@@ -1,10 +1,10 @@
 #include "engine/scene.hpp"
 #include <glad/glad.h>
 #include <iostream>
-#include <engine/config.h>
+#include <engine/utils/config.h>
 #include <glm/gtc/matrix_transform.hpp>
 
-Scene::Scene(const std::string &n, int msaaSamples) : name(n), msaaSamples(msaaSamples)
+Scene::Scene(const std::string &n, int msaaSamples) : name(n), msaaSamples(msaaSamples), width(SCREEN_WIDTH), height(SCREEN_HEIGHT)
 {
     // std::cout << "Scene Created!\n";
     defaultShader = std::make_shared<Shader>("assets/shaders/glsl/default.glsl");
@@ -32,12 +32,12 @@ void Scene::Update(float dt)
 {
     // 1. directional Light space matrix calculation
     glm::mat4 lightProjection, lightView;
-    float near_plane = 0.1f, far_plane = 25.0f; // These values might need tuning
+    float near_plane = 0.1f, far_plane = 25.0f;                                        // These values might need tuning
     lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane); // Adjust frustum to scene size
-    lightView = glm::lookAt(glm::vec3(0.0f, 3.0f, -5.0f), // Light position (matching lightPos in default.glsl)
-                            glm::vec3(0.0f, 0.0f, 0.0f),   // Look at origin
-                            glm::vec3(0.0f, 1.0f, 0.0f));  // Up vector
-    this->lightSpaceMatrix = lightProjection * lightView; // Update member variable
+    lightView = glm::lookAt(glm::vec3(0.0f, 3.0f, -5.0f),                              // Light position (matching lightPos in default.glsl)
+                            glm::vec3(0.0f, 0.0f, 0.0f),                               // Look at origin
+                            glm::vec3(0.0f, 1.0f, 0.0f));                              // Up vector
+    this->lightSpaceMatrix = lightProjection * lightView;                              // Update member variable
 
     defaultShadowBuffer->Bind();
     glClear(GL_DEPTH_BUFFER_BIT);
@@ -66,7 +66,7 @@ void Scene::Update(float dt)
     glBindTexture(GL_TEXTURE_2D, defaultShadowBuffer->GetDepthTexture());
     defaultShader->SetUniform("shadowMap", 1);
     defaultShader->SetUniform("lightSpaceMatrix", lightSpaceMatrix);
-    
+
     for (auto &en : entities)
     {
         en->Update(dt);
@@ -77,10 +77,11 @@ void Scene::Update(float dt)
     // Blit multisampled FBO to intermediate FBO
     glBindFramebuffer(GL_READ_FRAMEBUFFER, defaultFrameBuffer->GetTexture());      // GetTexture returns ID for multisampled FBO
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, intermediateFrameBuffer->GetTexture()); // GetTexture returns ID for regular FBO
-    glBlitFramebuffer(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    glBlitFramebuffer(0, 0, this->width, this->height, 0, 0, this->width, this->height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0); // Bind default framebuffer again
 
-    screen->Draw(*defaultFrameBufferShader, intermediateFrameBuffer->GetColorAttachmentTexture());
+    screen->Draw(*defaultFrameBufferShader, intermediateFrameBuffer->GetTexture());
 }
 
 void Scene::AddEntity(std::shared_ptr<Entity> en)
@@ -95,8 +96,11 @@ std::shared_ptr<Entity> Scene::CreateEntity(const std::string &n)
     return en;
 }
 
-void Scene::OnResize(int w, int h) const
+void Scene::OnResize(int w, int h)
 {
+    this->width = w; // Assign new width
+    this->height = h; // Assign new height
+    std::cout << "(scene): Resize(" << w << "," << h << ")\n";
     defaultCamera->OnResize(w, h);
     defaultFrameBuffer->OnResize(w, h);
     intermediateFrameBuffer->OnResize(w, h);

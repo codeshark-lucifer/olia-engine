@@ -1,4 +1,4 @@
-#include "engine/platform.hpp"
+#include "engine/graphics/platform.hpp"
 #include <stdexcept>
 
 Platform::Platform()
@@ -11,6 +11,9 @@ Platform::Platform()
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
                         SDL_GL_CONTEXT_PROFILE_CORE);
+
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1); // Enable multisampling
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4); // Request 4 samples
 
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24); // 24-bit depth buffer
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -42,6 +45,7 @@ Platform::Platform()
         SDL_DestroyWindow(window);
         SDL_Quit();
     }
+    glEnable(GL_MULTISAMPLE); // Enable GL_MULTISAMPLE here
 
     SDL_GL_SetSwapInterval(1);
     glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);

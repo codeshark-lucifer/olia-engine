@@ -44,4 +44,7 @@ add_custom_command(TARGET olia POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "${CMAKE_SOURCE_DIR}/lib/libassimp-6.dll"
         $<TARGET_FILE_DIR:olia>
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/assets"
+        $<TARGET_FILE_DIR:olia>/assets
 )

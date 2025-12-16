@@ -1,4 +1,4 @@
-#include "engine/engine.hpp"
+#include "engine/core/engine.hpp"
 #include <engine/mesh.hpp>
 #include <engine/meshfilter.hpp>
 #include <engine/meshrenderer.hpp>
@@ -11,6 +11,7 @@ Engine::Engine()
     platform = std::make_unique<Platform>();
     platform->callback = callback;
 
+    Input::Initialize();
     scene = std::make_unique<Scene>("SampleScene");
 
     model = std::make_unique<asset::Model>("assets/models/cube.fbx");
@@ -40,8 +41,9 @@ void Engine::Run() const
     float deltaTime;
     while (!platform->ShouldClose())
     {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        Input::Update();
         platform->PollEvent();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         currentTime = SDL_GetTicks();
         deltaTime = (currentTime - lastTime) / 1000.0f; // milliseconds → seconds
