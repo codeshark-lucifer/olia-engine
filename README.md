@@ -3,3 +3,4 @@ A GameEngine Made using C++
 - SDL3
 - GLM
 - ASSIMP
+- STB_image

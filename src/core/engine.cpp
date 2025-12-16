@@ -12,7 +12,7 @@ Engine::Engine()
     platform->callback = callback;
 
     Input::Initialize();
-    scene = std::make_unique<Scene>("SampleScene");
+    scene = std::make_unique<Scene>("SampleScene", 8);
 
     model = std::make_unique<asset::Model>("assets/models/cube.fbx");
     scene->AddEntity(model->root);

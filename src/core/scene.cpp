@@ -1,6 +1,5 @@
 #include "engine/scene.hpp"
 #include <glad/glad.h>
-#include <iostream>
 #include <engine/utils/config.h>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -17,6 +16,9 @@ Scene::Scene(const std::string &n, int msaaSamples) : name(n), msaaSamples(msaaS
 
     defaultShadowBuffer = std::make_shared<ShadowBuffer>(SHADOW_WIDTH, SHADOW_HEIGHT);
     defaultShadowShader = std::make_shared<Shader>("assets/shaders/glsl/depth.glsl");
+
+    updateSystem = std::make_shared<UpdateSystem>();
+    renderSystem = std::make_shared<RenderSystem>();
 }
 
 void Scene::Begin() const
@@ -45,8 +47,7 @@ void Scene::Update(float dt)
     defaultShadowShader->Use();
     defaultShadowShader->SetUniform("lightSpaceMatrix", lightSpaceMatrix); // light projection*view
 
-    for (auto &en : entities)
-        en->Render(*defaultShadowShader); // render scene from light perspective
+    renderSystem->RenderScene(entities, *defaultShadowShader); // Render scene for shadow pass
 
     defaultShadowBuffer->Unbind();
 
@@ -67,11 +68,9 @@ void Scene::Update(float dt)
     defaultShader->SetUniform("shadowMap", 1);
     defaultShader->SetUniform("lightSpaceMatrix", lightSpaceMatrix);
 
-    for (auto &en : entities)
-    {
-        en->Update(dt);
-        en->Render(*defaultShader);
-    }
+    updateSystem->Update(entities, dt); // Update entities using UpdateSystem
+    renderSystem->RenderScene(entities, *defaultShader); // Render scene for main pass
+
     defaultFrameBuffer->Unbind();
 
     // Blit multisampled FBO to intermediate FBO
@@ -100,7 +99,6 @@ void Scene::OnResize(int w, int h)
 {
     this->width = w; // Assign new width
     this->height = h; // Assign new height
-    std::cout << "(scene): Resize(" << w << "," << h << ")\n";
     defaultCamera->OnResize(w, h);
     defaultFrameBuffer->OnResize(w, h);
     intermediateFrameBuffer->OnResize(w, h);

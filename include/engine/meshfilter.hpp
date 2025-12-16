@@ -1,6 +1,6 @@
 #pragma once
 #include <memory>
-#include <engine/component.hpp>
+#include <engine/utils/component.hpp>
 #include <engine/mesh.hpp>
 
 class Component;

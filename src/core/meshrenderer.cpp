@@ -1,5 +1,5 @@
 #include <engine/meshrenderer.hpp>
-#include <engine/entity.hpp>
+#include <engine/utils/entity.hpp>
 #include <engine/meshfilter.hpp>
 #include <engine/shader.hpp>
 

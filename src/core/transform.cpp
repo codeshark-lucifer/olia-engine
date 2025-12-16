@@ -1,5 +1,5 @@
-#include <engine/transform.hpp>
-#include <engine/entity.hpp>
+#include <engine/utils/transform.hpp>
+#include <engine/utils/entity.hpp>
 
 glm::mat4 Transform::GetLocalMatrix() const
 {

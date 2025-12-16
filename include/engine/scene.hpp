@@ -8,6 +8,8 @@
 #include <engine/buffers/fbo.hpp>
 #include <engine/buffers/quad.hpp>
 #include <engine/buffers/sbo.hpp>
+#include <engine/updatesystem.hpp>
+#include <engine/rendersystem.hpp>
 
 class Scene
 {
@@ -37,4 +39,7 @@ private:
 
     std::shared_ptr<ShadowBuffer> defaultShadowBuffer = nullptr;
     std::shared_ptr<Shader> defaultShadowShader = nullptr;
+
+    std::shared_ptr<UpdateSystem> updateSystem;
+    std::shared_ptr<RenderSystem> renderSystem;
 };

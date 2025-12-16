@@ -24,17 +24,16 @@ public:
         vao = std::make_unique<VAO>();
         vbo = std::make_unique<VBO>(vertices);
         ebo = std::make_unique<EBO>(indices);
-
         vao->Bind();
-        ebo->Bind();
         vbo->Bind();
 
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)0);
         glEnableVertexAttribArray(0);
 
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)(offsetof(Vertex, TexCoord)));
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)offsetof(Vertex, TexCoord));
         glEnableVertexAttribArray(1);
 
+        ebo->Bind();
         vao->Unbind();
     }
     ~Quad() = default;

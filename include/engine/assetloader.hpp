@@ -11,7 +11,7 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-#include <engine/entity.hpp>
+#include <engine/utils/entity.hpp>
 #include <engine/mesh.hpp>
 #include <engine/meshrenderer.hpp>
 

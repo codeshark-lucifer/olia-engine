@@ -1,7 +1,6 @@
 #include "engine/shader.hpp"
 #include <fstream>
 #include <stdexcept>
-#include <iostream> // Added for std::cout
 #include <unordered_map>
 
 // ---------------- Constructors ----------------
@@ -75,7 +74,6 @@ GLuint Shader::Compile(GLenum type, const std::string &source)
     glCompileShader(shader);
 
     CheckShaderCompile(shader, type == GL_VERTEX_SHADER ? "Vertex" : "Fragment");
-    std::cout << (type == GL_VERTEX_SHADER ? "Vertex" : "Fragment") << " shader compiled successfully.\n";
     return shader;
 }
 
@@ -89,7 +87,6 @@ void Shader::LinkProgram()
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
-    std::cout << "Shader program linked successfully with ID: " << ID << "\n";
 }
 
 void Shader::CheckShaderCompile(GLuint shader, const std::string &type)

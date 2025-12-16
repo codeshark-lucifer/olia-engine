@@ -1,5 +1,5 @@
 #pragma once
-#include "component.hpp"
+#include <engine/utils/component.hpp>
 
 class Shader;
 class MeshFilter;

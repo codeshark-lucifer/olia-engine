@@ -1,4 +1,4 @@
-#include <engine/entity.hpp>
+#include <engine/utils/entity.hpp>
 #include <engine/shader.hpp>
 #include <engine/meshrenderer.hpp>
 
@@ -32,38 +32,6 @@ void Entity::Begin() const
         c->Awake();
         c->Start();
     }
-
-    for (auto &child : children)
-    {
-        child->Begin();
-    }
 }
 
-void Entity::Update(float dt, Shader *shader) const
-{
-    for (auto &c : components)
-    {
-        c->FixedUpdate(dt);
-        c->Update(dt);
-        c->LateUpdate(dt);
-    }
 
-    for (auto &child : children)
-    {
-        child->Update(dt, shader);
-    }
-}
-
-void Entity::Render(Shader &shader) const
-{
-    auto comps = GetComponents<MeshRenderer>();
-    for (auto &c : comps)
-    {
-        c->Render(shader);
-    }
-
-    for (auto &child : children)
-    {
-        child->Render(shader);
-    }
-}
