@@ -14,9 +14,13 @@ Engine::Engine()
     Input::Initialize();
     scene = std::make_unique<Scene>("SampleScene", 8);
 
-    model = std::make_unique<asset::Model>("assets/models/cube.fbx");
-    scene->AddEntity(model->root);
-    model->root->AddComponent<Rotator>(); // Add Rotator component
+    std::unique_ptr<asset::Model> cube = std::make_unique<asset::Model>("assets/models/cube.fbx");
+    scene->AddEntity(cube->root);
+    cube->root->AddComponent<Rotator>(); // Add Rotator component
+    
+    std::unique_ptr<asset::Model> plane = std::make_unique<asset::Model>("assets/models/plane.fbx");
+    scene->AddEntity(plane->root);
+    plane->root->transform->position = glm::vec3(0.0f, -5.0f, 0.0f);
 }
 
 Engine *Engine::instance = nullptr;

@@ -670,6 +670,8 @@ CMakeFiles/olia.dir/src/core/engine.cpp.obj
  D:/Programing Education/olia - engine/include/engine/buffers/vao.hpp
  D:/Programing Education/olia - engine/include/engine/buffers/vbo.hpp
  D:/Programing Education/olia - engine/include/engine/camera.hpp
+ D:/Programing Education/olia - engine/include/engine/components/physics/collider.hpp
+ D:/Programing Education/olia - engine/include/engine/components/physics/rigidbody.hpp
  D:/Programing Education/olia - engine/include/engine/components/rotator.hpp
  D:/Programing Education/olia - engine/include/engine/core/engine.hpp
  D:/Programing Education/olia - engine/include/engine/graphics/platform.hpp
@@ -677,6 +679,7 @@ CMakeFiles/olia.dir/src/core/engine.cpp.obj
  D:/Programing Education/olia - engine/include/engine/mesh.hpp
  D:/Programing Education/olia - engine/include/engine/meshfilter.hpp
  D:/Programing Education/olia - engine/include/engine/meshrenderer.hpp
+ D:/Programing Education/olia - engine/include/engine/physicsystem.hpp
  D:/Programing Education/olia - engine/include/engine/rendersystem.hpp
  D:/Programing Education/olia - engine/include/engine/scene.hpp
  D:/Programing Education/olia - engine/include/engine/shader.hpp
@@ -1851,6 +1854,7 @@ CMakeFiles/olia.dir/src/core/rendersystem.cpp.obj
  C:/msys64/mingw64/include/_mingw_stat64.h
  C:/msys64/mingw64/include/_timeval.h
  C:/msys64/mingw64/include/assert.h
+ C:/msys64/mingw64/include/c++/15.2.0/array
  C:/msys64/mingw64/include/c++/15.2.0/backward/auto_ptr.h
  C:/msys64/mingw64/include/c++/15.2.0/backward/binders.h
  C:/msys64/mingw64/include/c++/15.2.0/bit
@@ -1898,6 +1902,7 @@ CMakeFiles/olia.dir/src/core/rendersystem.cpp.obj
  C:/msys64/mingw64/include/c++/15.2.0/bits/shared_ptr_base.h
  C:/msys64/mingw64/include/c++/15.2.0/bits/specfun.h
  C:/msys64/mingw64/include/c++/15.2.0/bits/std_abs.h
+ C:/msys64/mingw64/include/c++/15.2.0/bits/std_function.h
  C:/msys64/mingw64/include/c++/15.2.0/bits/stl_algobase.h
  C:/msys64/mingw64/include/c++/15.2.0/bits/stl_bvector.h
  C:/msys64/mingw64/include/c++/15.2.0/bits/stl_construct.h
@@ -1926,6 +1931,7 @@ CMakeFiles/olia.dir/src/core/rendersystem.cpp.obj
  C:/msys64/mingw64/include/c++/15.2.0/climits
  C:/msys64/mingw64/include/c++/15.2.0/clocale
  C:/msys64/mingw64/include/c++/15.2.0/cmath
+ C:/msys64/mingw64/include/c++/15.2.0/compare
  C:/msys64/mingw64/include/c++/15.2.0/concepts
  C:/msys64/mingw64/include/c++/15.2.0/cstddef
  C:/msys64/mingw64/include/c++/15.2.0/cstdint
@@ -1942,6 +1948,7 @@ CMakeFiles/olia.dir/src/core/rendersystem.cpp.obj
  C:/msys64/mingw64/include/c++/15.2.0/ext/numeric_traits.h
  C:/msys64/mingw64/include/c++/15.2.0/ext/string_conversions.h
  C:/msys64/mingw64/include/c++/15.2.0/ext/type_traits.h
+ C:/msys64/mingw64/include/c++/15.2.0/functional
  C:/msys64/mingw64/include/c++/15.2.0/initializer_list
  C:/msys64/mingw64/include/c++/15.2.0/iosfwd
  C:/msys64/mingw64/include/c++/15.2.0/limits
@@ -2415,7 +2422,9 @@ CMakeFiles/olia.dir/src/core/scene.cpp.obj
  D:/Programing Education/olia - engine/include/engine/buffers/vao.hpp
  D:/Programing Education/olia - engine/include/engine/buffers/vbo.hpp
  D:/Programing Education/olia - engine/include/engine/camera.hpp
+ D:/Programing Education/olia - engine/include/engine/components/physics/collider.hpp
  D:/Programing Education/olia - engine/include/engine/meshrenderer.hpp
+ D:/Programing Education/olia - engine/include/engine/physicsystem.hpp
  D:/Programing Education/olia - engine/include/engine/rendersystem.hpp
  D:/Programing Education/olia - engine/include/engine/scene.hpp
  D:/Programing Education/olia - engine/include/engine/shader.hpp
@@ -3954,12 +3963,14 @@ CMakeFiles/olia.dir/src/main.cpp.obj
  D:/Programing Education/olia - engine/include/engine/buffers/vao.hpp
  D:/Programing Education/olia - engine/include/engine/buffers/vbo.hpp
  D:/Programing Education/olia - engine/include/engine/camera.hpp
+ D:/Programing Education/olia - engine/include/engine/components/physics/collider.hpp
  D:/Programing Education/olia - engine/include/engine/core/engine.hpp
  D:/Programing Education/olia - engine/include/engine/graphics/platform.hpp
  D:/Programing Education/olia - engine/include/engine/input/input.hpp
  D:/Programing Education/olia - engine/include/engine/mesh.hpp
  D:/Programing Education/olia - engine/include/engine/meshfilter.hpp
  D:/Programing Education/olia - engine/include/engine/meshrenderer.hpp
+ D:/Programing Education/olia - engine/include/engine/physicsystem.hpp
  D:/Programing Education/olia - engine/include/engine/rendersystem.hpp
  D:/Programing Education/olia - engine/include/engine/scene.hpp
  D:/Programing Education/olia - engine/include/engine/shader.hpp

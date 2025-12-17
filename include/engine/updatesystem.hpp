@@ -8,5 +8,5 @@ public:
     UpdateSystem() : System("UpdateSystem") {}
     ~UpdateSystem() override = default;
 
-    void Update(std::vector<std::shared_ptr<Entity>>& entities, float dt) override;
+    void Update(std::vector<std::shared_ptr<Entity>> &entities, float dt) override;
 };

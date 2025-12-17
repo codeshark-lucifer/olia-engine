@@ -68,7 +68,7 @@ void Scene::Update(float dt)
     defaultShader->SetUniform("shadowMap", 1);
     defaultShader->SetUniform("lightSpaceMatrix", lightSpaceMatrix);
 
-    updateSystem->Update(entities, dt); // Update entities using UpdateSystem
+    updateSystem->Update(entities, dt);                  // Update entities using UpdateSystem
     renderSystem->RenderScene(entities, *defaultShader); // Render scene for main pass
 
     defaultFrameBuffer->Unbind();
@@ -97,7 +97,7 @@ std::shared_ptr<Entity> Scene::CreateEntity(const std::string &n)
 
 void Scene::OnResize(int w, int h)
 {
-    this->width = w; // Assign new width
+    this->width = w;  // Assign new width
     this->height = h; // Assign new height
     defaultCamera->OnResize(w, h);
     defaultFrameBuffer->OnResize(w, h);

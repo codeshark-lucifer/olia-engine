@@ -19,7 +19,9 @@ add_executable(olia
     ${SRC_DIR}/core/entity.cpp
     ${SRC_DIR}/core/transform.cpp
     ${SRC_DIR}/core/meshrenderer.cpp
+    
     ${SRC_DIR}/core/components/rotator.cpp
+
     ${SRC_DIR}/core/updatesystem.cpp
     ${SRC_DIR}/core/rendersystem.cpp
 )

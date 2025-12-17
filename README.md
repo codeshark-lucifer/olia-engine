@@ -4,3 +4,7 @@ A GameEngine Made using C++
 - GLM
 - ASSIMP
 - STB_image
+
+f = m*a
+a = f/m
+f = m * g

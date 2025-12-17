@@ -668,6 +668,8 @@ CMakeFiles/olia.dir/src/core/engine.cpp.obj: D:/Programing\ Education/olia\ -\ e
   D:/Programing\ Education/olia\ -\ engine/include/engine/buffers/vao.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/buffers/vbo.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/camera.hpp \
+  D:/Programing\ Education/olia\ -\ engine/include/engine/components/physics/collider.hpp \
+  D:/Programing\ Education/olia\ -\ engine/include/engine/components/physics/rigidbody.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/components/rotator.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/core/engine.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/graphics/platform.hpp \
@@ -675,6 +677,7 @@ CMakeFiles/olia.dir/src/core/engine.cpp.obj: D:/Programing\ Education/olia\ -\ e
   D:/Programing\ Education/olia\ -\ engine/include/engine/mesh.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/meshfilter.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/meshrenderer.hpp \
+  D:/Programing\ Education/olia\ -\ engine/include/engine/physicsystem.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/rendersystem.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/scene.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/shader.hpp \
@@ -1845,6 +1848,7 @@ CMakeFiles/olia.dir/src/core/rendersystem.cpp.obj: D:/Programing\ Education/olia
   C:/msys64/mingw64/include/_mingw_stat64.h \
   C:/msys64/mingw64/include/_timeval.h \
   C:/msys64/mingw64/include/assert.h \
+  C:/msys64/mingw64/include/c++/15.2.0/array \
   C:/msys64/mingw64/include/c++/15.2.0/backward/auto_ptr.h \
   C:/msys64/mingw64/include/c++/15.2.0/backward/binders.h \
   C:/msys64/mingw64/include/c++/15.2.0/bit \
@@ -1892,6 +1896,7 @@ CMakeFiles/olia.dir/src/core/rendersystem.cpp.obj: D:/Programing\ Education/olia
   C:/msys64/mingw64/include/c++/15.2.0/bits/shared_ptr_base.h \
   C:/msys64/mingw64/include/c++/15.2.0/bits/specfun.h \
   C:/msys64/mingw64/include/c++/15.2.0/bits/std_abs.h \
+  C:/msys64/mingw64/include/c++/15.2.0/bits/std_function.h \
   C:/msys64/mingw64/include/c++/15.2.0/bits/stl_algobase.h \
   C:/msys64/mingw64/include/c++/15.2.0/bits/stl_bvector.h \
   C:/msys64/mingw64/include/c++/15.2.0/bits/stl_construct.h \
@@ -1920,6 +1925,7 @@ CMakeFiles/olia.dir/src/core/rendersystem.cpp.obj: D:/Programing\ Education/olia
   C:/msys64/mingw64/include/c++/15.2.0/climits \
   C:/msys64/mingw64/include/c++/15.2.0/clocale \
   C:/msys64/mingw64/include/c++/15.2.0/cmath \
+  C:/msys64/mingw64/include/c++/15.2.0/compare \
   C:/msys64/mingw64/include/c++/15.2.0/concepts \
   C:/msys64/mingw64/include/c++/15.2.0/cstddef \
   C:/msys64/mingw64/include/c++/15.2.0/cstdint \
@@ -1936,6 +1942,7 @@ CMakeFiles/olia.dir/src/core/rendersystem.cpp.obj: D:/Programing\ Education/olia
   C:/msys64/mingw64/include/c++/15.2.0/ext/numeric_traits.h \
   C:/msys64/mingw64/include/c++/15.2.0/ext/string_conversions.h \
   C:/msys64/mingw64/include/c++/15.2.0/ext/type_traits.h \
+  C:/msys64/mingw64/include/c++/15.2.0/functional \
   C:/msys64/mingw64/include/c++/15.2.0/initializer_list \
   C:/msys64/mingw64/include/c++/15.2.0/iosfwd \
   C:/msys64/mingw64/include/c++/15.2.0/limits \
@@ -2408,7 +2415,9 @@ CMakeFiles/olia.dir/src/core/scene.cpp.obj: D:/Programing\ Education/olia\ -\ en
   D:/Programing\ Education/olia\ -\ engine/include/engine/buffers/vao.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/buffers/vbo.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/camera.hpp \
+  D:/Programing\ Education/olia\ -\ engine/include/engine/components/physics/collider.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/meshrenderer.hpp \
+  D:/Programing\ Education/olia\ -\ engine/include/engine/physicsystem.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/rendersystem.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/scene.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/shader.hpp \
@@ -3943,12 +3952,14 @@ CMakeFiles/olia.dir/src/main.cpp.obj: D:/Programing\ Education/olia\ -\ engine/s
   D:/Programing\ Education/olia\ -\ engine/include/engine/buffers/vao.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/buffers/vbo.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/camera.hpp \
+  D:/Programing\ Education/olia\ -\ engine/include/engine/components/physics/collider.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/core/engine.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/graphics/platform.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/input/input.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/mesh.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/meshfilter.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/meshrenderer.hpp \
+  D:/Programing\ Education/olia\ -\ engine/include/engine/physicsystem.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/rendersystem.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/scene.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/shader.hpp \
@@ -4841,6 +4852,10 @@ C:/msys64/mingw64/include/consoleapi3.h:
 
 C:/msys64/mingw64/include/consoleapi2.h:
 
+C:/msys64/mingw64/include/consoleapi.h:
+
+C:/msys64/mingw64/include/concurrencysal.h:
+
 D:/Programing\ Education/olia\ -\ engine/include/glm/ext/matrix_float4x2.hpp:
 
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/lzcntintrin.h:
@@ -5029,13 +5044,9 @@ D:/Programing\ Education/olia\ -\ engine/include/glm/detail/type_float.hpp:
 
 D:/Programing\ Education/olia\ -\ engine/include/glm/ext/vector_uint2_precision.hpp:
 
-C:/msys64/mingw64/include/concurrencysal.h:
-
 C:/msys64/mingw64/include/c++/15.2.0/x86_64-w64-mingw32/bits/c++allocator.h:
 
 C:/msys64/mingw64/include/pthread.h:
-
-C:/msys64/mingw64/include/consoleapi.h:
 
 C:/msys64/mingw64/include/math.h:
 
@@ -5287,6 +5298,8 @@ C:/msys64/mingw64/include/c++/15.2.0/bits/exception_defines.h:
 
 C:/msys64/mingw64/include/c++/15.2.0/backward/binders.h:
 
+D:/Programing\ Education/olia\ -\ engine/include/engine/components/physics/collider.hpp:
+
 D:/Programing\ Education/olia\ -\ engine/include/glm/ext/vector_double3_precision.hpp:
 
 D:/Programing\ Education/olia\ -\ engine/src/core/components/rotator.cpp:
@@ -5418,6 +5431,8 @@ C:/msys64/mingw64/include/debugapi.h:
 C:/msys64/mingw64/include/c++/15.2.0/tr1/bessel_function.tcc:
 
 C:/msys64/mingw64/include/c++/15.2.0/bits/alloc_traits.h:
+
+D:/Programing\ Education/olia\ -\ engine/include/engine/components/physics/rigidbody.hpp:
 
 C:/msys64/mingw64/include/shellapi.h:
 
@@ -5749,9 +5764,9 @@ D:/Programing\ Education/olia\ -\ engine/include/glm/gtc/epsilon.hpp:
 
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/xmmintrin.h:
 
-C:/msys64/mingw64/include/c++/15.2.0/bits/ptr_traits.h:
-
 C:/msys64/mingw64/include/commdlg.h:
+
+C:/msys64/mingw64/include/c++/15.2.0/bits/ptr_traits.h:
 
 D:/Programing\ Education/olia\ -\ engine/include/glm/gtc/matrix_transform.inl:
 
@@ -6064,6 +6079,8 @@ D:/Programing\ Education/olia\ -\ engine/include/engine/meshfilter.hpp:
 D:/Programing\ Education/olia\ -\ engine/include/SDL3/SDL_render.h:
 
 D:/Programing\ Education/olia\ -\ engine/include/engine/meshrenderer.hpp:
+
+D:/Programing\ Education/olia\ -\ engine/include/engine/physicsystem.hpp:
 
 C:/msys64/mingw64/include/c++/15.2.0/bits/std_abs.h:
 

@@ -23,8 +23,6 @@ public:
 
     void Begin() const;
 
-
-
     template <typename T, typename... Args>
     std::shared_ptr<T> AddComponent(Args &&...args)
     {
@@ -44,6 +42,17 @@ public:
                 result.push_back(casted);
         }
         return result;
+    }
+
+    template <typename T>
+    std::shared_ptr<T> GetComponent()
+    {
+        for (auto &comp : components)
+        {
+            if (auto casted = std::dynamic_pointer_cast<T>(comp))
+                return casted;
+        }
+        return nullptr;
     }
 
 private:

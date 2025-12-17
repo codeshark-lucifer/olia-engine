@@ -1,7 +1,7 @@
 #pragma once
 #include <engine/utils/component.hpp>
 #include <engine/utils/transform.hpp>
-#include <engine/utils/entity.hpp> // For accessing entity's transform
+#include <engine/utils/entity.hpp> 
 
 class Rotator : public Component
 {

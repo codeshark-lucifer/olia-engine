@@ -22,7 +22,6 @@ public:
 private:
     std::unique_ptr<Platform> platform = nullptr;
     std::unique_ptr<Scene> scene = nullptr;
-    std::unique_ptr<asset::Model> model = nullptr;
 
     static Engine *instance;
 };
