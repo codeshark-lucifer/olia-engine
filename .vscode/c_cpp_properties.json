@@ -10,6 +10,7 @@
       "includePath": [
         "${workspaceFolder}/include",
         "${workspaceFolder}/include/**",
+        "${workspaceFolder}/third-party/imgui/**",
 
         "C:/msys64/mingw64/include",
         "C:/msys64/mingw64/include/**"

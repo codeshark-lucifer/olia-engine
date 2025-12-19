@@ -9,17 +9,13 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "D:/Programing Education/olia - engine/src/utils/glad.c" "CMakeFiles/olia.dir/src/utils/glad.c.obj" "gcc" "CMakeFiles/olia.dir/src/utils/glad.c.obj.d"
-  "D:/Programing Education/olia - engine/src/core/components/rotator.cpp" "CMakeFiles/olia.dir/src/core/components/rotator.cpp.obj" "gcc" "CMakeFiles/olia.dir/src/core/components/rotator.cpp.obj.d"
-  "D:/Programing Education/olia - engine/src/core/engine.cpp" "CMakeFiles/olia.dir/src/core/engine.cpp.obj" "gcc" "CMakeFiles/olia.dir/src/core/engine.cpp.obj.d"
-  "D:/Programing Education/olia - engine/src/core/entity.cpp" "CMakeFiles/olia.dir/src/core/entity.cpp.obj" "gcc" "CMakeFiles/olia.dir/src/core/entity.cpp.obj.d"
-  "D:/Programing Education/olia - engine/src/core/meshrenderer.cpp" "CMakeFiles/olia.dir/src/core/meshrenderer.cpp.obj" "gcc" "CMakeFiles/olia.dir/src/core/meshrenderer.cpp.obj.d"
+  "D:/Programing Education/olia - engine/src/core/components/meshrenderer.cpp" "CMakeFiles/olia.dir/src/core/components/meshrenderer.cpp.obj" "gcc" "CMakeFiles/olia.dir/src/core/components/meshrenderer.cpp.obj.d"
   "D:/Programing Education/olia - engine/src/core/platform.cpp" "CMakeFiles/olia.dir/src/core/platform.cpp.obj" "gcc" "CMakeFiles/olia.dir/src/core/platform.cpp.obj.d"
-  "D:/Programing Education/olia - engine/src/core/rendersystem.cpp" "CMakeFiles/olia.dir/src/core/rendersystem.cpp.obj" "gcc" "CMakeFiles/olia.dir/src/core/rendersystem.cpp.obj.d"
   "D:/Programing Education/olia - engine/src/core/scene.cpp" "CMakeFiles/olia.dir/src/core/scene.cpp.obj" "gcc" "CMakeFiles/olia.dir/src/core/scene.cpp.obj.d"
   "D:/Programing Education/olia - engine/src/core/shader.cpp" "CMakeFiles/olia.dir/src/core/shader.cpp.obj" "gcc" "CMakeFiles/olia.dir/src/core/shader.cpp.obj.d"
   "D:/Programing Education/olia - engine/src/core/transform.cpp" "CMakeFiles/olia.dir/src/core/transform.cpp.obj" "gcc" "CMakeFiles/olia.dir/src/core/transform.cpp.obj.d"
-  "D:/Programing Education/olia - engine/src/core/updatesystem.cpp" "CMakeFiles/olia.dir/src/core/updatesystem.cpp.obj" "gcc" "CMakeFiles/olia.dir/src/core/updatesystem.cpp.obj.d"
   "D:/Programing Education/olia - engine/src/main.cpp" "CMakeFiles/olia.dir/src/main.cpp.obj" "gcc" "CMakeFiles/olia.dir/src/main.cpp.obj.d"
+  "D:/Programing Education/olia - engine/src/utils/engine.cpp" "CMakeFiles/olia.dir/src/utils/engine.cpp.obj" "gcc" "CMakeFiles/olia.dir/src/utils/engine.cpp.obj.d"
   "D:/Programing Education/olia - engine/src/utils/stb_image.cpp" "CMakeFiles/olia.dir/src/utils/stb_image.cpp.obj" "gcc" "CMakeFiles/olia.dir/src/utils/stb_image.cpp.obj.d"
   )
 

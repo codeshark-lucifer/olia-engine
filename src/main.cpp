@@ -1,15 +1,17 @@
-#include <engine/core/engine.hpp>
-#include <exception>
 #include <iostream>
+#include <exception>
+#include <engine/engine.hpp>
 
 int main()
 {
-    try {
+    try
+    {
         Engine engine;
         engine.Run();
-    } catch(const std::exception& e) {
-        std::cout << "[Exception]: " << e.what() << "\n";
     }
-
+    catch (const std::exception &e)
+    {
+        std::cout << "[Exception]: " << e.what() << std::endl;
+    }
     return 0;
 }

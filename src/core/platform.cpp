@@ -1,8 +1,13 @@
-#include "engine/graphics/platform.hpp"
+#include <engine/render/platform.hpp>
 #include <stdexcept>
+#include <imgui_impl_sdl3.h> // Include ImGui SDL3 backend header
 
-Platform::Platform()
+Platform::Platform(const int &w, const int &h, const std::string &t)
 {
+    this->width = w;
+    this->height = h;
+    this->title = t.c_str();
+
     if (!SDL_Init(SDL_INIT_VIDEO))
     {
         throw std::runtime_error("Failed initialize SDL3.");
@@ -19,8 +24,8 @@ Platform::Platform()
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
     window = SDL_CreateWindow(
-        APPLICATION_NAME,
-        SCREEN_WIDTH, SCREEN_HEIGHT,
+        title,
+        width, height,
         SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
 
     if (!window)
@@ -48,7 +53,7 @@ Platform::Platform()
     glEnable(GL_MULTISAMPLE); // Enable GL_MULTISAMPLE here
 
     SDL_GL_SetSwapInterval(1);
-    glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    glViewport(0, 0, width, height);
     running = true;
 }
 
@@ -60,6 +65,7 @@ Platform::~Platform()
 
 bool Platform::ShouldClose()
 {
+
     return running == false;
 }
 
@@ -68,6 +74,8 @@ void Platform::PollEvent()
     SDL_Event e;
     while (SDL_PollEvent(&e))
     {
+        ProcessImGuiEvent(&e); // Allow ImGui to process the event first
+
         if (e.type == SDL_EVENT_QUIT)
             running = false;
         if (e.type == SDL_EVENT_WINDOW_RESIZED)
@@ -85,4 +93,9 @@ void Platform::PollEvent()
 void Platform::SwapBuffers()
 {
     SDL_GL_SwapWindow(window);
+}
+
+void Platform::ProcessImGuiEvent(SDL_Event* event)
+{
+    ImGui_ImplSDL3_ProcessEvent(event);
 }

@@ -1,44 +1,43 @@
 #pragma once
-#include <vector>
-#include <engine/utils/entity.hpp>
-#include <engine/utils/component.hpp>
+#include <engine/systems/render.hpp>
+#include <engine/systems/system.hpp>
+#include <engine/components/camera.hpp>
+
+#include <engine/ec/entity.hpp>
 #include <engine/shader.hpp>
-#include <engine/meshrenderer.hpp>
-#include <engine/camera.hpp>
 #include <engine/buffers/fbo.hpp>
 #include <engine/buffers/quad.hpp>
 #include <engine/buffers/sbo.hpp>
-#include <engine/updatesystem.hpp>
-#include <engine/rendersystem.hpp>
+
 class Scene
 {
 public:
-    Scene(const std::string &n, int msaaSamples = 1);
-    ~Scene() = default;
-
-    void Begin() const;
+    Scene(const int &w, const int &h, const std::string &n);
+    void Begin();
     void Update(float dt);
-    void OnResize(int w, int h); // Removed const
-
-    void AddEntity(std::shared_ptr<Entity> en);
-    std::shared_ptr<Entity> CreateEntity(const std::string &n);
+    void OnResize(const int &w, const int &h);
+    void AddEntity(const std::shared_ptr<Entity>& en);
+    const std::vector<std::shared_ptr<Entity>>& GetEntities() const { return entities; }
 
 private:
+    int width = 0,
+        height = 0;
     glm::mat4 lightSpaceMatrix = glm::mat4(0.0f);
-    std::string name = "";
+
+    std::string name = "SampleScene";
     std::vector<std::shared_ptr<Entity>> entities;
-    std::shared_ptr<Shader> defaultShader = nullptr;
-    std::shared_ptr<Camera> defaultCamera = nullptr;
-    std::shared_ptr<Shader> defaultFrameBufferShader = nullptr;
-    std::shared_ptr<FBO> defaultFrameBuffer = nullptr;
-    std::shared_ptr<FBO> intermediateFrameBuffer = nullptr;
-    std::shared_ptr<Quad> screen = nullptr;
-    int msaaSamples = 1;
-    int width, height; // Added width and height members
+    std::vector<std::unique_ptr<System>> systems;
 
-    std::shared_ptr<ShadowBuffer> defaultShadowBuffer = nullptr;
-    std::shared_ptr<Shader> defaultShadowShader = nullptr;
+    std::unique_ptr<Camera> defaultCamera = nullptr;
 
-    std::shared_ptr<UpdateSystem> updateSystem = nullptr;
-    std::shared_ptr<RenderSystem> renderSystem = nullptr;
+    std::unique_ptr<Shader> defaultShader = nullptr;
+    std::unique_ptr<Shader> depthShader = nullptr;
+    std::unique_ptr<Shader> frameShader = nullptr;
+
+    std::unique_ptr<SBO> sbo = nullptr;
+    std::unique_ptr<FBO> fbo = nullptr;
+    std::unique_ptr<FBO> ifbo = nullptr;
+    std::unique_ptr<Quad> screen = nullptr;
+
+    std::unique_ptr<RenderSystem> render = nullptr;
 };

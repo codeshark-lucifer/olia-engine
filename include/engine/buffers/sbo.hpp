@@ -2,10 +2,10 @@
 #include <glad/glad.h>
 #include <stdexcept>
 
-class ShadowBuffer
+class SBO
 {
 public:
-    ShadowBuffer(int w, int h)
+    SBO(int w, int h)
         : width(w), height(h)
     {
         // Create framebuffer
@@ -40,7 +40,7 @@ public:
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    ~ShadowBuffer()
+    ~SBO()
     {
         glDeleteFramebuffers(1, &ID);
         glDeleteTextures(1, &depthTexture);

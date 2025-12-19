@@ -4,17 +4,14 @@
 #include <vector>
 #include <unordered_map>
 #include <stdexcept>
-#include <iostream>
-#include <engine/meshrenderer.hpp>
-
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-#include <engine/utils/entity.hpp>
-#include <engine/mesh.hpp>
-#include <engine/meshrenderer.hpp>
-
+#include <engine/ec/entity.hpp>
+#include <engine/components/mesh.hpp>
+#include <engine/components/meshrenderer.hpp>
+#include <engine/components/meshfilter.hpp> 
 namespace asset
 {
     class Model

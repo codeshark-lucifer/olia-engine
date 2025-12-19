@@ -10,20 +10,15 @@ add_executable(olia
     ${SRC_DIR}/main.cpp
     ${SRC_DIR}/utils/glad.c
     ${SRC_DIR}/utils/stb_image.cpp
+    ${SRC_DIR}/utils/engine.cpp
 
     ${SRC_DIR}/core/platform.cpp
-    ${SRC_DIR}/core/engine.cpp
-    ${SRC_DIR}/core/scene.cpp
     ${SRC_DIR}/core/shader.cpp
-    
-    ${SRC_DIR}/core/entity.cpp
+    ${SRC_DIR}/core/scene.cpp
     ${SRC_DIR}/core/transform.cpp
-    ${SRC_DIR}/core/meshrenderer.cpp
-    
-    ${SRC_DIR}/core/components/rotator.cpp
 
-    ${SRC_DIR}/core/updatesystem.cpp
-    ${SRC_DIR}/core/rendersystem.cpp
+    ${SRC_DIR}/core/components/meshrenderer.cpp
+
 )
 
 target_include_directories(olia PRIVATE
@@ -39,7 +34,31 @@ target_link_libraries(olia
     SDL3
     OpenGL::GL
     assimp
+    ImGui # Link ImGui library
 )
+
+# ImGui
+set(IMGUI_DIR "${CMAKE_SOURCE_DIR}/third-party/imgui")
+
+file(GLOB IMGUI_SOURCES
+    "${IMGUI_DIR}/imgui.cpp"
+    "${IMGUI_DIR}/imgui_draw.cpp"
+    "${IMGUI_DIR}/imgui_widgets.cpp"
+    "${IMGUI_DIR}/imgui_tables.cpp"
+    # "${IMGUI_DIR}/imgui_demo.cpp" # Optional: remove if not needed for production
+    "${IMGUI_DIR}/backends/imgui_impl_sdl3.cpp"
+    "${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp"
+)
+
+add_library(ImGui STATIC ${IMGUI_SOURCES}) # Create static library for ImGui
+
+target_include_directories(ImGui PUBLIC
+    ${IMGUI_DIR}
+    ${IMGUI_DIR}/backends
+    include # Add project's main include directory for SDL3 headers
+)
+
+target_link_libraries(ImGui PUBLIC SDL3) # Link SDL3 to ImGui static library
 
 add_custom_command(TARGET olia POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different

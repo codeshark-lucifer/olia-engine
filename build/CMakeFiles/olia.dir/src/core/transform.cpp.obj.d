@@ -1,6 +1,6 @@
 CMakeFiles/olia.dir/src/core/transform.cpp.obj: \
  D:\Programing\ Education\olia\ -\ engine\src\core\transform.cpp \
- D:/Programing\ Education/olia\ -\ engine/include/engine/utils/transform.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/engine/components/transform.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/glm.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/detail/_fixes.hpp \
  C:/msys64/mingw64/include/c++/15.2.0/cmath \
@@ -317,7 +317,15 @@ CMakeFiles/olia.dir/src/core/transform.cpp.obj: \
  C:/msys64/mingw64/include/c++/15.2.0/backward/auto_ptr.h \
  C:/msys64/mingw64/include/c++/15.2.0/pstl/glue_memory_defs.h \
  C:/msys64/mingw64/include/c++/15.2.0/pstl/execution_defs.h \
- D:/Programing\ Education/olia\ -\ engine/include/engine/utils/entity.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/engine/ec/entity.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/engine/ec/component.hpp \
+ D:/Programing\ Education/olia\ -\ engine/third-party/imgui/imgui.h \
+ D:/Programing\ Education/olia\ -\ engine/third-party/imgui/imconfig.h \
+ C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/stdarg.h \
+ C:/msys64/mingw64/include/stdarg.h \
+ C:/msys64/mingw64/include/_mingw_stdarg.h \
+ C:/msys64/mingw64/include/string.h \
+ C:/msys64/mingw64/include/sec_api/string_s.h \
  C:/msys64/mingw64/include/c++/15.2.0/vector \
  C:/msys64/mingw64/include/c++/15.2.0/bits/stl_vector.h \
  C:/msys64/mingw64/include/c++/15.2.0/initializer_list \
@@ -345,4 +353,9 @@ CMakeFiles/olia.dir/src/core/transform.cpp.obj: \
  C:/msys64/mingw64/include/c++/15.2.0/cerrno \
  C:/msys64/mingw64/include/c++/15.2.0/bits/charconv.h \
  C:/msys64/mingw64/include/c++/15.2.0/bits/basic_string.tcc \
- D:/Programing\ Education/olia\ -\ engine/include/engine/utils/component.hpp
+ C:/msys64/mingw64/include/c++/15.2.0/algorithm \
+ C:/msys64/mingw64/include/c++/15.2.0/bits/stl_algo.h \
+ C:/msys64/mingw64/include/c++/15.2.0/bits/algorithmfwd.h \
+ C:/msys64/mingw64/include/c++/15.2.0/bits/stl_heap.h \
+ C:/msys64/mingw64/include/c++/15.2.0/bits/uniform_int_dist.h \
+ C:/msys64/mingw64/include/c++/15.2.0/pstl/glue_algorithm_defs.h

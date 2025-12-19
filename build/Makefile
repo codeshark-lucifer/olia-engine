@@ -135,101 +135,42 @@ olia/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/build
 .PHONY : olia/fast
 
-src/core/components/rotator.obj: src/core/components/rotator.cpp.obj
-.PHONY : src/core/components/rotator.obj
+#=============================================================================
+# Target rules for targets named ImGui
+
+# Build rule for target.
+ImGui: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 ImGui
+.PHONY : ImGui
+
+# fast build rule for target.
+ImGui/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\ImGui.dir\build.make CMakeFiles/ImGui.dir/build
+.PHONY : ImGui/fast
+
+src/core/components/meshrenderer.obj: src/core/components/meshrenderer.cpp.obj
+.PHONY : src/core/components/meshrenderer.obj
 
 # target to build an object file
-src/core/components/rotator.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/components/rotator.cpp.obj
-.PHONY : src/core/components/rotator.cpp.obj
+src/core/components/meshrenderer.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/components/meshrenderer.cpp.obj
+.PHONY : src/core/components/meshrenderer.cpp.obj
 
-src/core/components/rotator.i: src/core/components/rotator.cpp.i
-.PHONY : src/core/components/rotator.i
-
-# target to preprocess a source file
-src/core/components/rotator.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/components/rotator.cpp.i
-.PHONY : src/core/components/rotator.cpp.i
-
-src/core/components/rotator.s: src/core/components/rotator.cpp.s
-.PHONY : src/core/components/rotator.s
-
-# target to generate assembly for a file
-src/core/components/rotator.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/components/rotator.cpp.s
-.PHONY : src/core/components/rotator.cpp.s
-
-src/core/engine.obj: src/core/engine.cpp.obj
-.PHONY : src/core/engine.obj
-
-# target to build an object file
-src/core/engine.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/engine.cpp.obj
-.PHONY : src/core/engine.cpp.obj
-
-src/core/engine.i: src/core/engine.cpp.i
-.PHONY : src/core/engine.i
+src/core/components/meshrenderer.i: src/core/components/meshrenderer.cpp.i
+.PHONY : src/core/components/meshrenderer.i
 
 # target to preprocess a source file
-src/core/engine.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/engine.cpp.i
-.PHONY : src/core/engine.cpp.i
+src/core/components/meshrenderer.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/components/meshrenderer.cpp.i
+.PHONY : src/core/components/meshrenderer.cpp.i
 
-src/core/engine.s: src/core/engine.cpp.s
-.PHONY : src/core/engine.s
-
-# target to generate assembly for a file
-src/core/engine.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/engine.cpp.s
-.PHONY : src/core/engine.cpp.s
-
-src/core/entity.obj: src/core/entity.cpp.obj
-.PHONY : src/core/entity.obj
-
-# target to build an object file
-src/core/entity.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/entity.cpp.obj
-.PHONY : src/core/entity.cpp.obj
-
-src/core/entity.i: src/core/entity.cpp.i
-.PHONY : src/core/entity.i
-
-# target to preprocess a source file
-src/core/entity.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/entity.cpp.i
-.PHONY : src/core/entity.cpp.i
-
-src/core/entity.s: src/core/entity.cpp.s
-.PHONY : src/core/entity.s
+src/core/components/meshrenderer.s: src/core/components/meshrenderer.cpp.s
+.PHONY : src/core/components/meshrenderer.s
 
 # target to generate assembly for a file
-src/core/entity.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/entity.cpp.s
-.PHONY : src/core/entity.cpp.s
-
-src/core/meshrenderer.obj: src/core/meshrenderer.cpp.obj
-.PHONY : src/core/meshrenderer.obj
-
-# target to build an object file
-src/core/meshrenderer.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/meshrenderer.cpp.obj
-.PHONY : src/core/meshrenderer.cpp.obj
-
-src/core/meshrenderer.i: src/core/meshrenderer.cpp.i
-.PHONY : src/core/meshrenderer.i
-
-# target to preprocess a source file
-src/core/meshrenderer.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/meshrenderer.cpp.i
-.PHONY : src/core/meshrenderer.cpp.i
-
-src/core/meshrenderer.s: src/core/meshrenderer.cpp.s
-.PHONY : src/core/meshrenderer.s
-
-# target to generate assembly for a file
-src/core/meshrenderer.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/meshrenderer.cpp.s
-.PHONY : src/core/meshrenderer.cpp.s
+src/core/components/meshrenderer.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/components/meshrenderer.cpp.s
+.PHONY : src/core/components/meshrenderer.cpp.s
 
 src/core/platform.obj: src/core/platform.cpp.obj
 .PHONY : src/core/platform.obj
@@ -254,30 +195,6 @@ src/core/platform.s: src/core/platform.cpp.s
 src/core/platform.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/platform.cpp.s
 .PHONY : src/core/platform.cpp.s
-
-src/core/rendersystem.obj: src/core/rendersystem.cpp.obj
-.PHONY : src/core/rendersystem.obj
-
-# target to build an object file
-src/core/rendersystem.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/rendersystem.cpp.obj
-.PHONY : src/core/rendersystem.cpp.obj
-
-src/core/rendersystem.i: src/core/rendersystem.cpp.i
-.PHONY : src/core/rendersystem.i
-
-# target to preprocess a source file
-src/core/rendersystem.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/rendersystem.cpp.i
-.PHONY : src/core/rendersystem.cpp.i
-
-src/core/rendersystem.s: src/core/rendersystem.cpp.s
-.PHONY : src/core/rendersystem.s
-
-# target to generate assembly for a file
-src/core/rendersystem.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/rendersystem.cpp.s
-.PHONY : src/core/rendersystem.cpp.s
 
 src/core/scene.obj: src/core/scene.cpp.obj
 .PHONY : src/core/scene.obj
@@ -351,30 +268,6 @@ src/core/transform.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/transform.cpp.s
 .PHONY : src/core/transform.cpp.s
 
-src/core/updatesystem.obj: src/core/updatesystem.cpp.obj
-.PHONY : src/core/updatesystem.obj
-
-# target to build an object file
-src/core/updatesystem.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/updatesystem.cpp.obj
-.PHONY : src/core/updatesystem.cpp.obj
-
-src/core/updatesystem.i: src/core/updatesystem.cpp.i
-.PHONY : src/core/updatesystem.i
-
-# target to preprocess a source file
-src/core/updatesystem.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/updatesystem.cpp.i
-.PHONY : src/core/updatesystem.cpp.i
-
-src/core/updatesystem.s: src/core/updatesystem.cpp.s
-.PHONY : src/core/updatesystem.s
-
-# target to generate assembly for a file
-src/core/updatesystem.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/updatesystem.cpp.s
-.PHONY : src/core/updatesystem.cpp.s
-
 src/main.obj: src/main.cpp.obj
 .PHONY : src/main.obj
 
@@ -398,6 +291,30 @@ src/main.s: src/main.cpp.s
 src/main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
+
+src/utils/engine.obj: src/utils/engine.cpp.obj
+.PHONY : src/utils/engine.obj
+
+# target to build an object file
+src/utils/engine.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/utils/engine.cpp.obj
+.PHONY : src/utils/engine.cpp.obj
+
+src/utils/engine.i: src/utils/engine.cpp.i
+.PHONY : src/utils/engine.i
+
+# target to preprocess a source file
+src/utils/engine.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/utils/engine.cpp.i
+.PHONY : src/utils/engine.cpp.i
+
+src/utils/engine.s: src/utils/engine.cpp.s
+.PHONY : src/utils/engine.s
+
+# target to generate assembly for a file
+src/utils/engine.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/utils/engine.cpp.s
+.PHONY : src/utils/engine.cpp.s
 
 src/utils/glad.obj: src/utils/glad.c.obj
 .PHONY : src/utils/glad.obj
@@ -447,6 +364,150 @@ src/utils/stb_image.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/utils/stb_image.cpp.s
 .PHONY : src/utils/stb_image.cpp.s
 
+third-party/imgui/backends/imgui_impl_opengl3.obj: third-party/imgui/backends/imgui_impl_opengl3.cpp.obj
+.PHONY : third-party/imgui/backends/imgui_impl_opengl3.obj
+
+# target to build an object file
+third-party/imgui/backends/imgui_impl_opengl3.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\ImGui.dir\build.make CMakeFiles/ImGui.dir/third-party/imgui/backends/imgui_impl_opengl3.cpp.obj
+.PHONY : third-party/imgui/backends/imgui_impl_opengl3.cpp.obj
+
+third-party/imgui/backends/imgui_impl_opengl3.i: third-party/imgui/backends/imgui_impl_opengl3.cpp.i
+.PHONY : third-party/imgui/backends/imgui_impl_opengl3.i
+
+# target to preprocess a source file
+third-party/imgui/backends/imgui_impl_opengl3.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\ImGui.dir\build.make CMakeFiles/ImGui.dir/third-party/imgui/backends/imgui_impl_opengl3.cpp.i
+.PHONY : third-party/imgui/backends/imgui_impl_opengl3.cpp.i
+
+third-party/imgui/backends/imgui_impl_opengl3.s: third-party/imgui/backends/imgui_impl_opengl3.cpp.s
+.PHONY : third-party/imgui/backends/imgui_impl_opengl3.s
+
+# target to generate assembly for a file
+third-party/imgui/backends/imgui_impl_opengl3.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\ImGui.dir\build.make CMakeFiles/ImGui.dir/third-party/imgui/backends/imgui_impl_opengl3.cpp.s
+.PHONY : third-party/imgui/backends/imgui_impl_opengl3.cpp.s
+
+third-party/imgui/backends/imgui_impl_sdl3.obj: third-party/imgui/backends/imgui_impl_sdl3.cpp.obj
+.PHONY : third-party/imgui/backends/imgui_impl_sdl3.obj
+
+# target to build an object file
+third-party/imgui/backends/imgui_impl_sdl3.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\ImGui.dir\build.make CMakeFiles/ImGui.dir/third-party/imgui/backends/imgui_impl_sdl3.cpp.obj
+.PHONY : third-party/imgui/backends/imgui_impl_sdl3.cpp.obj
+
+third-party/imgui/backends/imgui_impl_sdl3.i: third-party/imgui/backends/imgui_impl_sdl3.cpp.i
+.PHONY : third-party/imgui/backends/imgui_impl_sdl3.i
+
+# target to preprocess a source file
+third-party/imgui/backends/imgui_impl_sdl3.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\ImGui.dir\build.make CMakeFiles/ImGui.dir/third-party/imgui/backends/imgui_impl_sdl3.cpp.i
+.PHONY : third-party/imgui/backends/imgui_impl_sdl3.cpp.i
+
+third-party/imgui/backends/imgui_impl_sdl3.s: third-party/imgui/backends/imgui_impl_sdl3.cpp.s
+.PHONY : third-party/imgui/backends/imgui_impl_sdl3.s
+
+# target to generate assembly for a file
+third-party/imgui/backends/imgui_impl_sdl3.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\ImGui.dir\build.make CMakeFiles/ImGui.dir/third-party/imgui/backends/imgui_impl_sdl3.cpp.s
+.PHONY : third-party/imgui/backends/imgui_impl_sdl3.cpp.s
+
+third-party/imgui/imgui.obj: third-party/imgui/imgui.cpp.obj
+.PHONY : third-party/imgui/imgui.obj
+
+# target to build an object file
+third-party/imgui/imgui.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\ImGui.dir\build.make CMakeFiles/ImGui.dir/third-party/imgui/imgui.cpp.obj
+.PHONY : third-party/imgui/imgui.cpp.obj
+
+third-party/imgui/imgui.i: third-party/imgui/imgui.cpp.i
+.PHONY : third-party/imgui/imgui.i
+
+# target to preprocess a source file
+third-party/imgui/imgui.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\ImGui.dir\build.make CMakeFiles/ImGui.dir/third-party/imgui/imgui.cpp.i
+.PHONY : third-party/imgui/imgui.cpp.i
+
+third-party/imgui/imgui.s: third-party/imgui/imgui.cpp.s
+.PHONY : third-party/imgui/imgui.s
+
+# target to generate assembly for a file
+third-party/imgui/imgui.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\ImGui.dir\build.make CMakeFiles/ImGui.dir/third-party/imgui/imgui.cpp.s
+.PHONY : third-party/imgui/imgui.cpp.s
+
+third-party/imgui/imgui_draw.obj: third-party/imgui/imgui_draw.cpp.obj
+.PHONY : third-party/imgui/imgui_draw.obj
+
+# target to build an object file
+third-party/imgui/imgui_draw.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\ImGui.dir\build.make CMakeFiles/ImGui.dir/third-party/imgui/imgui_draw.cpp.obj
+.PHONY : third-party/imgui/imgui_draw.cpp.obj
+
+third-party/imgui/imgui_draw.i: third-party/imgui/imgui_draw.cpp.i
+.PHONY : third-party/imgui/imgui_draw.i
+
+# target to preprocess a source file
+third-party/imgui/imgui_draw.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\ImGui.dir\build.make CMakeFiles/ImGui.dir/third-party/imgui/imgui_draw.cpp.i
+.PHONY : third-party/imgui/imgui_draw.cpp.i
+
+third-party/imgui/imgui_draw.s: third-party/imgui/imgui_draw.cpp.s
+.PHONY : third-party/imgui/imgui_draw.s
+
+# target to generate assembly for a file
+third-party/imgui/imgui_draw.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\ImGui.dir\build.make CMakeFiles/ImGui.dir/third-party/imgui/imgui_draw.cpp.s
+.PHONY : third-party/imgui/imgui_draw.cpp.s
+
+third-party/imgui/imgui_tables.obj: third-party/imgui/imgui_tables.cpp.obj
+.PHONY : third-party/imgui/imgui_tables.obj
+
+# target to build an object file
+third-party/imgui/imgui_tables.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\ImGui.dir\build.make CMakeFiles/ImGui.dir/third-party/imgui/imgui_tables.cpp.obj
+.PHONY : third-party/imgui/imgui_tables.cpp.obj
+
+third-party/imgui/imgui_tables.i: third-party/imgui/imgui_tables.cpp.i
+.PHONY : third-party/imgui/imgui_tables.i
+
+# target to preprocess a source file
+third-party/imgui/imgui_tables.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\ImGui.dir\build.make CMakeFiles/ImGui.dir/third-party/imgui/imgui_tables.cpp.i
+.PHONY : third-party/imgui/imgui_tables.cpp.i
+
+third-party/imgui/imgui_tables.s: third-party/imgui/imgui_tables.cpp.s
+.PHONY : third-party/imgui/imgui_tables.s
+
+# target to generate assembly for a file
+third-party/imgui/imgui_tables.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\ImGui.dir\build.make CMakeFiles/ImGui.dir/third-party/imgui/imgui_tables.cpp.s
+.PHONY : third-party/imgui/imgui_tables.cpp.s
+
+third-party/imgui/imgui_widgets.obj: third-party/imgui/imgui_widgets.cpp.obj
+.PHONY : third-party/imgui/imgui_widgets.obj
+
+# target to build an object file
+third-party/imgui/imgui_widgets.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\ImGui.dir\build.make CMakeFiles/ImGui.dir/third-party/imgui/imgui_widgets.cpp.obj
+.PHONY : third-party/imgui/imgui_widgets.cpp.obj
+
+third-party/imgui/imgui_widgets.i: third-party/imgui/imgui_widgets.cpp.i
+.PHONY : third-party/imgui/imgui_widgets.i
+
+# target to preprocess a source file
+third-party/imgui/imgui_widgets.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\ImGui.dir\build.make CMakeFiles/ImGui.dir/third-party/imgui/imgui_widgets.cpp.i
+.PHONY : third-party/imgui/imgui_widgets.cpp.i
+
+third-party/imgui/imgui_widgets.s: third-party/imgui/imgui_widgets.cpp.s
+.PHONY : third-party/imgui/imgui_widgets.s
+
+# target to generate assembly for a file
+third-party/imgui/imgui_widgets.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\ImGui.dir\build.make CMakeFiles/ImGui.dir/third-party/imgui/imgui_widgets.cpp.s
+.PHONY : third-party/imgui/imgui_widgets.cpp.s
+
 # Help Target
 help:
 	@echo The following are some of the valid targets for this Makefile:
@@ -456,25 +517,14 @@ help:
 	@echo ... codegen
 	@echo ... edit_cache
 	@echo ... rebuild_cache
+	@echo ... ImGui
 	@echo ... olia
-	@echo ... src/core/components/rotator.obj
-	@echo ... src/core/components/rotator.i
-	@echo ... src/core/components/rotator.s
-	@echo ... src/core/engine.obj
-	@echo ... src/core/engine.i
-	@echo ... src/core/engine.s
-	@echo ... src/core/entity.obj
-	@echo ... src/core/entity.i
-	@echo ... src/core/entity.s
-	@echo ... src/core/meshrenderer.obj
-	@echo ... src/core/meshrenderer.i
-	@echo ... src/core/meshrenderer.s
+	@echo ... src/core/components/meshrenderer.obj
+	@echo ... src/core/components/meshrenderer.i
+	@echo ... src/core/components/meshrenderer.s
 	@echo ... src/core/platform.obj
 	@echo ... src/core/platform.i
 	@echo ... src/core/platform.s
-	@echo ... src/core/rendersystem.obj
-	@echo ... src/core/rendersystem.i
-	@echo ... src/core/rendersystem.s
 	@echo ... src/core/scene.obj
 	@echo ... src/core/scene.i
 	@echo ... src/core/scene.s
@@ -484,18 +534,36 @@ help:
 	@echo ... src/core/transform.obj
 	@echo ... src/core/transform.i
 	@echo ... src/core/transform.s
-	@echo ... src/core/updatesystem.obj
-	@echo ... src/core/updatesystem.i
-	@echo ... src/core/updatesystem.s
 	@echo ... src/main.obj
 	@echo ... src/main.i
 	@echo ... src/main.s
+	@echo ... src/utils/engine.obj
+	@echo ... src/utils/engine.i
+	@echo ... src/utils/engine.s
 	@echo ... src/utils/glad.obj
 	@echo ... src/utils/glad.i
 	@echo ... src/utils/glad.s
 	@echo ... src/utils/stb_image.obj
 	@echo ... src/utils/stb_image.i
 	@echo ... src/utils/stb_image.s
+	@echo ... third-party/imgui/backends/imgui_impl_opengl3.obj
+	@echo ... third-party/imgui/backends/imgui_impl_opengl3.i
+	@echo ... third-party/imgui/backends/imgui_impl_opengl3.s
+	@echo ... third-party/imgui/backends/imgui_impl_sdl3.obj
+	@echo ... third-party/imgui/backends/imgui_impl_sdl3.i
+	@echo ... third-party/imgui/backends/imgui_impl_sdl3.s
+	@echo ... third-party/imgui/imgui.obj
+	@echo ... third-party/imgui/imgui.i
+	@echo ... third-party/imgui/imgui.s
+	@echo ... third-party/imgui/imgui_draw.obj
+	@echo ... third-party/imgui/imgui_draw.i
+	@echo ... third-party/imgui/imgui_draw.s
+	@echo ... third-party/imgui/imgui_tables.obj
+	@echo ... third-party/imgui/imgui_tables.i
+	@echo ... third-party/imgui/imgui_tables.s
+	@echo ... third-party/imgui/imgui_widgets.obj
+	@echo ... third-party/imgui/imgui_widgets.i
+	@echo ... third-party/imgui/imgui_widgets.s
 .PHONY : help
 
 
