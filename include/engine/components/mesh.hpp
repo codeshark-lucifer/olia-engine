@@ -7,7 +7,6 @@
 #include <engine/buffers/ebo.hpp>
 
 #include <engine/texture2D.hpp>
-#include <iostream>
 
 class Mesh
 {

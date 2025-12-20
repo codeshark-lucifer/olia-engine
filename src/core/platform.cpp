@@ -1,6 +1,5 @@
 #include <engine/render/platform.hpp>
 #include <stdexcept>
-#include <imgui_impl_sdl3.h> // Include ImGui SDL3 backend header
 
 Platform::Platform(const int &w, const int &h, const std::string &t)
 {
@@ -74,8 +73,6 @@ void Platform::PollEvent()
     SDL_Event e;
     while (SDL_PollEvent(&e))
     {
-        ProcessImGuiEvent(&e); // Allow ImGui to process the event first
-
         if (e.type == SDL_EVENT_QUIT)
             running = false;
         if (e.type == SDL_EVENT_WINDOW_RESIZED)
@@ -95,7 +92,3 @@ void Platform::SwapBuffers()
     SDL_GL_SwapWindow(window);
 }
 
-void Platform::ProcessImGuiEvent(SDL_Event* event)
-{
-    ImGui_ImplSDL3_ProcessEvent(event);
-}

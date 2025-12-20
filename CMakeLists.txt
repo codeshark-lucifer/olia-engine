@@ -10,12 +10,11 @@ add_executable(olia
     ${SRC_DIR}/main.cpp
     ${SRC_DIR}/utils/glad.c
     ${SRC_DIR}/utils/stb_image.cpp
-    ${SRC_DIR}/utils/engine.cpp
+    ${SRC_DIR}/engine.cpp
 
     ${SRC_DIR}/core/platform.cpp
     ${SRC_DIR}/core/shader.cpp
     ${SRC_DIR}/core/scene.cpp
-    ${SRC_DIR}/core/transform.cpp
 
     ${SRC_DIR}/core/components/meshrenderer.cpp
 

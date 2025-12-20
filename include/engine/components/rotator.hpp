@@ -1,6 +1,5 @@
 #pragma once
 #include <engine/ec/component.hpp>
-#include <engine/components/transform.hpp>
 #include <engine/ec/entity.hpp>
 
 class Rotator : public Component
@@ -25,8 +24,4 @@ public:
         }
     }
 
-    void DrawImGuiControls() override
-    {
-        ImGui::Checkbox("Enabled", &enabled);
-    }
 };

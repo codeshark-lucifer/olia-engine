@@ -192,9 +192,4 @@ CMakeFiles/olia.dir/src/core/platform.cpp.obj: \
  C:/msys64/mingw64/include/c++/15.2.0/exception \
  C:/msys64/mingw64/include/c++/15.2.0/bits/exception_ptr.h \
  C:/msys64/mingw64/include/c++/15.2.0/bits/cxxabi_init_exception.h \
- C:/msys64/mingw64/include/c++/15.2.0/bits/nested_exception.h \
- D:/Programing\ Education/olia\ -\ engine/third-party/imgui/backends/imgui_impl_sdl3.h \
- D:/Programing\ Education/olia\ -\ engine/third-party/imgui/imgui.h \
- D:/Programing\ Education/olia\ -\ engine/third-party/imgui/imconfig.h \
- C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/float.h \
- C:/msys64/mingw64/include/float.h C:/msys64/mingw64/include/assert.h
+ C:/msys64/mingw64/include/c++/15.2.0/bits/nested_exception.h

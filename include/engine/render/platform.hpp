@@ -18,7 +18,6 @@ public:
 
     SDL_Window *GetWindow() const { return window; }
     SDL_GLContext GetGLContext() const { return context; }
-    void ProcessImGuiEvent(SDL_Event* event);
 
 private:
     int width = 0, height = 0;

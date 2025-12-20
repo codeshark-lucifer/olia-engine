@@ -244,29 +244,29 @@ src/core/shader.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/shader.cpp.s
 .PHONY : src/core/shader.cpp.s
 
-src/core/transform.obj: src/core/transform.cpp.obj
-.PHONY : src/core/transform.obj
+src/engine.obj: src/engine.cpp.obj
+.PHONY : src/engine.obj
 
 # target to build an object file
-src/core/transform.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/transform.cpp.obj
-.PHONY : src/core/transform.cpp.obj
+src/engine.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/engine.cpp.obj
+.PHONY : src/engine.cpp.obj
 
-src/core/transform.i: src/core/transform.cpp.i
-.PHONY : src/core/transform.i
+src/engine.i: src/engine.cpp.i
+.PHONY : src/engine.i
 
 # target to preprocess a source file
-src/core/transform.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/transform.cpp.i
-.PHONY : src/core/transform.cpp.i
+src/engine.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/engine.cpp.i
+.PHONY : src/engine.cpp.i
 
-src/core/transform.s: src/core/transform.cpp.s
-.PHONY : src/core/transform.s
+src/engine.s: src/engine.cpp.s
+.PHONY : src/engine.s
 
 # target to generate assembly for a file
-src/core/transform.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/transform.cpp.s
-.PHONY : src/core/transform.cpp.s
+src/engine.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/engine.cpp.s
+.PHONY : src/engine.cpp.s
 
 src/main.obj: src/main.cpp.obj
 .PHONY : src/main.obj
@@ -291,30 +291,6 @@ src/main.s: src/main.cpp.s
 src/main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
-
-src/utils/engine.obj: src/utils/engine.cpp.obj
-.PHONY : src/utils/engine.obj
-
-# target to build an object file
-src/utils/engine.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/utils/engine.cpp.obj
-.PHONY : src/utils/engine.cpp.obj
-
-src/utils/engine.i: src/utils/engine.cpp.i
-.PHONY : src/utils/engine.i
-
-# target to preprocess a source file
-src/utils/engine.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/utils/engine.cpp.i
-.PHONY : src/utils/engine.cpp.i
-
-src/utils/engine.s: src/utils/engine.cpp.s
-.PHONY : src/utils/engine.s
-
-# target to generate assembly for a file
-src/utils/engine.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/utils/engine.cpp.s
-.PHONY : src/utils/engine.cpp.s
 
 src/utils/glad.obj: src/utils/glad.c.obj
 .PHONY : src/utils/glad.obj
@@ -531,15 +507,12 @@ help:
 	@echo ... src/core/shader.obj
 	@echo ... src/core/shader.i
 	@echo ... src/core/shader.s
-	@echo ... src/core/transform.obj
-	@echo ... src/core/transform.i
-	@echo ... src/core/transform.s
+	@echo ... src/engine.obj
+	@echo ... src/engine.i
+	@echo ... src/engine.s
 	@echo ... src/main.obj
 	@echo ... src/main.i
 	@echo ... src/main.s
-	@echo ... src/utils/engine.obj
-	@echo ... src/utils/engine.i
-	@echo ... src/utils/engine.s
 	@echo ... src/utils/glad.obj
 	@echo ... src/utils/glad.i
 	@echo ... src/utils/glad.s

@@ -1,7 +1,7 @@
 CMakeFiles/olia.dir/src/core/scene.cpp.obj: \
  D:\Programing\ Education\olia\ -\ engine\src\core\scene.cpp \
  D:/Programing\ Education/olia\ -\ engine/include/engine/scene.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/engine/systems/render.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/engine/systems/system.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/engine/ec/entity.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/engine/ec/component.hpp \
  C:/msys64/mingw64/include/c++/15.2.0/memory \
@@ -124,42 +124,62 @@ CMakeFiles/olia.dir/src/core/scene.cpp.obj: \
  C:/msys64/mingw64/include/malloc.h \
  C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/mm_malloc.h \
  C:/msys64/mingw64/include/c++/15.2.0/bits/std_abs.h \
- D:/Programing\ Education/olia\ -\ engine/include/engine/components/transform.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/glm/glm.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/glm/detail/_fixes.hpp \
- C:/msys64/mingw64/include/c++/15.2.0/cmath \
- C:/msys64/mingw64/include/math.h \
- C:/msys64/mingw64/include/c++/15.2.0/bits/specfun.h \
- C:/msys64/mingw64/include/c++/15.2.0/limits \
- C:/msys64/mingw64/include/c++/15.2.0/tr1/gamma.tcc \
- C:/msys64/mingw64/include/c++/15.2.0/tr1/special_function_util.h \
- C:/msys64/mingw64/include/c++/15.2.0/tr1/bessel_function.tcc \
- C:/msys64/mingw64/include/c++/15.2.0/tr1/beta_function.tcc \
- C:/msys64/mingw64/include/c++/15.2.0/tr1/ell_integral.tcc \
- C:/msys64/mingw64/include/c++/15.2.0/tr1/exp_integral.tcc \
- C:/msys64/mingw64/include/c++/15.2.0/tr1/hypergeometric.tcc \
- C:/msys64/mingw64/include/c++/15.2.0/tr1/legendre_function.tcc \
- C:/msys64/mingw64/include/c++/15.2.0/tr1/modified_bessel_func.tcc \
- C:/msys64/mingw64/include/c++/15.2.0/tr1/poly_hermite.tcc \
- C:/msys64/mingw64/include/c++/15.2.0/tr1/poly_laguerre.tcc \
- C:/msys64/mingw64/include/c++/15.2.0/tr1/riemann_zeta.tcc \
+ C:/msys64/mingw64/include/c++/15.2.0/vector \
+ C:/msys64/mingw64/include/c++/15.2.0/bits/stl_vector.h \
+ C:/msys64/mingw64/include/c++/15.2.0/initializer_list \
+ C:/msys64/mingw64/include/c++/15.2.0/bits/stl_bvector.h \
+ C:/msys64/mingw64/include/c++/15.2.0/bits/range_access.h \
+ C:/msys64/mingw64/include/c++/15.2.0/bits/vector.tcc \
+ C:/msys64/mingw64/include/c++/15.2.0/bits/memory_resource.h \
+ C:/msys64/mingw64/include/c++/15.2.0/cstddef \
+ C:/msys64/mingw64/include/c++/15.2.0/bits/uses_allocator_args.h \
+ C:/msys64/mingw64/include/c++/15.2.0/string \
+ C:/msys64/mingw64/include/c++/15.2.0/bits/char_traits.h \
+ C:/msys64/mingw64/include/c++/15.2.0/bits/localefwd.h \
+ C:/msys64/mingw64/include/c++/15.2.0/x86_64-w64-mingw32/bits/c++locale.h \
+ C:/msys64/mingw64/include/c++/15.2.0/clocale \
+ C:/msys64/mingw64/include/locale.h C:/msys64/mingw64/include/stdio.h \
+ C:/msys64/mingw64/include/sec_api/stdio_s.h \
+ C:/msys64/mingw64/include/c++/15.2.0/cctype \
+ C:/msys64/mingw64/include/ctype.h \
+ C:/msys64/mingw64/include/c++/15.2.0/bits/ostream_insert.h \
+ C:/msys64/mingw64/include/c++/15.2.0/bits/cxxabi_forced.h \
+ C:/msys64/mingw64/include/c++/15.2.0/bits/basic_string.h \
+ C:/msys64/mingw64/include/c++/15.2.0/string_view \
+ C:/msys64/mingw64/include/c++/15.2.0/bits/string_view.tcc \
+ C:/msys64/mingw64/include/c++/15.2.0/ext/string_conversions.h \
+ C:/msys64/mingw64/include/c++/15.2.0/cstdio \
+ C:/msys64/mingw64/include/c++/15.2.0/cerrno \
+ C:/msys64/mingw64/include/c++/15.2.0/bits/charconv.h \
+ C:/msys64/mingw64/include/c++/15.2.0/bits/basic_string.tcc \
+ C:/msys64/mingw64/include/c++/15.2.0/algorithm \
+ C:/msys64/mingw64/include/c++/15.2.0/bits/stl_algo.h \
+ C:/msys64/mingw64/include/c++/15.2.0/bits/algorithmfwd.h \
+ C:/msys64/mingw64/include/c++/15.2.0/bits/stl_heap.h \
+ C:/msys64/mingw64/include/c++/15.2.0/bits/uniform_int_dist.h \
+ C:/msys64/mingw64/include/c++/15.2.0/pstl/glue_algorithm_defs.h \
+ D:/Programing\ Education/olia\ -\ engine/include/glm/gtc/matrix_transform.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/glm/mat4x4.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/glm/ext/matrix_double4x4.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/glm/detail/type_mat4x4.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/glm/detail/type_vec4.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/glm/detail/qualifier.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/detail/setup.hpp \
  C:/msys64/mingw64/include/c++/15.2.0/cassert \
- C:/msys64/mingw64/include/c++/15.2.0/cstddef \
  D:/Programing\ Education/olia\ -\ engine/include/glm/simd/platform.h \
  C:/msys64/mingw64/include/c++/15.2.0/cstdint \
  C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/stdint.h \
  C:/msys64/mingw64/include/stdint.h \
- C:/msys64/mingw64/include/c++/15.2.0/climits \
- C:/msys64/mingw64/include/c++/15.2.0/cfloat \
- D:/Programing\ Education/olia\ -\ engine/include/glm/fwd.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/glm/detail/qualifier.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/glm/detail/type_vec4.inl \
+ D:/Programing\ Education/olia\ -\ engine/include/glm/detail/compute_vector_relational.hpp \
+ C:/msys64/mingw64/include/c++/15.2.0/limits \
+ D:/Programing\ Education/olia\ -\ engine/include/glm/detail/type_mat4x4.inl \
+ D:/Programing\ Education/olia\ -\ engine/include/glm/matrix.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/detail/setup.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/vec2.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/vector_bool2.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/detail/type_vec2.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/detail/type_vec2.inl \
- D:/Programing\ Education/olia\ -\ engine/include/glm/detail/compute_vector_relational.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/vector_bool2_precision.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/vector_float2.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/vector_float2_precision.hpp \
@@ -184,8 +204,6 @@ CMakeFiles/olia.dir/src/core/scene.cpp.obj: \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/vector_uint3_precision.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/vec4.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/vector_bool4.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/glm/detail/type_vec4.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/glm/detail/type_vec4.inl \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/vector_bool4_precision.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/vector_float4.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/vector_float4_precision.hpp \
@@ -200,7 +218,9 @@ CMakeFiles/olia.dir/src/core/scene.cpp.obj: \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/matrix_double2x2.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/detail/type_mat2x2.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/detail/type_mat2x2.inl \
- D:/Programing\ Education/olia\ -\ engine/include/glm/matrix.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/glm/ext/matrix_double2x2_precision.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/glm/ext/matrix_float2x2.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/glm/ext/matrix_float2x2_precision.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/mat2x3.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/matrix_double2x3.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/detail/type_mat2x3.hpp \
@@ -250,49 +270,62 @@ CMakeFiles/olia.dir/src/core/scene.cpp.obj: \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/matrix_double4x3_precision.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/matrix_float4x3.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/matrix_float4x3_precision.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/glm/mat4x4.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/glm/ext/matrix_double4x4.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/glm/detail/type_mat4x4.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/glm/detail/type_mat4x4.inl \
- D:/Programing\ Education/olia\ -\ engine/include/glm/ext/matrix_double4x4_precision.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/glm/ext/matrix_float4x4.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/glm/ext/matrix_float4x4_precision.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/detail/func_matrix.inl \
  D:/Programing\ Education/olia\ -\ engine/include/glm/geometric.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/detail/func_geometric.inl \
  D:/Programing\ Education/olia\ -\ engine/include/glm/exponential.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/detail/type_vec1.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/detail/type_vec1.inl \
+ C:/msys64/mingw64/include/c++/15.2.0/cmath \
+ C:/msys64/mingw64/include/math.h \
+ C:/msys64/mingw64/include/c++/15.2.0/bits/specfun.h \
+ C:/msys64/mingw64/include/c++/15.2.0/tr1/gamma.tcc \
+ C:/msys64/mingw64/include/c++/15.2.0/tr1/special_function_util.h \
+ C:/msys64/mingw64/include/c++/15.2.0/tr1/bessel_function.tcc \
+ C:/msys64/mingw64/include/c++/15.2.0/tr1/beta_function.tcc \
+ C:/msys64/mingw64/include/c++/15.2.0/tr1/ell_integral.tcc \
+ C:/msys64/mingw64/include/c++/15.2.0/tr1/exp_integral.tcc \
+ C:/msys64/mingw64/include/c++/15.2.0/tr1/hypergeometric.tcc \
+ C:/msys64/mingw64/include/c++/15.2.0/tr1/legendre_function.tcc \
+ C:/msys64/mingw64/include/c++/15.2.0/tr1/modified_bessel_func.tcc \
+ C:/msys64/mingw64/include/c++/15.2.0/tr1/poly_hermite.tcc \
+ C:/msys64/mingw64/include/c++/15.2.0/tr1/poly_laguerre.tcc \
+ C:/msys64/mingw64/include/c++/15.2.0/tr1/riemann_zeta.tcc \
  D:/Programing\ Education/olia\ -\ engine/include/glm/detail/func_exponential.inl \
  D:/Programing\ Education/olia\ -\ engine/include/glm/vector_relational.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/detail/func_vector_relational.inl \
  D:/Programing\ Education/olia\ -\ engine/include/glm/detail/_vectorize.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/common.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/glm/detail/_fixes.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/detail/func_common.inl \
  D:/Programing\ Education/olia\ -\ engine/include/glm/detail/compute_common.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/glm/ext/matrix_double2x2_precision.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/glm/ext/matrix_float2x2.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/glm/ext/matrix_float2x2_precision.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/glm/trigonometric.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/glm/detail/func_trigonometric.inl \
- D:/Programing\ Education/olia\ -\ engine/include/glm/packing.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/glm/detail/func_packing.inl \
- D:/Programing\ Education/olia\ -\ engine/include/glm/detail/type_half.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/glm/detail/type_half.inl \
- D:/Programing\ Education/olia\ -\ engine/include/glm/integer.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/glm/detail/func_integer.inl \
- D:/Programing\ Education/olia\ -\ engine/include/glm/gtc/matrix_transform.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/glm/ext/matrix_double4x4_precision.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/glm/ext/matrix_float4x4.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/glm/ext/matrix_float4x4_precision.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/matrix_projection.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/gtc/constants.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/scalar_constants.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/scalar_constants.inl \
  D:/Programing\ Education/olia\ -\ engine/include/glm/gtc/constants.inl \
+ D:/Programing\ Education/olia\ -\ engine/include/glm/trigonometric.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/glm/detail/func_trigonometric.inl \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/matrix_projection.inl \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/matrix_clip_space.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/matrix_clip_space.inl \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/matrix_transform.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/matrix_transform.inl \
  D:/Programing\ Education/olia\ -\ engine/include/glm/gtc/matrix_transform.inl \
+ D:/Programing\ Education/olia\ -\ engine/include/glm/gtx/quaternion.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/glm/glm.hpp \
+ C:/msys64/mingw64/include/c++/15.2.0/climits \
+ C:/msys64/mingw64/include/c++/15.2.0/cfloat \
+ D:/Programing\ Education/olia\ -\ engine/include/glm/fwd.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/glm/packing.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/glm/detail/func_packing.inl \
+ D:/Programing\ Education/olia\ -\ engine/include/glm/detail/type_half.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/glm/detail/type_half.inl \
+ D:/Programing\ Education/olia\ -\ engine/include/glm/integer.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/glm/detail/func_integer.inl \
  D:/Programing\ Education/olia\ -\ engine/include/glm/gtc/quaternion.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/vector_relational.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/vector_relational.inl \
@@ -317,7 +350,6 @@ CMakeFiles/olia.dir/src/core/scene.cpp.obj: \
  D:/Programing\ Education/olia\ -\ engine/include/glm/gtc/epsilon.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/detail/setup.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/gtc/epsilon.inl \
- D:/Programing\ Education/olia\ -\ engine/include/glm/gtx/quaternion.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/quaternion_exponential.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/quaternion_exponential.inl \
  D:/Programing\ Education/olia\ -\ engine/include/glm/gtx/norm.hpp \
@@ -326,42 +358,7 @@ CMakeFiles/olia.dir/src/core/scene.cpp.obj: \
  D:/Programing\ Education/olia\ -\ engine/include/glm/gtx/component_wise.inl \
  D:/Programing\ Education/olia\ -\ engine/include/glm/gtx/norm.inl \
  D:/Programing\ Education/olia\ -\ engine/include/glm/gtx/quaternion.inl \
- C:/msys64/mingw64/include/c++/15.2.0/vector \
- C:/msys64/mingw64/include/c++/15.2.0/bits/stl_vector.h \
- C:/msys64/mingw64/include/c++/15.2.0/initializer_list \
- C:/msys64/mingw64/include/c++/15.2.0/bits/stl_bvector.h \
- C:/msys64/mingw64/include/c++/15.2.0/bits/range_access.h \
- C:/msys64/mingw64/include/c++/15.2.0/bits/vector.tcc \
- C:/msys64/mingw64/include/c++/15.2.0/bits/memory_resource.h \
- C:/msys64/mingw64/include/c++/15.2.0/bits/uses_allocator_args.h \
- C:/msys64/mingw64/include/c++/15.2.0/string \
- C:/msys64/mingw64/include/c++/15.2.0/bits/char_traits.h \
- C:/msys64/mingw64/include/c++/15.2.0/bits/localefwd.h \
- C:/msys64/mingw64/include/c++/15.2.0/x86_64-w64-mingw32/bits/c++locale.h \
- C:/msys64/mingw64/include/c++/15.2.0/clocale \
- C:/msys64/mingw64/include/locale.h C:/msys64/mingw64/include/stdio.h \
- C:/msys64/mingw64/include/sec_api/stdio_s.h \
- C:/msys64/mingw64/include/c++/15.2.0/cctype \
- C:/msys64/mingw64/include/ctype.h \
- C:/msys64/mingw64/include/c++/15.2.0/bits/ostream_insert.h \
- C:/msys64/mingw64/include/c++/15.2.0/bits/cxxabi_forced.h \
- C:/msys64/mingw64/include/c++/15.2.0/bits/basic_string.h \
- C:/msys64/mingw64/include/c++/15.2.0/string_view \
- C:/msys64/mingw64/include/c++/15.2.0/bits/string_view.tcc \
- C:/msys64/mingw64/include/c++/15.2.0/ext/string_conversions.h \
- C:/msys64/mingw64/include/c++/15.2.0/cstdio \
- C:/msys64/mingw64/include/c++/15.2.0/cerrno \
- C:/msys64/mingw64/include/c++/15.2.0/bits/charconv.h \
- C:/msys64/mingw64/include/c++/15.2.0/bits/basic_string.tcc \
- C:/msys64/mingw64/include/c++/15.2.0/algorithm \
- C:/msys64/mingw64/include/c++/15.2.0/bits/stl_algo.h \
- C:/msys64/mingw64/include/c++/15.2.0/bits/algorithmfwd.h \
- C:/msys64/mingw64/include/c++/15.2.0/bits/stl_heap.h \
- C:/msys64/mingw64/include/c++/15.2.0/bits/uniform_int_dist.h \
- C:/msys64/mingw64/include/c++/15.2.0/pstl/glue_algorithm_defs.h \
- D:/Programing\ Education/olia\ -\ engine/include/engine/components/meshrenderer.hpp \
- C:/msys64/mingw64/include/c++/15.2.0/functional \
- C:/msys64/mingw64/include/c++/15.2.0/bits/std_function.h \
+ D:/Programing\ Education/olia\ -\ engine/include/engine/shader.hpp \
  C:/msys64/mingw64/include/c++/15.2.0/unordered_map \
  C:/msys64/mingw64/include/c++/15.2.0/bits/unordered_map.h \
  C:/msys64/mingw64/include/c++/15.2.0/bits/hashtable.h \
@@ -369,19 +366,17 @@ CMakeFiles/olia.dir/src/core/scene.cpp.obj: \
  C:/msys64/mingw64/include/c++/15.2.0/bits/enable_special_members.h \
  C:/msys64/mingw64/include/c++/15.2.0/bits/node_handle.h \
  C:/msys64/mingw64/include/c++/15.2.0/bits/erase_if.h \
- C:/msys64/mingw64/include/c++/15.2.0/array \
- C:/msys64/mingw64/include/c++/15.2.0/compare \
- D:/Programing\ Education/olia\ -\ engine/include/engine/systems/system.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/engine/components/camera.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/engine/shader.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glad/glad.h \
  D:/Programing\ Education/olia\ -\ engine/include/KHR/khrplatform.h \
  D:/Programing\ Education/olia\ -\ engine/include/engine/shader.inl \
- D:/Programing\ Education/olia\ -\ engine/include/engine/buffers/fbo.hpp \
- C:/msys64/mingw64/include/c++/15.2.0/stdexcept \
- D:/Programing\ Education/olia\ -\ engine/include/engine/buffers/quad.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/engine/buffers/vao.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/engine/buffers/vbo.hpp \
+ C:/msys64/mingw64/include/c++/15.2.0/functional \
+ C:/msys64/mingw64/include/c++/15.2.0/bits/std_function.h \
+ C:/msys64/mingw64/include/c++/15.2.0/array \
+ C:/msys64/mingw64/include/c++/15.2.0/compare \
+ D:/Programing\ Education/olia\ -\ engine/include/engine/config.h \
+ D:/Programing\ Education/olia\ -\ engine/include/engine/systems/update.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/engine/systems/physics.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/engine/components/physics/collider.hpp \
  C:/msys64/mingw64/include/c++/15.2.0/iostream \
  C:/msys64/mingw64/include/c++/15.2.0/ostream \
  C:/msys64/mingw64/include/c++/15.2.0/bits/ostream.h \
@@ -391,6 +386,7 @@ CMakeFiles/olia.dir/src/core/scene.cpp.obj: \
  C:/msys64/mingw64/include/c++/15.2.0/bits/locale_classes.tcc \
  C:/msys64/mingw64/include/c++/15.2.0/system_error \
  C:/msys64/mingw64/include/c++/15.2.0/x86_64-w64-mingw32/bits/error_constants.h \
+ C:/msys64/mingw64/include/c++/15.2.0/stdexcept \
  C:/msys64/mingw64/include/c++/15.2.0/streambuf \
  C:/msys64/mingw64/include/c++/15.2.0/bits/streambuf.tcc \
  C:/msys64/mingw64/include/c++/15.2.0/bits/basic_ios.h \
@@ -405,9 +401,12 @@ CMakeFiles/olia.dir/src/core/scene.cpp.obj: \
  C:/msys64/mingw64/include/c++/15.2.0/bits/ostream.tcc \
  C:/msys64/mingw64/include/c++/15.2.0/istream \
  C:/msys64/mingw64/include/c++/15.2.0/bits/istream.tcc \
- D:/Programing\ Education/olia\ -\ engine/include/engine/buffers/ebo.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/engine/systems/render.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/engine/buffers/fbo.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/engine/buffers/sbo.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/engine/config.h \
- D:/Programing\ Education/olia\ -\ engine/include/engine/systems/update.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/engine/systems/physics.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/engine/components/physics/collider.hpp
+ D:/Programing\ Education/olia\ -\ engine/include/engine/buffers/quad.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/engine/buffers/vao.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/engine/buffers/vbo.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/engine/buffers/ebo.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/engine/components/camera.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/engine/components/meshrenderer.hpp

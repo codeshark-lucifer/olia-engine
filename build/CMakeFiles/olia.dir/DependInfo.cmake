@@ -13,9 +13,8 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "D:/Programing Education/olia - engine/src/core/platform.cpp" "CMakeFiles/olia.dir/src/core/platform.cpp.obj" "gcc" "CMakeFiles/olia.dir/src/core/platform.cpp.obj.d"
   "D:/Programing Education/olia - engine/src/core/scene.cpp" "CMakeFiles/olia.dir/src/core/scene.cpp.obj" "gcc" "CMakeFiles/olia.dir/src/core/scene.cpp.obj.d"
   "D:/Programing Education/olia - engine/src/core/shader.cpp" "CMakeFiles/olia.dir/src/core/shader.cpp.obj" "gcc" "CMakeFiles/olia.dir/src/core/shader.cpp.obj.d"
-  "D:/Programing Education/olia - engine/src/core/transform.cpp" "CMakeFiles/olia.dir/src/core/transform.cpp.obj" "gcc" "CMakeFiles/olia.dir/src/core/transform.cpp.obj.d"
+  "D:/Programing Education/olia - engine/src/engine.cpp" "CMakeFiles/olia.dir/src/engine.cpp.obj" "gcc" "CMakeFiles/olia.dir/src/engine.cpp.obj.d"
   "D:/Programing Education/olia - engine/src/main.cpp" "CMakeFiles/olia.dir/src/main.cpp.obj" "gcc" "CMakeFiles/olia.dir/src/main.cpp.obj.d"
-  "D:/Programing Education/olia - engine/src/utils/engine.cpp" "CMakeFiles/olia.dir/src/utils/engine.cpp.obj" "gcc" "CMakeFiles/olia.dir/src/utils/engine.cpp.obj.d"
   "D:/Programing Education/olia - engine/src/utils/stb_image.cpp" "CMakeFiles/olia.dir/src/utils/stb_image.cpp.obj" "gcc" "CMakeFiles/olia.dir/src/utils/stb_image.cpp.obj.d"
   )
 

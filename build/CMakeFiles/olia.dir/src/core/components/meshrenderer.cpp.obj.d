@@ -348,7 +348,12 @@ CMakeFiles/olia.dir/src/core/components/meshrenderer.cpp.obj: \
  D:/Programing\ Education/olia\ -\ engine/include/engine/texture2D.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/stb/stb_image.h \
  D:/Programing\ Education/olia\ -\ engine/include/engine/ec/entity.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/engine/components/transform.hpp \
+ C:/msys64/mingw64/include/c++/15.2.0/algorithm \
+ C:/msys64/mingw64/include/c++/15.2.0/bits/stl_algo.h \
+ C:/msys64/mingw64/include/c++/15.2.0/bits/algorithmfwd.h \
+ C:/msys64/mingw64/include/c++/15.2.0/bits/stl_heap.h \
+ C:/msys64/mingw64/include/c++/15.2.0/bits/uniform_int_dist.h \
+ C:/msys64/mingw64/include/c++/15.2.0/pstl/glue_algorithm_defs.h \
  D:/Programing\ Education/olia\ -\ engine/include/glm/gtc/matrix_transform.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/matrix_projection.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/gtc/constants.hpp \
@@ -361,6 +366,7 @@ CMakeFiles/olia.dir/src/core/components/meshrenderer.cpp.obj: \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/matrix_transform.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/matrix_transform.inl \
  D:/Programing\ Education/olia\ -\ engine/include/glm/gtc/matrix_transform.inl \
+ D:/Programing\ Education/olia\ -\ engine/include/glm/gtx/quaternion.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/gtc/quaternion.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/vector_relational.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/vector_relational.inl \
@@ -385,7 +391,6 @@ CMakeFiles/olia.dir/src/core/components/meshrenderer.cpp.obj: \
  D:/Programing\ Education/olia\ -\ engine/include/glm/gtc/epsilon.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/detail/setup.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/gtc/epsilon.inl \
- D:/Programing\ Education/olia\ -\ engine/include/glm/gtx/quaternion.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/quaternion_exponential.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/ext/quaternion_exponential.inl \
  D:/Programing\ Education/olia\ -\ engine/include/glm/gtx/norm.hpp \
@@ -393,10 +398,4 @@ CMakeFiles/olia.dir/src/core/components/meshrenderer.cpp.obj: \
  D:/Programing\ Education/olia\ -\ engine/include/glm/detail/setup.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/glm/gtx/component_wise.inl \
  D:/Programing\ Education/olia\ -\ engine/include/glm/gtx/norm.inl \
- D:/Programing\ Education/olia\ -\ engine/include/glm/gtx/quaternion.inl \
- C:/msys64/mingw64/include/c++/15.2.0/algorithm \
- C:/msys64/mingw64/include/c++/15.2.0/bits/stl_algo.h \
- C:/msys64/mingw64/include/c++/15.2.0/bits/algorithmfwd.h \
- C:/msys64/mingw64/include/c++/15.2.0/bits/stl_heap.h \
- C:/msys64/mingw64/include/c++/15.2.0/bits/uniform_int_dist.h \
- C:/msys64/mingw64/include/c++/15.2.0/pstl/glue_algorithm_defs.h
+ D:/Programing\ Education/olia\ -\ engine/include/glm/gtx/quaternion.inl
