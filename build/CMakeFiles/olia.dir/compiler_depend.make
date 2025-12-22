@@ -1654,8 +1654,7 @@ CMakeFiles/olia.dir/src/engine.cpp.obj: D:/Programing\ Education/olia\ -\ engine
   D:/Programing\ Education/olia\ -\ engine/include/engine/components/mesh.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/components/meshfilter.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/components/meshrenderer.hpp \
-  D:/Programing\ Education/olia\ -\ engine/include/engine/components/physics/box.hpp \
-  D:/Programing\ Education/olia\ -\ engine/include/engine/components/physics/collider.hpp \
+  D:/Programing\ Education/olia\ -\ engine/include/engine/components/rigidbody.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/components/rotator.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/config.h \
   D:/Programing\ Education/olia\ -\ engine/include/engine/ec/component.hpp \
@@ -2735,8 +2734,6 @@ C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/pconfigintrin.h:
 
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/movrsintrin.h:
 
-C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/movdirintrin.h:
-
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/mmintrin.h:
 
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/mm3dnow.h:
@@ -3205,6 +3202,8 @@ C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/amxbf16intrin.h:
 
 C:/msys64/mingw64/include/c++/15.2.0/tr1/poly_hermite.tcc:
 
+D:/Programing\ Education/olia\ -\ engine/include/glm/detail/func_integer.inl:
+
 C:/msys64/mingw64/include/c++/15.2.0/tr1/legendre_function.tcc:
 
 D:/Programing\ Education/olia\ -\ engine/include/glm/detail/qualifier.hpp:
@@ -3416,6 +3415,10 @@ C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/f16cintrin.h:
 C:/msys64/mingw64/include/c++/15.2.0/bits/shared_ptr_base.h:
 
 C:/msys64/mingw64/include/c++/15.2.0/backward/auto_ptr.h:
+
+C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/movdirintrin.h:
+
+D:/Programing\ Education/olia\ -\ engine/include/engine/components/rigidbody.hpp:
 
 C:/msys64/mingw64/include/c++/15.2.0/bits/enable_special_members.h:
 
@@ -4254,10 +4257,6 @@ C:/msys64/mingw64/include/_mingw_mac.h:
 D:/Programing\ Education/olia\ -\ engine/include/assimp/types.h:
 
 D:/Programing\ Education/olia\ -\ engine/include/assimp/vector3.h:
-
-D:/Programing\ Education/olia\ -\ engine/include/glm/detail/func_integer.inl:
-
-D:/Programing\ Education/olia\ -\ engine/include/engine/components/physics/box.hpp:
 
 D:/Programing\ Education/olia\ -\ engine/src/main.cpp:
 

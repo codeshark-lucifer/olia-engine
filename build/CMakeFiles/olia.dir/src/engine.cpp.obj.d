@@ -502,7 +502,6 @@ CMakeFiles/olia.dir/src/engine.cpp.obj: \
  D:/Programing\ Education/olia\ -\ engine/include/engine/components/meshfilter.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/engine/config.h \
  D:/Programing\ Education/olia\ -\ engine/include/engine/components/rotator.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/engine/components/physics/box.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/engine/components/physics/collider.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/engine/components/rigidbody.hpp \
  D:/Programing\ Education/olia\ -\ engine/third-party/imgui/backends/imgui_impl_sdl3.h \
  D:/Programing\ Education/olia\ -\ engine/third-party/imgui/backends/imgui_impl_opengl3.h

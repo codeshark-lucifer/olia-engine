@@ -376,7 +376,6 @@ CMakeFiles/olia.dir/src/core/scene.cpp.obj: \
  D:/Programing\ Education/olia\ -\ engine/include/engine/config.h \
  D:/Programing\ Education/olia\ -\ engine/include/engine/systems/update.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/engine/systems/physics.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/engine/components/physics/collider.hpp \
  C:/msys64/mingw64/include/c++/15.2.0/iostream \
  C:/msys64/mingw64/include/c++/15.2.0/ostream \
  C:/msys64/mingw64/include/c++/15.2.0/bits/ostream.h \

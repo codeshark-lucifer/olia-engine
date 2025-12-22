@@ -1659,8 +1659,7 @@ CMakeFiles/olia.dir/src/engine.cpp.obj
  D:/Programing Education/olia - engine/include/engine/components/mesh.hpp
  D:/Programing Education/olia - engine/include/engine/components/meshfilter.hpp
  D:/Programing Education/olia - engine/include/engine/components/meshrenderer.hpp
- D:/Programing Education/olia - engine/include/engine/components/physics/box.hpp
- D:/Programing Education/olia - engine/include/engine/components/physics/collider.hpp
+ D:/Programing Education/olia - engine/include/engine/components/rigidbody.hpp
  D:/Programing Education/olia - engine/include/engine/components/rotator.hpp
  D:/Programing Education/olia - engine/include/engine/config.h
  D:/Programing Education/olia - engine/include/engine/ec/component.hpp

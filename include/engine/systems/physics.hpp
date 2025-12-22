@@ -1,6 +1,5 @@
 #pragma once
 #include <engine/systems/system.hpp>
-#include <engine/components/physics/collider.hpp>
 #include <iostream>
 
 class PhysicsSystem : public System

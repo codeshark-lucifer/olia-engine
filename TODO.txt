@@ -1,0 +1,60 @@
+** Collision 3D **
+----------------------------------------------------------------
+AABB (Axis-Aligned Bounding Box)
+- What it is: A box aligned with the world axes (X, Y, Z).
+- How it works: Check whether the min/max X, Y, Z values of two boxes overlap.
+- Pros:
+	> Very fast and simple to compute
+	> Great for broad-phase collision detection
+- Cons:
+	> Not suitable for rotated objects
+	> Can be inaccurate for non-box shapes
+----------------------------------------------------------------
+OBB (Oriented Bounding Box)
+- What it is: A 3D box that can be rotated freely.
+- How it works: Uses the Separating Axis Theorem (SAT) in 3D to test for overlaps.
+- Pros:
+	> Much more accurate for rotated objects
+	> Better fit than AABB
+- Cons:
+	> Slower than AABB
+	> More complex math and implementation
+----------------------------------------------------------------
+Sphere Collision
+- What it is: A collision shape defined by a center point and a radius.
+- How it works: Measure the distance between two sphere centers and compare it to the sum of their radii.
+- Pros:
+	> Extremely fast
+	> Rotation-independent
+	> Ideal for characters, particles, and triggers
+- Cons:
+	> Poor fit for box-like or elongated objects
+	> Can cause noticeable false positives
+----------------------------------------------------------------
+Capsule Collision
+- What it is: A cylinder with hemispheres on both ends (commonly used for characters).
+- How it works: Check the distance between the central line segments of two capsules (or capsule vs shape).
+- Pros:
+	> Smooth collision response
+	> Excellent for character controllers
+	> Handles slopes and steps well
+- Cons:
+	> More expensive than spheres and AABBs
+	> Slightly harder to implement
+----------------------------------------------------------------
+
+
+** TIP: 
+- Broad Phase (Fast Filtering)
+- Narrow Phase (Accurate Testing)
+- Collision Resolution
+- Trigger Handling (Optional)
+
+- Velocity threshold
+- Penetration slop
+- Partial correction
+- Ground detection
+- Gravity disabling
+
+
+

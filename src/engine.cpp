@@ -9,7 +9,7 @@
 #include <glad/glad.h>
 
 #include <engine/components/rotator.hpp>
-#include <engine/components/physics/box.hpp>
+#include <engine/components/rigidbody.hpp>
 
 // ImGui includes
 #include "imgui.h"
@@ -28,14 +28,14 @@ Engine::Engine()
         SCREEN_HEIGHT,
         APPLICATION_NAME);
 
-    asset::Model cube("assets/models/cube.fbx");
+    asset::Model cube("assets/models/octahedron-sharpe.fbx");
     cube.root->AddComponent<Rotator>();
-    cube.root->AddComponent<BoxCollider>();
+    cube.root->AddComponent<Rigidbody>();
     scene->AddEntity(cube.root);
     
     asset::Model plane("assets/models/plane.fbx");
     plane.root->transform->position = glm::vec3(0.0f, -2.0f, 0.0f);
-    plane.root->AddComponent<BoxCollider>();
+    // plane.root->AddComponent<BoxCollider>();
     scene->AddEntity(plane.root);
 
 }
