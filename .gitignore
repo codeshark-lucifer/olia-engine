@@ -1,3 +1,3 @@
-./build/
-./vscode/
-./third-party/
+./build/*
+./vscode/*
+./third-party/*
