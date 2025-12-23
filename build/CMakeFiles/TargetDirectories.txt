@@ -1,4 +1,0 @@
-D:/Programing Education/olia - engine/build/CMakeFiles/engine.dir
-D:/Programing Education/olia - engine/build/CMakeFiles/ImGui.dir
-D:/Programing Education/olia - engine/build/CMakeFiles/edit_cache.dir
-D:/Programing Education/olia - engine/build/CMakeFiles/rebuild_cache.dir
