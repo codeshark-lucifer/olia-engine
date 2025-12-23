@@ -375,9 +375,6 @@ CMakeFiles/engine.dir/src/core/scene.cpp.obj: \
  C:/msys64/mingw64/include/c++/15.2.0/stdexcept \
  D:/Programing\ Education/olia\ -\ engine/include/engine/components/camera.hpp \
  D:/Programing\ Education/olia\ -\ engine/include/engine/buffers/fbo.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/engine/buffers/ifbo.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/engine/buffers/sbo.hpp \
- D:/Programing\ Education/olia\ -\ engine/include/engine/buffers/quad.hpp \
  C:/msys64/mingw64/include/c++/15.2.0/iostream \
  C:/msys64/mingw64/include/c++/15.2.0/ostream \
  C:/msys64/mingw64/include/c++/15.2.0/bits/ostream.h \
@@ -400,4 +397,6 @@ CMakeFiles/engine.dir/src/core/scene.cpp.obj: \
  C:/msys64/mingw64/include/c++/15.2.0/bits/basic_ios.tcc \
  C:/msys64/mingw64/include/c++/15.2.0/bits/ostream.tcc \
  C:/msys64/mingw64/include/c++/15.2.0/istream \
- C:/msys64/mingw64/include/c++/15.2.0/bits/istream.tcc
+ C:/msys64/mingw64/include/c++/15.2.0/bits/istream.tcc \
+ D:/Programing\ Education/olia\ -\ engine/include/engine/buffers/sbo.hpp \
+ D:/Programing\ Education/olia\ -\ engine/include/engine/buffers/quad.hpp

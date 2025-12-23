@@ -33,27 +33,41 @@ uniform vec3 lightDir;
 uniform vec3 viewPos;
 uniform sampler2D shadowMap;
 
-float ShadowCalculation(vec4 fragPosLight)
+float ShadowCalculation(vec4 fragPosLightSpace)
 {
-    vec3 projCoords = fragPosLight.xyz / fragPosLight.w;
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     projCoords = projCoords * 0.5 + 0.5;
 
-    float closest = texture(shadowMap, projCoords.xy).r;
-    float current = projCoords.z;
+    if(projCoords.z > 1.0)
+        return 0.0;
 
+    float shadow = 0.0;
     float bias = 0.005;
-    return current - bias > closest ? 0.5 : 1.0;
+    int samples = 3;
+    float texelSize = 1.0 / 2048.0;
+
+    for(int x = -samples; x <= samples; ++x)
+    {
+        for(int y = -samples; y <= samples; ++y)
+        {
+            float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
+            if(projCoords.z - bias > pcfDepth)
+                shadow += 1.0;
+        }
+    }
+    shadow /= pow((samples * 2 + 1), 2);
+
+    return shadow;
 }
 
 void main()
 {
     vec3 color = vec3(1.0, 0.7, 0.4);
-
     vec3 norm = normalize(Normal);
     float diff = max(dot(norm, -lightDir), 0.0);
 
     float shadow = ShadowCalculation(FragPosLight);
-    vec3 lighting = color * diff * shadow + color * 0.15;
+    vec3 lighting = (0.3 + (1.0 - shadow) * diff) * color;
 
     FragColor = vec4(lighting, 1.0);
 }

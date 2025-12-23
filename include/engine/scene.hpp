@@ -12,6 +12,7 @@ public:
     void Update(const float &deltaTime);
     std::shared_ptr<Entity> AddEntity(const std::shared_ptr<Entity> &entity, std::shared_ptr<Scene> self);
     void Destroy(const std::shared_ptr<Entity> &entity);
+    void OnResize(const int &w, const int &h);
 
 private:
     std::string name = "Scene";

@@ -410,7 +410,6 @@ CMakeFiles/engine.dir/src/core/scene.cpp.obj: D:/Programing\ Education/olia\ -\ 
   D:/Programing\ Education/olia\ -\ engine/include/KHR/khrplatform.h \
   D:/Programing\ Education/olia\ -\ engine/include/engine/buffers/ebo.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/buffers/fbo.hpp \
-  D:/Programing\ Education/olia\ -\ engine/include/engine/buffers/ifbo.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/buffers/quad.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/buffers/sbo.hpp \
   D:/Programing\ Education/olia\ -\ engine/include/engine/buffers/vao.hpp \
@@ -2587,8 +2586,6 @@ C:/msys64/mingw64/include/excpt.h:
 
 C:/msys64/mingw64/include/errhandlingapi.h:
 
-C:/msys64/mingw64/include/driverspecs.h:
-
 C:/msys64/mingw64/include/c++/15.2.0/tr1/hypergeometric.tcc:
 
 D:/Programing\ Education/olia\ -\ engine/include/glm/ext/matrix_double3x4_precision.hpp:
@@ -3037,6 +3034,8 @@ C:/msys64/mingw64/include/c++/15.2.0/array:
 
 C:/msys64/mingw64/include/c++/15.2.0/bits/functional_hash.h:
 
+D:/Programing\ Education/olia\ -\ engine/include/glm/ext/vector_double3.hpp:
+
 C:/msys64/mingw64/include/mmiscapi.h:
 
 C:/msys64/mingw64/include/c++/15.2.0/bits/hash_bytes.h:
@@ -3126,6 +3125,8 @@ D:/Programing\ Education/olia\ -\ engine/include/assimp/anim.h:
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/syslimits.h:
 
 C:/msys64/mingw64/include/stdio.h:
+
+C:/msys64/mingw64/include/driverspecs.h:
 
 D:/Programing\ Education/olia\ -\ engine/include/SDL3/SDL_keycode.h:
 
@@ -3300,10 +3301,6 @@ C:/msys64/mingw64/include/wctype.h:
 C:/msys64/mingw64/include/apisetcconv.h:
 
 C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/float.h:
-
-D:/Programing\ Education/olia\ -\ engine/include/glm/ext/vector_double3.hpp:
-
-D:/Programing\ Education/olia\ -\ engine/include/engine/buffers/ifbo.hpp:
 
 D:/Programing\ Education/olia\ -\ engine/include/SDL3/SDL_iostream.h:
 
