@@ -1,80 +1,43 @@
 #include <engine/engine.hpp>
-
-#include <engine/render/platform.hpp>
-#include <engine/scene.hpp>
-#include <engine/assetloader.hpp>
 #include <engine/config.h>
-
-#include <SDL3/SDL.h>
-#include <glad/glad.h>
-
-#include <engine/components/rotator.hpp>
-#include <engine/components/rigidbody.hpp>
-
-// ImGui includes
-#include "imgui.h"
-#include "imgui_impl_sdl3.h"
-#include "imgui_impl_opengl3.h"
+#include <engine/components/camera.hpp>
+#include <iostream>
+#include <engine/model.hpp>
 
 Engine::Engine()
 {
-    platform = std::make_unique<Platform>(
-        SCREEN_WIDTH,
-        SCREEN_HEIGHT,
-        APPLICATION_NAME);
-
-    scene = std::make_unique<Scene>(
-        SCREEN_WIDTH,
-        SCREEN_HEIGHT,
-        APPLICATION_NAME);
-
-    asset::Model cube("assets/models/octahedron-sharpe.fbx");
-    cube.root->AddComponent<Rotator>();
-    cube.root->AddComponent<Rigidbody>();
-    scene->AddEntity(cube.root);
+    platform = std::make_shared<Platform>(SCREEN_WIDTH, SCREEN_HEIGHT, APPLICATION_TITLE);
+    scene = std::make_shared<Scene>(SCREEN_WIDTH, SCREEN_HEIGHT, "SampleScene");
+    std::cout << "Initialize Engine.\n";
     
-    asset::Model plane("assets/models/plane.fbx");
-    plane.root->transform->position = glm::vec3(0.0f, -2.0f, 0.0f);
-    // plane.root->AddComponent<BoxCollider>();
-    scene->AddEntity(plane.root);
+    auto camera = scene->AddEntity(std::make_shared<Entity>("Main Camera"), scene);
+    camera->AddComponent<Camera>(SCREEN_HEIGHT, SCREEN_HEIGHT);
+    camera->position = glm::vec3(0.0f, 0.0f, 5.0f);
 
-}
+    auto cube = Model::Load("assets/models/cube.fbx", scene);
+    scene->AddEntity(cube, scene);
 
-Engine::~Engine()
-{
-}
-
-void Engine::callback(int w, int h)
-{
-    if (scene)
-    {
-        scene->OnResize(w, h);
-    }
+    std::cout << "SetUp Engine.\n";
 }
 
 void Engine::Run()
 {
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-
-    scene->Begin();
-
-    Uint32 lastTime = SDL_GetTicks();
-    Uint32 currentTime;
-    float deltaTime = 0.0f;
-
+    Uint64 now = SDL_GetPerformanceCounter();
+    Uint64 last = now;
+    double deltaTime = 0.0;
     while (!platform->ShouldClose())
     {
         platform->PollEvent();
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        // Calculate delta time in seconds
+        now = SDL_GetPerformanceCounter();
+        Uint64 freq = SDL_GetPerformanceFrequency();
+        deltaTime = (double)(now - last) / (double)freq;
+        last = now;
 
-        currentTime = SDL_GetTicks();
-        deltaTime = (currentTime - lastTime) / 1000.0f;
-        lastTime = currentTime;
-
+        // Update
         scene->Update(deltaTime);
 
-        platform->SwapBuffers();
+        platform->SwapBuffer();
     }
 }

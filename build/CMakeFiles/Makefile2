@@ -62,12 +62,12 @@ CMAKE_BINARY_DIR = "D:\Programing Education\olia - engine\build"
 # Directory level rules for the build root directory
 
 # The main recursive "all" target.
-all: CMakeFiles/olia.dir/all
+all: CMakeFiles/engine.dir/all
 all: CMakeFiles/ImGui.dir/all
 .PHONY : all
 
 # The main recursive "codegen" target.
-codegen: CMakeFiles/olia.dir/codegen
+codegen: CMakeFiles/engine.dir/codegen
 codegen: CMakeFiles/ImGui.dir/codegen
 .PHONY : codegen
 
@@ -76,41 +76,41 @@ preinstall:
 .PHONY : preinstall
 
 # The main recursive "clean" target.
-clean: CMakeFiles/olia.dir/clean
+clean: CMakeFiles/engine.dir/clean
 clean: CMakeFiles/ImGui.dir/clean
 .PHONY : clean
 
 #=============================================================================
-# Target rules for target CMakeFiles/olia.dir
+# Target rules for target CMakeFiles/engine.dir
 
 # All Build rule for target.
-CMakeFiles/olia.dir/all: CMakeFiles/ImGui.dir/all
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/depend
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir="D:\Programing Education\olia - engine\build\CMakeFiles" --progress-num=8,9,10,11,12,13,14,15,16 "Built target olia"
-.PHONY : CMakeFiles/olia.dir/all
+CMakeFiles/engine.dir/all: CMakeFiles/ImGui.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\engine.dir\build.make CMakeFiles/engine.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\engine.dir\build.make CMakeFiles/engine.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir="D:\Programing Education\olia - engine\build\CMakeFiles" --progress-num=8,9,10,11,12,13,14,15 "Built target engine"
+.PHONY : CMakeFiles/engine.dir/all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/olia.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start "D:\Programing Education\olia - engine\build\CMakeFiles" 16
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 CMakeFiles/olia.dir/all
+CMakeFiles/engine.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start "D:\Programing Education\olia - engine\build\CMakeFiles" 15
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 CMakeFiles/engine.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start "D:\Programing Education\olia - engine\build\CMakeFiles" 0
-.PHONY : CMakeFiles/olia.dir/rule
+.PHONY : CMakeFiles/engine.dir/rule
 
 # Convenience name for target.
-olia: CMakeFiles/olia.dir/rule
-.PHONY : olia
+engine: CMakeFiles/engine.dir/rule
+.PHONY : engine
 
 # codegen rule for target.
-CMakeFiles/olia.dir/codegen:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir="D:\Programing Education\olia - engine\build\CMakeFiles" --progress-num=8,9,10,11,12,13,14,15,16 "Finished codegen for target olia"
-.PHONY : CMakeFiles/olia.dir/codegen
+CMakeFiles/engine.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\engine.dir\build.make CMakeFiles/engine.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir="D:\Programing Education\olia - engine\build\CMakeFiles" --progress-num=8,9,10,11,12,13,14,15 "Finished codegen for target engine"
+.PHONY : CMakeFiles/engine.dir/codegen
 
 # clean rule for target.
-CMakeFiles/olia.dir/clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/clean
-.PHONY : CMakeFiles/olia.dir/clean
+CMakeFiles/engine.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\engine.dir\build.make CMakeFiles/engine.dir/clean
+.PHONY : CMakeFiles/engine.dir/clean
 
 #=============================================================================
 # Target rules for target CMakeFiles/ImGui.dir

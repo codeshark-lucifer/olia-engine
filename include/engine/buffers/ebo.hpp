@@ -1,34 +1,43 @@
 #pragma once
-#include <glad/glad.h>
 #include <vector>
+#include <glad/glad.h>
 
 class EBO
 {
 public:
-    EBO(const std::vector<unsigned int> &indices)
+    EBO(const std::vector<unsigned int>& indices)
+        : count(static_cast<unsigned int>(indices.size()))
     {
-        this->indices = indices;
-        glGenBuffers(1, &ID);
+        glGenBuffers(1, &id);
         Bind();
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+        glBufferData(
+            GL_ELEMENT_ARRAY_BUFFER,
+            indices.size() * sizeof(unsigned int),
+            indices.data(),
+            GL_STATIC_DRAW
+        );
     }
-    
+
     ~EBO()
     {
-        glDeleteBuffers(1, &ID);
+        if (id)
+            glDeleteBuffers(1, &id);
     }
 
     void Bind() const
     {
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ID);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
     }
 
-    size_t size() const
+    void Unbind() const
     {
-        return indices.size();
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     }
+
+    unsigned int size() const { return count; }
+    unsigned int GetID() const { return id; }
 
 private:
-    unsigned int ID;
-    std::vector<unsigned int> indices;
+    unsigned int id = 0;
+    unsigned int count = 0;
 };

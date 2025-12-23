@@ -18,7 +18,7 @@ public:
             this->textures.push_back(std::move(t));
         }
         vao = std::make_unique<VAO>();
-        vbo = std::make_unique<VBO>(vertices);
+        vbo = std::make_unique<VBO<Vertex>>(vertices);
         ebo = std::make_unique<EBO>(indices);
 
         vao->Bind();
@@ -28,10 +28,10 @@ public:
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)0);
         glEnableVertexAttribArray(0);
 
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)(offsetof(Vertex, Normal)));
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)(offsetof(Vertex, normal)));
         glEnableVertexAttribArray(1);
 
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)(offsetof(Vertex, TexCoord)));
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)(offsetof(Vertex, uv)));
         glEnableVertexAttribArray(2);
 
         vao->Unbind();
@@ -77,7 +77,7 @@ public:
 
 private:
     std::unique_ptr<VAO> vao = nullptr;
-    std::unique_ptr<VBO> vbo = nullptr;
+    std::unique_ptr<VBO<Vertex>> vbo = nullptr;
     std::unique_ptr<EBO> ebo = nullptr;
     std::vector<std::shared_ptr<Texture2D>> textures;
     std::shared_ptr<Texture2D> LoadDefaultTexture()

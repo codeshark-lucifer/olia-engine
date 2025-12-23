@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.31.5)
-project(olia LANGUAGES C CXX)
+project(OliaEngine LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
 find_package(OpenGL REQUIRED)
 set(SRC_DIR "${CMAKE_SOURCE_DIR}/src")
 
-add_executable(olia
+add_executable(engine
     ${SRC_DIR}/main.cpp
     ${SRC_DIR}/utils/glad.c
     ${SRC_DIR}/utils/stb_image.cpp
@@ -15,21 +15,18 @@ add_executable(olia
     ${SRC_DIR}/core/platform.cpp
     ${SRC_DIR}/core/shader.cpp
     ${SRC_DIR}/core/scene.cpp
-
-    ${SRC_DIR}/core/components/meshrenderer.cpp
-
 )
 
-target_include_directories(olia PRIVATE
+target_include_directories(engine PRIVATE
     include
 )
 
-target_link_directories(olia PRIVATE
+target_link_directories(engine PRIVATE
     lib/SDL3/x64
     lib
 )
 
-target_link_libraries(olia
+target_link_libraries(engine
     SDL3
     OpenGL::GL
     assimp
@@ -59,14 +56,14 @@ target_include_directories(ImGui PUBLIC
 
 target_link_libraries(ImGui PUBLIC SDL3) # Link SDL3 to ImGui static library
 
-add_custom_command(TARGET olia POST_BUILD
+add_custom_command(TARGET engine POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "${CMAKE_SOURCE_DIR}/lib/SDL3/x64/SDL3.dll"
-        $<TARGET_FILE_DIR:olia>
+        $<TARGET_FILE_DIR:engine>
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "${CMAKE_SOURCE_DIR}/lib/libassimp-6.dll"
-        $<TARGET_FILE_DIR:olia>
+        $<TARGET_FILE_DIR:engine>
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_SOURCE_DIR}/assets"
-        $<TARGET_FILE_DIR:olia>/assets
+        $<TARGET_FILE_DIR:engine>/assets
 )

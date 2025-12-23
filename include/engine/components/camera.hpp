@@ -1,9 +1,10 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <engine/ec/component.hpp>
+#include <engine/ecs/component.hpp>
+#include <engine/shader.hpp>
 
-class Camera: public Component
+class Camera : public Component
 {
 public:
     Camera(int w, int h)
@@ -15,6 +16,8 @@ public:
 
     void OnResize(int w, int h)
     {
+        if (this->width == w && this->height == h)
+            return;
         this->width = w;
         this->height = h;
     }
@@ -26,21 +29,27 @@ public:
 
     glm::mat4 GetView()
     {
-        direction = glm::normalize(position - target);
-        right = glm::normalize(glm::cross(up, direction));
-        return glm::lookAt(
-            position,
-            target,
-            up);
+        if (auto en = entity.lock())
+        {
+            glm::vec3 pos = en->position;
+            glm::vec3 forward = en->rotation * glm::vec3(0, 0, -1);
+            glm::vec3 upDir = en->rotation * glm::vec3(0, 1, 0);
+
+            return glm::lookAt(pos, pos + forward, upDir);
+        }
+
+        return glm::mat4(1.0f);
     }
 
-    glm::vec3 GetPosition() {
-        return position;
+    void SetUniform(const Shader &shader)
+    {
+        shader.Use();
+        shader.SetUniform("projection", GetProjection());
+        shader.SetUniform("view", GetView());
     }
 
 private:
     int width, height;
-    glm::vec3 position = glm::vec3(0.0f, 0.0f, -5.0f);
     glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
     glm::vec3 right = glm::vec3(0.0f);
 

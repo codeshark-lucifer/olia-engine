@@ -6,18 +6,18 @@ class VAO
 public:
     VAO()
     {
-        glGenVertexArrays(1, &ID);
-        Bind();
+        glGenVertexArrays(1, &id);
     }
-    
+
     ~VAO()
     {
-        glDeleteVertexArrays(1, &ID);
+        if (id)
+            glDeleteVertexArrays(1, &id);
     }
 
     void Bind() const
     {
-        glBindVertexArray(ID);
+        glBindVertexArray(id);
     }
 
     void Unbind() const
@@ -25,6 +25,8 @@ public:
         glBindVertexArray(0);
     }
 
+    unsigned int GetID() const { return id; }
+
 private:
-    unsigned int ID;
+    unsigned int id = 0;
 };

@@ -161,36 +161,6 @@ CMakeFiles/olia.dir/src/core/shader.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/olia.dir/src/core/shader.cpp.s"
 	C:\msys64\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "D:\Programing Education\olia - engine\src\core\shader.cpp" -o CMakeFiles\olia.dir\src\core\shader.cpp.s
 
-CMakeFiles/olia.dir/src/core/scene.cpp.obj: CMakeFiles/olia.dir/flags.make
-CMakeFiles/olia.dir/src/core/scene.cpp.obj: CMakeFiles/olia.dir/includes_CXX.rsp
-CMakeFiles/olia.dir/src/core/scene.cpp.obj: D:/Programing\ Education/olia\ -\ engine/src/core/scene.cpp
-CMakeFiles/olia.dir/src/core/scene.cpp.obj: CMakeFiles/olia.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="D:\Programing Education\olia - engine\build\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/olia.dir/src/core/scene.cpp.obj"
-	C:\msys64\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/olia.dir/src/core/scene.cpp.obj -MF CMakeFiles\olia.dir\src\core\scene.cpp.obj.d -o CMakeFiles\olia.dir\src\core\scene.cpp.obj -c "D:\Programing Education\olia - engine\src\core\scene.cpp"
-
-CMakeFiles/olia.dir/src/core/scene.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/olia.dir/src/core/scene.cpp.i"
-	C:\msys64\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "D:\Programing Education\olia - engine\src\core\scene.cpp" > CMakeFiles\olia.dir\src\core\scene.cpp.i
-
-CMakeFiles/olia.dir/src/core/scene.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/olia.dir/src/core/scene.cpp.s"
-	C:\msys64\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "D:\Programing Education\olia - engine\src\core\scene.cpp" -o CMakeFiles\olia.dir\src\core\scene.cpp.s
-
-CMakeFiles/olia.dir/src/core/components/meshrenderer.cpp.obj: CMakeFiles/olia.dir/flags.make
-CMakeFiles/olia.dir/src/core/components/meshrenderer.cpp.obj: CMakeFiles/olia.dir/includes_CXX.rsp
-CMakeFiles/olia.dir/src/core/components/meshrenderer.cpp.obj: D:/Programing\ Education/olia\ -\ engine/src/core/components/meshrenderer.cpp
-CMakeFiles/olia.dir/src/core/components/meshrenderer.cpp.obj: CMakeFiles/olia.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="D:\Programing Education\olia - engine\build\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/olia.dir/src/core/components/meshrenderer.cpp.obj"
-	C:\msys64\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/olia.dir/src/core/components/meshrenderer.cpp.obj -MF CMakeFiles\olia.dir\src\core\components\meshrenderer.cpp.obj.d -o CMakeFiles\olia.dir\src\core\components\meshrenderer.cpp.obj -c "D:\Programing Education\olia - engine\src\core\components\meshrenderer.cpp"
-
-CMakeFiles/olia.dir/src/core/components/meshrenderer.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/olia.dir/src/core/components/meshrenderer.cpp.i"
-	C:\msys64\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "D:\Programing Education\olia - engine\src\core\components\meshrenderer.cpp" > CMakeFiles\olia.dir\src\core\components\meshrenderer.cpp.i
-
-CMakeFiles/olia.dir/src/core/components/meshrenderer.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/olia.dir/src/core/components/meshrenderer.cpp.s"
-	C:\msys64\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "D:\Programing Education\olia - engine\src\core\components\meshrenderer.cpp" -o CMakeFiles\olia.dir\src\core\components\meshrenderer.cpp.s
-
 # Object files for target olia
 olia_OBJECTS = \
 "CMakeFiles/olia.dir/src/main.cpp.obj" \
@@ -198,9 +168,7 @@ olia_OBJECTS = \
 "CMakeFiles/olia.dir/src/utils/stb_image.cpp.obj" \
 "CMakeFiles/olia.dir/src/engine.cpp.obj" \
 "CMakeFiles/olia.dir/src/core/platform.cpp.obj" \
-"CMakeFiles/olia.dir/src/core/shader.cpp.obj" \
-"CMakeFiles/olia.dir/src/core/scene.cpp.obj" \
-"CMakeFiles/olia.dir/src/core/components/meshrenderer.cpp.obj"
+"CMakeFiles/olia.dir/src/core/shader.cpp.obj"
 
 # External object files for target olia
 olia_EXTERNAL_OBJECTS =
@@ -211,14 +179,12 @@ olia.exe: CMakeFiles/olia.dir/src/utils/stb_image.cpp.obj
 olia.exe: CMakeFiles/olia.dir/src/engine.cpp.obj
 olia.exe: CMakeFiles/olia.dir/src/core/platform.cpp.obj
 olia.exe: CMakeFiles/olia.dir/src/core/shader.cpp.obj
-olia.exe: CMakeFiles/olia.dir/src/core/scene.cpp.obj
-olia.exe: CMakeFiles/olia.dir/src/core/components/meshrenderer.cpp.obj
 olia.exe: CMakeFiles/olia.dir/build.make
 olia.exe: libImGui.a
 olia.exe: CMakeFiles/olia.dir/linkLibs.rsp
 olia.exe: CMakeFiles/olia.dir/objects1.rsp
 olia.exe: CMakeFiles/olia.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir="D:\Programing Education\olia - engine\build\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_9) "Linking CXX executable olia.exe"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir="D:\Programing Education\olia - engine\build\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_7) "Linking CXX executable olia.exe"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles\olia.dir\link.txt --verbose=$(VERBOSE)
 	C:\msys64\mingw64\bin\cmake.exe -E copy_if_different "D:/Programing Education/olia - engine/lib/SDL3/x64/SDL3.dll" "D:/Programing Education/olia - engine/build"
 	C:\msys64\mingw64\bin\cmake.exe -E copy_if_different "D:/Programing Education/olia - engine/lib/libassimp-6.dll" "D:/Programing Education/olia - engine/build"

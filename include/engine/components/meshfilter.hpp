@@ -1,14 +1,10 @@
 #pragma once
-#include <engine/ec/component.hpp>
-#include <memory>
+#include <engine/ecs/component.hpp>
+#include <engine/components/mesh.hpp>
 
-class Mesh;
-
-class MeshFilter : public Component
+class MeshFilter: public Component
 {
 public:
-    std::shared_ptr<Mesh> mesh;
-
-    MeshFilter(const std::shared_ptr<Mesh>& m)
-        : mesh(m) {}
+    MeshFilter(const std::shared_ptr<Mesh> &m) : mesh(m) {}
+    std::shared_ptr<Mesh> mesh = nullptr;
 };

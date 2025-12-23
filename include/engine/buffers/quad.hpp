@@ -1,57 +1,52 @@
 #pragma once
-#include <memory>
-#include <engine/shader.hpp>
-#include <engine/buffers/vao.hpp>
-#include <engine/buffers/vbo.hpp>
-#include <engine/buffers/ebo.hpp>
+#include <glad/glad.h>
 
 class Quad
 {
 public:
     Quad()
     {
-        std::vector<Vertex> vertices = {
-            // position                // normal           // uv
-            {{-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}}, // bottom-left
-            {{1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}},  // bottom-right
-            {{1.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},   // top-right
-            {{-1.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}}   // top-left
+        float vertices[] = {
+            // pos      // uv
+            -1, -1,  0, 0,
+             1, -1,  1, 0,
+             1,  1,  1, 1,
+
+            -1, -1,  0, 0,
+             1,  1,  1, 1,
+            -1,  1,  0, 1
         };
-        std::vector<uint32_t> indices = {
-            0, 1, 2,
-            2, 3, 0};
 
-        vao = std::make_unique<VAO>();
-        vbo = std::make_unique<VBO>(vertices);
-        ebo = std::make_unique<EBO>(indices);
-        vao->Bind();
-        vbo->Bind();
+        glGenVertexArrays(1, &vao);
+        glGenBuffers(1, &vbo);
 
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)0);
+        glBindVertexArray(vao);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
         glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
 
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)offsetof(Vertex, TexCoord));
         glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 
-        ebo->Bind();
-        vao->Unbind();
+        glBindVertexArray(0);
     }
-    ~Quad() = default;
 
-    void Draw(const Shader &shader, const unsigned int &texture)
+    ~Quad()
     {
-        shader.Use();
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture);
-        shader.SetUniform("screenTexture", 0);
+        glDeleteVertexArrays(1, &vao);
+        glDeleteBuffers(1, &vbo);
+    }
 
-        vao->Bind();
-        glDrawElements(GL_TRIANGLES, ebo->size(), GL_UNSIGNED_INT, 0);
-        vao->Unbind();
+    void Draw() const
+    {
+        glBindVertexArray(vao);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
     }
 
 private:
-    std::unique_ptr<VAO> vao = nullptr;
-    std::unique_ptr<VBO> vbo = nullptr;
-    std::unique_ptr<EBO> ebo = nullptr;
+    unsigned int vao = 0;
+    unsigned int vbo = 0;
 };

@@ -9,9 +9,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "D:/Programing Education/olia - engine/src/utils/glad.c" "CMakeFiles/olia.dir/src/utils/glad.c.obj" "gcc" "CMakeFiles/olia.dir/src/utils/glad.c.obj.d"
-  "D:/Programing Education/olia - engine/src/core/components/meshrenderer.cpp" "CMakeFiles/olia.dir/src/core/components/meshrenderer.cpp.obj" "gcc" "CMakeFiles/olia.dir/src/core/components/meshrenderer.cpp.obj.d"
   "D:/Programing Education/olia - engine/src/core/platform.cpp" "CMakeFiles/olia.dir/src/core/platform.cpp.obj" "gcc" "CMakeFiles/olia.dir/src/core/platform.cpp.obj.d"
-  "D:/Programing Education/olia - engine/src/core/scene.cpp" "CMakeFiles/olia.dir/src/core/scene.cpp.obj" "gcc" "CMakeFiles/olia.dir/src/core/scene.cpp.obj.d"
   "D:/Programing Education/olia - engine/src/core/shader.cpp" "CMakeFiles/olia.dir/src/core/shader.cpp.obj" "gcc" "CMakeFiles/olia.dir/src/core/shader.cpp.obj.d"
   "D:/Programing Education/olia - engine/src/engine.cpp" "CMakeFiles/olia.dir/src/engine.cpp.obj" "gcc" "CMakeFiles/olia.dir/src/engine.cpp.obj.d"
   "D:/Programing Education/olia - engine/src/main.cpp" "CMakeFiles/olia.dir/src/main.cpp.obj" "gcc" "CMakeFiles/olia.dir/src/main.cpp.obj.d"

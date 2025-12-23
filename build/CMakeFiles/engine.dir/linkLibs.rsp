@@ -1,0 +1,1 @@
+  -L"D:/Programing Education/olia - engine/lib/SDL3/x64"  -L"D:/Programing Education/olia - engine/lib"  -lSDL3 -lopengl32 -lassimp libImGui.a -lSDL3 -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32 

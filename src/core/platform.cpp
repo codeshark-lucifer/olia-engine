@@ -1,94 +1,83 @@
-#include <engine/render/platform.hpp>
+#include <engine/window/platform.hpp>
+#include <glad/glad.h> // Added for gladLoadGLLoader
 #include <stdexcept>
 
-Platform::Platform(const int &w, const int &h, const std::string &t)
+Platform::Platform(const int &width, const int &height, const std::string &title)
 {
-    this->width = w;
-    this->height = h;
-    this->title = t.c_str();
-
     if (!SDL_Init(SDL_INIT_VIDEO))
     {
-        throw std::runtime_error("Failed initialize SDL3.");
+        throw std::runtime_error("Failed to Initialize SDL3.");
     }
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
-                        SDL_GL_CONTEXT_PROFILE_CORE);
-
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1); // Enable multisampling
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4); // Request 4 samples
-
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24); // 24-bit depth buffer
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
-    window = SDL_CreateWindow(
-        title,
+    this->window = SDL_CreateWindow(
+        title.c_str(),
         width, height,
-        SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
+        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 
-    if (!window)
+    if (!this->window)
     {
-        throw std::runtime_error("Failed to create window.");
         SDL_Quit();
+        throw std::runtime_error("Failed to create window.");
     }
 
-    context = SDL_GL_CreateContext(window);
-
+    context = SDL_GL_CreateContext(this->window);
     if (!context)
     {
-        throw std::runtime_error("SDL GL context failed: " + (std::string)SDL_GetError());
         SDL_DestroyWindow(window);
         SDL_Quit();
+        throw std::runtime_error("Failed to create context SDL3.");
     }
+
+    SDL_GL_MakeCurrent(this->window, context);
+    SDL_GL_SetSwapInterval(1);
 
     if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
     {
-        throw std::runtime_error("Failed initialize GLAD.");
-        SDL_GL_DestroyContext(context);
-        SDL_DestroyWindow(window);
-        SDL_Quit();
+        throw std::runtime_error("Failed to initialize GLAD.");
     }
-    glEnable(GL_MULTISAMPLE); // Enable GL_MULTISAMPLE here
-
-    SDL_GL_SetSwapInterval(1);
-    glViewport(0, 0, width, height);
+    
+    glViewport(0, 0, width, height); // Set initial viewport
+    
     running = true;
 }
 
 Platform::~Platform()
 {
+    SDL_GL_DestroyContext(context);
     SDL_DestroyWindow(window);
     SDL_Quit();
 }
 
 bool Platform::ShouldClose()
 {
-
-    return running == false;
+    return !running;
 }
 
 void Platform::PollEvent()
 {
-    SDL_Event e;
-    while (SDL_PollEvent(&e))
+    SDL_Event event;
+    while (SDL_PollEvent(&event))
     {
-        if (e.type == SDL_EVENT_QUIT)
-            running = false;
-        if (e.type == SDL_EVENT_WINDOW_RESIZED)
+        if (event.type == SDL_EVENT_QUIT)
         {
-            int width = e.window.data1;
-            int height = e.window.data2;
-            glViewport(0, 0, width, height);
-
+            running = false;
+        }
+        else if (event.type == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
+        {
+            int w = event.window.data1;
+            int h = event.window.data2;
             if (callback)
-                callback(width, height);
+                callback(w, h);
         }
     }
 }
 
-void Platform::SwapBuffers()
+void Platform::SwapBuffer()
 {
     SDL_GL_SwapWindow(window);
 }
-

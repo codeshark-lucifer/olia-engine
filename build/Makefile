@@ -123,17 +123,17 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named olia
+# Target rules for targets named engine
 
 # Build rule for target.
-olia: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 olia
-.PHONY : olia
+engine: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 engine
+.PHONY : engine
 
 # fast build rule for target.
-olia/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/build
-.PHONY : olia/fast
+engine/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\engine.dir\build.make CMakeFiles/engine.dir/build
+.PHONY : engine/fast
 
 #=============================================================================
 # Target rules for targets named ImGui
@@ -148,36 +148,12 @@ ImGui/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\ImGui.dir\build.make CMakeFiles/ImGui.dir/build
 .PHONY : ImGui/fast
 
-src/core/components/meshrenderer.obj: src/core/components/meshrenderer.cpp.obj
-.PHONY : src/core/components/meshrenderer.obj
-
-# target to build an object file
-src/core/components/meshrenderer.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/components/meshrenderer.cpp.obj
-.PHONY : src/core/components/meshrenderer.cpp.obj
-
-src/core/components/meshrenderer.i: src/core/components/meshrenderer.cpp.i
-.PHONY : src/core/components/meshrenderer.i
-
-# target to preprocess a source file
-src/core/components/meshrenderer.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/components/meshrenderer.cpp.i
-.PHONY : src/core/components/meshrenderer.cpp.i
-
-src/core/components/meshrenderer.s: src/core/components/meshrenderer.cpp.s
-.PHONY : src/core/components/meshrenderer.s
-
-# target to generate assembly for a file
-src/core/components/meshrenderer.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/components/meshrenderer.cpp.s
-.PHONY : src/core/components/meshrenderer.cpp.s
-
 src/core/platform.obj: src/core/platform.cpp.obj
 .PHONY : src/core/platform.obj
 
 # target to build an object file
 src/core/platform.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/platform.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\engine.dir\build.make CMakeFiles/engine.dir/src/core/platform.cpp.obj
 .PHONY : src/core/platform.cpp.obj
 
 src/core/platform.i: src/core/platform.cpp.i
@@ -185,7 +161,7 @@ src/core/platform.i: src/core/platform.cpp.i
 
 # target to preprocess a source file
 src/core/platform.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/platform.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\engine.dir\build.make CMakeFiles/engine.dir/src/core/platform.cpp.i
 .PHONY : src/core/platform.cpp.i
 
 src/core/platform.s: src/core/platform.cpp.s
@@ -193,7 +169,7 @@ src/core/platform.s: src/core/platform.cpp.s
 
 # target to generate assembly for a file
 src/core/platform.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/platform.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\engine.dir\build.make CMakeFiles/engine.dir/src/core/platform.cpp.s
 .PHONY : src/core/platform.cpp.s
 
 src/core/scene.obj: src/core/scene.cpp.obj
@@ -201,7 +177,7 @@ src/core/scene.obj: src/core/scene.cpp.obj
 
 # target to build an object file
 src/core/scene.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/scene.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\engine.dir\build.make CMakeFiles/engine.dir/src/core/scene.cpp.obj
 .PHONY : src/core/scene.cpp.obj
 
 src/core/scene.i: src/core/scene.cpp.i
@@ -209,7 +185,7 @@ src/core/scene.i: src/core/scene.cpp.i
 
 # target to preprocess a source file
 src/core/scene.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/scene.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\engine.dir\build.make CMakeFiles/engine.dir/src/core/scene.cpp.i
 .PHONY : src/core/scene.cpp.i
 
 src/core/scene.s: src/core/scene.cpp.s
@@ -217,7 +193,7 @@ src/core/scene.s: src/core/scene.cpp.s
 
 # target to generate assembly for a file
 src/core/scene.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/scene.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\engine.dir\build.make CMakeFiles/engine.dir/src/core/scene.cpp.s
 .PHONY : src/core/scene.cpp.s
 
 src/core/shader.obj: src/core/shader.cpp.obj
@@ -225,7 +201,7 @@ src/core/shader.obj: src/core/shader.cpp.obj
 
 # target to build an object file
 src/core/shader.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/shader.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\engine.dir\build.make CMakeFiles/engine.dir/src/core/shader.cpp.obj
 .PHONY : src/core/shader.cpp.obj
 
 src/core/shader.i: src/core/shader.cpp.i
@@ -233,7 +209,7 @@ src/core/shader.i: src/core/shader.cpp.i
 
 # target to preprocess a source file
 src/core/shader.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/shader.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\engine.dir\build.make CMakeFiles/engine.dir/src/core/shader.cpp.i
 .PHONY : src/core/shader.cpp.i
 
 src/core/shader.s: src/core/shader.cpp.s
@@ -241,7 +217,7 @@ src/core/shader.s: src/core/shader.cpp.s
 
 # target to generate assembly for a file
 src/core/shader.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/core/shader.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\engine.dir\build.make CMakeFiles/engine.dir/src/core/shader.cpp.s
 .PHONY : src/core/shader.cpp.s
 
 src/engine.obj: src/engine.cpp.obj
@@ -249,7 +225,7 @@ src/engine.obj: src/engine.cpp.obj
 
 # target to build an object file
 src/engine.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/engine.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\engine.dir\build.make CMakeFiles/engine.dir/src/engine.cpp.obj
 .PHONY : src/engine.cpp.obj
 
 src/engine.i: src/engine.cpp.i
@@ -257,7 +233,7 @@ src/engine.i: src/engine.cpp.i
 
 # target to preprocess a source file
 src/engine.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/engine.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\engine.dir\build.make CMakeFiles/engine.dir/src/engine.cpp.i
 .PHONY : src/engine.cpp.i
 
 src/engine.s: src/engine.cpp.s
@@ -265,7 +241,7 @@ src/engine.s: src/engine.cpp.s
 
 # target to generate assembly for a file
 src/engine.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/engine.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\engine.dir\build.make CMakeFiles/engine.dir/src/engine.cpp.s
 .PHONY : src/engine.cpp.s
 
 src/main.obj: src/main.cpp.obj
@@ -273,7 +249,7 @@ src/main.obj: src/main.cpp.obj
 
 # target to build an object file
 src/main.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/main.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\engine.dir\build.make CMakeFiles/engine.dir/src/main.cpp.obj
 .PHONY : src/main.cpp.obj
 
 src/main.i: src/main.cpp.i
@@ -281,7 +257,7 @@ src/main.i: src/main.cpp.i
 
 # target to preprocess a source file
 src/main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/main.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\engine.dir\build.make CMakeFiles/engine.dir/src/main.cpp.i
 .PHONY : src/main.cpp.i
 
 src/main.s: src/main.cpp.s
@@ -289,7 +265,7 @@ src/main.s: src/main.cpp.s
 
 # target to generate assembly for a file
 src/main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/main.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\engine.dir\build.make CMakeFiles/engine.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
 src/utils/glad.obj: src/utils/glad.c.obj
@@ -297,7 +273,7 @@ src/utils/glad.obj: src/utils/glad.c.obj
 
 # target to build an object file
 src/utils/glad.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/utils/glad.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\engine.dir\build.make CMakeFiles/engine.dir/src/utils/glad.c.obj
 .PHONY : src/utils/glad.c.obj
 
 src/utils/glad.i: src/utils/glad.c.i
@@ -305,7 +281,7 @@ src/utils/glad.i: src/utils/glad.c.i
 
 # target to preprocess a source file
 src/utils/glad.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/utils/glad.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\engine.dir\build.make CMakeFiles/engine.dir/src/utils/glad.c.i
 .PHONY : src/utils/glad.c.i
 
 src/utils/glad.s: src/utils/glad.c.s
@@ -313,7 +289,7 @@ src/utils/glad.s: src/utils/glad.c.s
 
 # target to generate assembly for a file
 src/utils/glad.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/utils/glad.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\engine.dir\build.make CMakeFiles/engine.dir/src/utils/glad.c.s
 .PHONY : src/utils/glad.c.s
 
 src/utils/stb_image.obj: src/utils/stb_image.cpp.obj
@@ -321,7 +297,7 @@ src/utils/stb_image.obj: src/utils/stb_image.cpp.obj
 
 # target to build an object file
 src/utils/stb_image.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/utils/stb_image.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\engine.dir\build.make CMakeFiles/engine.dir/src/utils/stb_image.cpp.obj
 .PHONY : src/utils/stb_image.cpp.obj
 
 src/utils/stb_image.i: src/utils/stb_image.cpp.i
@@ -329,7 +305,7 @@ src/utils/stb_image.i: src/utils/stb_image.cpp.i
 
 # target to preprocess a source file
 src/utils/stb_image.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/utils/stb_image.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\engine.dir\build.make CMakeFiles/engine.dir/src/utils/stb_image.cpp.i
 .PHONY : src/utils/stb_image.cpp.i
 
 src/utils/stb_image.s: src/utils/stb_image.cpp.s
@@ -337,7 +313,7 @@ src/utils/stb_image.s: src/utils/stb_image.cpp.s
 
 # target to generate assembly for a file
 src/utils/stb_image.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\olia.dir\build.make CMakeFiles/olia.dir/src/utils/stb_image.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\engine.dir\build.make CMakeFiles/engine.dir/src/utils/stb_image.cpp.s
 .PHONY : src/utils/stb_image.cpp.s
 
 third-party/imgui/backends/imgui_impl_opengl3.obj: third-party/imgui/backends/imgui_impl_opengl3.cpp.obj
@@ -494,10 +470,7 @@ help:
 	@echo ... edit_cache
 	@echo ... rebuild_cache
 	@echo ... ImGui
-	@echo ... olia
-	@echo ... src/core/components/meshrenderer.obj
-	@echo ... src/core/components/meshrenderer.i
-	@echo ... src/core/components/meshrenderer.s
+	@echo ... engine
 	@echo ... src/core/platform.obj
 	@echo ... src/core/platform.i
 	@echo ... src/core/platform.s

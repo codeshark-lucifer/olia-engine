@@ -154,7 +154,7 @@ CMAKE_PROJECT_DESCRIPTION:STATIC=
 CMAKE_PROJECT_HOMEPAGE_URL:STATIC=
 
 //Value Computed by CMake
-CMAKE_PROJECT_NAME:STATIC=olia
+CMAKE_PROJECT_NAME:STATIC=OliaEngine
 
 //Path to a program.
 CMAKE_RANLIB:FILEPATH=C:/msys64/mingw64/bin/ranlib.exe
@@ -244,6 +244,15 @@ OPENGL_gl_LIBRARY:STRING=opengl32
 
 //GLU library for win32
 OPENGL_glu_LIBRARY:STRING=glu32
+
+//Value Computed by CMake
+OliaEngine_BINARY_DIR:STATIC=D:/Programing Education/olia - engine/build
+
+//Value Computed by CMake
+OliaEngine_IS_TOP_LEVEL:STATIC=ON
+
+//Value Computed by CMake
+OliaEngine_SOURCE_DIR:STATIC=D:/Programing Education/olia - engine
 
 //Value Computed by CMake
 olia_BINARY_DIR:STATIC=D:/Programing Education/olia - engine/build

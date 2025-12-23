@@ -1,10 +1,6 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/olia.dir/src/core/components/meshrenderer.cpp.obj"
-  "CMakeFiles/olia.dir/src/core/components/meshrenderer.cpp.obj.d"
   "CMakeFiles/olia.dir/src/core/platform.cpp.obj"
   "CMakeFiles/olia.dir/src/core/platform.cpp.obj.d"
-  "CMakeFiles/olia.dir/src/core/scene.cpp.obj"
-  "CMakeFiles/olia.dir/src/core/scene.cpp.obj.d"
   "CMakeFiles/olia.dir/src/core/shader.cpp.obj"
   "CMakeFiles/olia.dir/src/core/shader.cpp.obj.d"
   "CMakeFiles/olia.dir/src/engine.cpp.obj"
