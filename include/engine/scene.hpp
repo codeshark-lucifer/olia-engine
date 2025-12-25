@@ -9,6 +9,7 @@ public:
     Scene(const int &w, const int &h, const std::string &n);
     ~Scene();
 
+    void Begin();
     void Update(const float &deltaTime);
     std::shared_ptr<Entity> AddEntity(const std::shared_ptr<Entity> &entity, std::shared_ptr<Scene> self);
     void Destroy(const std::shared_ptr<Entity> &entity);

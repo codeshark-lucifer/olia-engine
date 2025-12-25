@@ -7,6 +7,7 @@ public:
     bool enabled = true;
     std::weak_ptr<Entity> entity;
     virtual ~Component() = default;
+    virtual void OnAttach() {}
     virtual void Begin() {}
     virtual void Update(const float &deltaTime) {}
 };

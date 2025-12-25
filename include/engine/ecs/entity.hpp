@@ -103,6 +103,7 @@ public:
 
         auto component = std::make_shared<T>(std::forward<Args>(args)...);
         component->entity = shared_from_this(); // if Component has entity reference
+        component->OnAttach();
         components.push_back(component);
         return component;
     }

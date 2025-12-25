@@ -24,18 +24,17 @@ public:
     // LOAD MODEL
     // -------------------------------
     static std::shared_ptr<Entity> Load(
-        const std::string& path,
-        const std::shared_ptr<Scene>& scene)
+        const std::string &path,
+        const std::shared_ptr<Scene> &scene)
     {
         Assimp::Importer importer;
-        const aiScene* aiScene = importer.ReadFile(
+        const aiScene *aiScene = importer.ReadFile(
             path,
             aiProcess_Triangulate |
-            aiProcess_GenNormals |
-            aiProcess_CalcTangentSpace |
-            aiProcess_JoinIdenticalVertices |
-            aiProcess_ImproveCacheLocality
-        );
+                aiProcess_GenNormals |
+                aiProcess_CalcTangentSpace |
+                aiProcess_JoinIdenticalVertices |
+                aiProcess_ImproveCacheLocality);
 
         if (!aiScene || !aiScene->mRootNode)
         {
@@ -53,8 +52,8 @@ public:
             aiScene,
             root,
             scene,
-            directory
-        );
+            directory);
+        scene->AddEntity(root, scene);
 
         return root;
     }
@@ -64,11 +63,11 @@ private:
     // NODE → ENTITY
     // -------------------------------
     static void ProcessNode(
-        aiNode* node,
-        const aiScene* scene,
-        const std::shared_ptr<Entity>& parent,
-        const std::shared_ptr<Scene>& ecsScene,
-        const std::string& directory)
+        aiNode *node,
+        const aiScene *scene,
+        const std::shared_ptr<Entity> &parent,
+        const std::shared_ptr<Scene> &ecsScene,
+        const std::string &directory)
     {
         auto entity = std::make_shared<Entity>(node->mName.C_Str());
         entity->scene = ecsScene;
@@ -79,7 +78,7 @@ private:
         // Meshes
         for (unsigned int i = 0; i < node->mNumMeshes; i++)
         {
-            aiMesh* aiMesh = scene->mMeshes[node->mMeshes[i]];
+            aiMesh *aiMesh = scene->mMeshes[node->mMeshes[i]];
             auto mesh = ProcessMesh(aiMesh, scene, directory);
 
             entity->AddComponent<MeshFilter>(mesh);
@@ -94,8 +93,7 @@ private:
                 scene,
                 entity,
                 ecsScene,
-                directory
-            );
+                directory);
         }
     }
 
@@ -103,15 +101,15 @@ private:
     // TRANSFORM
     // -------------------------------
     static void ApplyTransform(
-        const aiMatrix4x4& m,
-        const std::shared_ptr<Entity>& entity)
+        const aiMatrix4x4 &m,
+        const std::shared_ptr<Entity> &entity)
     {
         aiVector3D pos, scale;
         aiQuaternion rot;
         m.Decompose(scale, rot, pos);
 
-        entity->position = { pos.x, pos.y, pos.z };
-        entity->scale    = { scale.x, scale.y, scale.z };
+        entity->position = {pos.x, pos.y, pos.z};
+        entity->scale = {scale.x, scale.y, scale.z};
         entity->rotation = glm::quat(rot.w, rot.x, rot.y, rot.z);
     }
 
@@ -119,9 +117,9 @@ private:
     // MESH
     // -------------------------------
     static std::shared_ptr<Mesh> ProcessMesh(
-        aiMesh* mesh,
-        const aiScene* scene,
-        const std::string& directory)
+        aiMesh *mesh,
+        const aiScene *scene,
+        const std::string &directory)
     {
         std::vector<Vertex> vertices;
         std::vector<unsigned int> indices;
@@ -136,24 +134,21 @@ private:
             v.position = {
                 mesh->mVertices[i].x,
                 mesh->mVertices[i].y,
-                mesh->mVertices[i].z
-            };
+                mesh->mVertices[i].z};
 
             if (mesh->HasNormals())
             {
                 v.normal = {
                     mesh->mNormals[i].x,
                     mesh->mNormals[i].y,
-                    mesh->mNormals[i].z
-                };
+                    mesh->mNormals[i].z};
             }
 
             if (mesh->mTextureCoords[0])
             {
                 v.uv = {
                     mesh->mTextureCoords[0][i].x,
-                    mesh->mTextureCoords[0][i].y
-                };
+                    mesh->mTextureCoords[0][i].y};
             }
 
             vertices.push_back(v);
@@ -162,7 +157,7 @@ private:
         // Indices
         for (unsigned int i = 0; i < mesh->mNumFaces; i++)
         {
-            const aiFace& face = mesh->mFaces[i];
+            const aiFace &face = mesh->mFaces[i];
             for (unsigned int j = 0; j < face.mNumIndices; j++)
                 indices.push_back(face.mIndices[j]);
         }
@@ -170,23 +165,21 @@ private:
         // Materials
         if (mesh->mMaterialIndex >= 0)
         {
-            aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+            aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
 
             AppendMaterialTextures(
                 textures,
                 material,
                 aiTextureType_DIFFUSE,
                 Type::DIFFUSE,
-                directory
-            );
+                directory);
 
             AppendMaterialTextures(
                 textures,
                 material,
                 aiTextureType_SPECULAR,
                 Type::SPECULAR,
-                directory
-            );
+                directory);
         }
 
         return std::make_shared<Mesh>(vertices, indices, textures);
@@ -196,11 +189,11 @@ private:
     // TEXTURES
     // -------------------------------
     static void AppendMaterialTextures(
-        std::vector<std::shared_ptr<Texture2D>>& out,
-        aiMaterial* material,
+        std::vector<std::shared_ptr<Texture2D>> &out,
+        aiMaterial *material,
         aiTextureType type,
         Type engineType,
-        const std::string& directory)
+        const std::string &directory)
     {
         for (unsigned int i = 0; i < material->GetTextureCount(type); i++)
         {
@@ -210,9 +203,7 @@ private:
             out.push_back(
                 std::make_shared<Texture2D>(
                     directory + "/" + str.C_Str(),
-                    engineType
-                )
-            );
+                    engineType));
         }
     }
 };

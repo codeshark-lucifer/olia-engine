@@ -1,4 +1,12 @@
 ** Collision 3D **
+
+Collider: 
+Sphere	: Use distance between centers
+AABB	: Axis-Aligned Bounding Box
+OBB		: Oriented Bounding Box, more math
+Capsule	: Combianation of spheres and line
+Mesh	: Usually need triangle-based collision
+
 ----------------------------------------------------------------
 AABB (Axis-Aligned Bounding Box)
 - What it is: A box aligned with the world axes (X, Y, Z).
