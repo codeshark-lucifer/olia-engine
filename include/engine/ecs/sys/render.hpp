@@ -9,6 +9,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <engine/config.h>
 
 class RenderSystem : public System
 {
@@ -24,7 +25,7 @@ public:
         // Create buffers
         msaaFBO = std::make_unique<FBO>(width, height, 4); // MSAA x4
         resolvedFBO = std::make_unique<FBO>(width, height);
-        sbo = std::make_unique<SBO>(2048);
+        sbo = std::make_unique<SBO>(SHADOW_SIZE);
         quad = std::make_unique<Quad>();
 
         glEnable(GL_DEPTH_TEST);
@@ -34,7 +35,6 @@ public:
     void Update(const std::vector<std::shared_ptr<Entity>> &entities, const float &)
     {
         UpdateCamera(entities);
-
         ShadowPass(entities);
         ScenePass(entities);
         ResolveMSAA();
@@ -76,7 +76,8 @@ private:
     {
         for (auto &en : entities)
         {
-            if (!en->HasComponent<Camera>()) continue;
+            if (!en->HasComponent<Camera>())
+                continue;
 
             auto cam = en->GetComponent<Camera>();
             cam->OnResize(width, height);
@@ -92,9 +93,13 @@ private:
     // -------------------------------
     void ShadowPass(const std::vector<std::shared_ptr<Entity>> &entities)
     {
+        glCullFace(GL_FRONT); // prevent shadow acne
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LESS);
+        glDepthMask(GL_TRUE);
         sbo->Bind();
 
-        glm::mat4 lightProj = glm::ortho(-20.f, 20.f, -20.f, 20.f, 1.f, 50.f);
+        glm::mat4 lightProj = glm::ortho(-100.f, 100.f, -100.f, 100.f, 0.01f, 200.f);
         glm::mat4 lightView = glm::lookAt(-lightDir * 20.0f, glm::vec3(0.0f), glm::vec3(0, 1, 0));
         glm::mat4 lightSpace = lightProj * lightView;
 
@@ -102,9 +107,10 @@ private:
         depthShader->SetUniform("lightSpace", lightSpace);
 
         for (auto &en : entities)
-            DrawEntity(en, *depthShader);
+            DrawEntity(en, *depthShader, true);
 
         SBO::Unbind(width, height);
+        glCullFace(GL_BACK);
 
         // Bind shadow map to scene shader
         sceneShader->Use();
@@ -113,6 +119,7 @@ private:
 
         glActiveTexture(GL_TEXTURE5);
         glBindTexture(GL_TEXTURE_2D, sbo->GetDepthMap());
+        glDisable(GL_DEPTH_TEST); // Disable depth test after depth map generation
     }
 
     // -------------------------------
@@ -123,7 +130,7 @@ private:
         msaaFBO->Bind();
 
         glEnable(GL_DEPTH_TEST);
-        glClearColor(0.01f, 0.01f, 0.01f, 1.0f); 
+        glClearColor(0.01f, 0.01f, 0.01f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         sceneShader->Use();
@@ -132,7 +139,7 @@ private:
         sceneShader->SetUniform("lightDir", lightDir);
 
         for (auto &en : entities)
-            DrawEntity(en, *sceneShader);
+            DrawEntity(en, *sceneShader, false);
     }
 
     // -------------------------------
@@ -165,12 +172,23 @@ private:
     // -------------------------------
     // DRAW ENTITY RECURSIVE
     // -------------------------------
-    void DrawEntity(const std::shared_ptr<Entity> &en, const Shader &shader)
+    void DrawEntity(const std::shared_ptr<Entity> &en, const Shader &shader, bool isDepthPass)
     {
         if (en->HasComponent<MeshRenderer>())
-            en->GetComponent<MeshRenderer>()->Render(shader);
+        {
+            if (isDepthPass)
+            {
+                depthShader->Use();                             // Ensure depth shader is active
+                depthShader->SetUniform("model", en->matrix()); // Set model matrix for depth shader
+                en->GetComponent<MeshFilter>()->mesh->DrawDepth();
+            }
+            else
+            {
+                en->GetComponent<MeshRenderer>()->Render(shader);
+            }
+        }
 
         for (auto &child : en->children)
-            DrawEntity(child, shader);
+            DrawEntity(child, shader, isDepthPass);
     }
 };

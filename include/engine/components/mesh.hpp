@@ -42,7 +42,12 @@ public:
         }
     }
 
-    ~Mesh() = default;
+    void DrawDepth()
+    {
+        vao->Bind();
+        glDrawElements(GL_TRIANGLES, ebo->size(), GL_UNSIGNED_INT, 0);
+        vao->Unbind();
+    }
 
     void Draw(const Shader &shader)
     {

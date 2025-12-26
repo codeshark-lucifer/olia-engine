@@ -33,7 +33,7 @@ uniform vec3 lightDir;
 uniform vec3 viewPos;
 uniform sampler2D shadowMap;
 
-float ShadowCalculation(vec4 fragPosLightSpace)
+float ShadowCalculation(vec4 fragPosLightSpace, vec3 norm, vec3 lightDir)
 {
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     projCoords = projCoords * 0.5 + 0.5;
@@ -42,9 +42,10 @@ float ShadowCalculation(vec4 fragPosLightSpace)
         return 0.0;
 
     float shadow = 0.0;
-    float bias = 0.005;
+    // float bias = 0.005; // Old fixed bias
+    float bias = max(0.005 * (1.0 - dot(norm, -lightDir)), 0.0005);
     int samples = 3;
-    float texelSize = 1.0 / 2048.0;
+    float texelSize = 1.0 / 4096.0;
 
     for(int x = -samples; x <= samples; ++x)
     {
@@ -62,11 +63,11 @@ float ShadowCalculation(vec4 fragPosLightSpace)
 
 void main()
 {
-    vec3 color = vec3(1.0, 0.7, 0.4);
+    vec3 color = vec3(1.0, 1.0, 1.0);
     vec3 norm = normalize(Normal);
     float diff = max(dot(norm, -lightDir), 0.0);
 
-    float shadow = ShadowCalculation(FragPosLight);
+    float shadow = ShadowCalculation(FragPosLight, norm, lightDir);
     vec3 lighting = (0.3 + (1.0 - shadow) * diff) * color;
 
     FragColor = vec4(lighting, 1.0);

@@ -13,7 +13,7 @@ class Rigidbody : public Component
 public:
     float mass = 1.0f;
     float inverseMass = 1.0f;
-    float restitution = 0.5f; // bounciness
+    float restitution = 0.8f; // bounciness
     glm::mat3 inertia{1.0f};
     glm::mat3 inverseInertia{1.0f};
 

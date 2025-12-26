@@ -12,6 +12,7 @@
 #include <engine/components/physics/sphere.hpp>
 
 #include <engine/components/looker.hpp>
+#include <engine/components/player.hpp>
 
 Engine::Engine()
 {
@@ -32,9 +33,10 @@ Engine::Engine()
 
     auto sphere = Model::Load("assets/models/sphere-smooth.fbx", scene);
     sphere->position = glm::vec3(0.0f, 0.5f, 0.0f); // Changed position
-    // sphere->AddComponent<SphereCollider>();
-    sphere->AddComponent<Rigidbody>();
     sphere->AddComponent<SphereCollider>();
+    sphere->AddComponent<Rigidbody>();
+    sphere->AddComponent<Player>();
+    // sphere->AddComponent<BoxCollider>();
 
     auto sphere1 = Model::Load("assets/models/cube.fbx", scene);
     sphere1->position = glm::vec3(0.0f, -2.5f, 0.0f); // Changed position

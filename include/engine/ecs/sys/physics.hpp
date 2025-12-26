@@ -87,8 +87,7 @@ private:
     {
         auto eA = A->entity.lock();
         auto eB = B->entity.lock();
-        if (!eA || !eB)
-            return;
+        if (!eA || !eB) return;
 
         auto rbA = eA->GetComponent<Rigidbody>();
         auto rbB = eB->GetComponent<Rigidbody>();
@@ -107,98 +106,98 @@ private:
         if (overlap.x <= 0 || overlap.y <= 0 || overlap.z <= 0)
             return; // No collision
 
-        // Find the axis of minimum penetration
-        if (overlap.x < overlap.y && overlap.x < overlap.z)
-            overlap = glm::vec3(overlap.x, 0, 0);
-        else if (overlap.y < overlap.x && overlap.y < overlap.z)
-            overlap = glm::vec3(0, overlap.y, 0);
-        else
-            overlap = glm::vec3(0, 0, overlap.z);
+        // Find axis of minimum penetration
+        int axis = 0;
+        float minOverlap = overlap.x;
+        if (overlap.y < minOverlap) { axis = 1; minOverlap = overlap.y; }
+        if (overlap.z < minOverlap) { axis = 2; minOverlap = overlap.z; }
 
-        glm::vec3 normal = glm::normalize(overlap);
+        glm::vec3 normal(0.0f);
+        if (axis == 0) normal.x = (eB->position.x > eA->position.x) ? 1.0f : -1.0f;
+        else if (axis == 1) normal.y = (eB->position.y > eA->position.y) ? 1.0f : -1.0f;
+        else normal.z = (eB->position.z > eA->position.z) ? 1.0f : -1.0f;
 
         float invMassA = rbA ? 1.0f / rbA->mass : 0.0f;
         float invMassB = rbB ? 1.0f / rbB->mass : 0.0f;
         float totalInvMass = invMassA + invMassB;
-        if (totalInvMass <= 0)
-            return;
+        if (totalInvMass <= 0) return;
 
-        // Positional correction
-        glm::vec3 correction = normal * (glm::length(overlap) / totalInvMass);
-        if (rbA)
-            rbA->position -= correction * invMassA;
-        if (rbB)
-            rbB->position += correction * invMassB;
+        // Positional correction (demo mode, reduce damping)
+        const float percent = 0.5f; // 50% penetration
+        const float slop = 0.001f;
+        glm::vec3 correction = normal * std::max(minOverlap - slop, 0.0f) * percent / totalInvMass;
+        if (rbA) rbA->position -= correction * invMassA;
+        if (rbB) rbB->position += correction * invMassB;
 
         // Relative velocity
         glm::vec3 relVel = (rbB ? rbB->velocity : glm::vec3(0)) - (rbA ? rbA->velocity : glm::vec3(0));
         float velAlongNormal = glm::dot(relVel, normal);
-        if (velAlongNormal > 0)
-            return;
 
-        // Impulse resolution
-        float e = std::min(rbA ? rbA->restitution : 0.0f, rbB ? rbB->restitution : 0.0f);
+        // Demo-bounce: enforce small impulse if objects are nearly resting
+        if (velAlongNormal > -0.05f) velAlongNormal = -0.05f;
+
+        // Restitution
+        float e = std::min(rbA ? rbA->restitution : 1.0f, rbB ? rbB->restitution : 1.0f);
         float j = -(1.0f + e) * velAlongNormal / totalInvMass;
         glm::vec3 impulse = j * normal;
 
-        if (rbA)
-            rbA->velocity -= impulse * invMassA;
-        if (rbB)
-            rbB->velocity += impulse * invMassB;
+        if (rbA) rbA->velocity -= impulse * invMassA;
+        if (rbB) rbB->velocity += impulse * invMassB;
+
+        // std::cout << "[BoxBox Demo] Impulse: " << glm::to_string(impulse) << "\n";
     }
 
     void SphereSphere(std::shared_ptr<SphereCollider> A, std::shared_ptr<SphereCollider> B)
     {
         auto eA = A->entity.lock();
         auto eB = B->entity.lock();
-        if (!eA || !eB)
-            return;
+        if (!eA || !eB) return;
 
         auto rbA = eA->GetComponent<Rigidbody>();
         auto rbB = eB->GetComponent<Rigidbody>();
 
         glm::vec3 delta = (eB->position + B->center) - (eA->position + A->center);
         float dist = glm::length(delta);
-        float r = A->radius + B->radius;
-        if (dist <= 0.0f || dist >= r)
-            return;
+        float radiusSum = A->radius + B->radius;
+        if (dist <= 0.0f || dist >= radiusSum) return;
 
         glm::vec3 normal = delta / dist;
-        float penetration = r - dist;
+        float penetration = radiusSum - dist;
 
         float invMassA = rbA ? 1.0f / rbA->mass : 0.0f;
         float invMassB = rbB ? 1.0f / rbB->mass : 0.0f;
         float totalInvMass = invMassA + invMassB;
-        if (totalInvMass <= 0)
-            return;
+        if (totalInvMass <= 0.0f) return;
 
-        glm::vec3 correction = normal * (penetration / totalInvMass);
-        if (rbA)
-            rbA->position -= correction * invMassA;
-        if (rbB)
-            rbB->position += correction * invMassB;
+        // Positional correction (smaller to not damp bounce)
+        const float percent = 0.5f; // 50% of penetration
+        const float slop = 0.001f;
+        glm::vec3 correction = normal * std::max(penetration - slop, 0.0f) * percent / totalInvMass;
+        if (rbA) rbA->position -= correction * invMassA;
+        if (rbB) rbB->position += correction * invMassB;
 
+        // Relative velocity
         glm::vec3 relVel = (rbB ? rbB->velocity : glm::vec3(0)) - (rbA ? rbA->velocity : glm::vec3(0));
         float velAlongNormal = glm::dot(relVel, normal);
-        if (velAlongNormal > 0)
-            return;
 
-        float e = std::min(rbA ? rbA->restitution : 0.0f, rbB ? rbB->restitution : 0.0f);
+        // Demo-bounce: ensure small impulses even if object is resting
+        if (velAlongNormal > -0.05f) velAlongNormal = -0.05f;
+
+        float e = std::min(rbA ? rbA->restitution : 1.0f, rbB ? rbB->restitution : 1.0f);
         float j = -(1.0f + e) * velAlongNormal / totalInvMass;
         glm::vec3 impulse = j * normal;
 
-        if (rbA)
-            rbA->velocity -= impulse * invMassA;
-        if (rbB)
-            rbB->velocity += impulse * invMassB;
+        if (rbA) rbA->velocity -= impulse * invMassA;
+        if (rbB) rbB->velocity += impulse * invMassB;
+
+        // std::cout << "[SphereSphere Demo] Impulse: " << glm::to_string(impulse) << "\n";
     }
 
     void BoxSphere(std::shared_ptr<BoxCollider> box, std::shared_ptr<SphereCollider> sphere)
     {
         auto eBox = box->entity.lock();
         auto eSphere = sphere->entity.lock();
-        if (!eBox || !eSphere)
-            return;
+        if (!eBox || !eSphere) return;
 
         glm::vec3 boxMin = eBox->position + box->center - box->size;
         glm::vec3 boxMax = eBox->position + box->center + box->size;
@@ -207,8 +206,7 @@ private:
         glm::vec3 closest = glm::clamp(spherePos, boxMin, boxMax);
         glm::vec3 delta = spherePos - closest;
         float dist = glm::length(delta);
-        if (dist <= 0.0f || dist >= sphere->radius)
-            return;
+        if (dist <= 0.0f || dist >= sphere->radius) return;
 
         glm::vec3 normal = delta / dist;
         float penetration = sphere->radius - dist;
@@ -218,27 +216,30 @@ private:
         float invMassBox = rbBox ? 1.0f / rbBox->mass : 0.0f;
         float invMassSphere = rbSphere ? 1.0f / rbSphere->mass : 0.0f;
         float totalInvMass = invMassBox + invMassSphere;
-        if (totalInvMass <= 0.0f)
-            return;
+        if (totalInvMass <= 0.0f) return;
 
-        glm::vec3 correction = normal * (penetration / totalInvMass);
-        if (rbBox)
-            rbBox->position -= correction * invMassBox;
-        if (rbSphere)
-            rbSphere->position += correction * invMassSphere;
+        // Positional correction (reduce damping)
+        const float percent = 0.5f;
+        const float slop = 0.001f;
+        glm::vec3 correction = normal * std::max(penetration - slop, 0.0f) * percent / totalInvMass;
+        if (rbBox) rbBox->position -= correction * invMassBox;
+        if (rbSphere) rbSphere->position += correction * invMassSphere;
 
+        // Relative velocity
         glm::vec3 relVel = (rbSphere ? rbSphere->velocity : glm::vec3(0)) - (rbBox ? rbBox->velocity : glm::vec3(0));
         float velAlongNormal = glm::dot(relVel, normal);
-        if (velAlongNormal > 0)
-            return;
 
-        float e = std::min(rbBox ? rbBox->restitution : 0.0f, rbSphere ? rbSphere->restitution : 0.0f);
+        // Demo-bounce: enforce small upward impulse even if resting
+        if (velAlongNormal > -0.05f) velAlongNormal = -0.05f;
+
+        float e = std::min(rbBox ? rbBox->restitution : 1.0f, rbSphere ? rbSphere->restitution : 1.0f);
         float j = -(1.0f + e) * velAlongNormal / totalInvMass;
         glm::vec3 impulse = j * normal;
 
-        if (rbBox)
-            rbBox->velocity -= impulse * invMassBox;
-        if (rbSphere)
-            rbSphere->velocity += impulse * invMassSphere;
+        if (rbBox) rbBox->velocity -= impulse * invMassBox;
+        if (rbSphere) rbSphere->velocity += impulse * invMassSphere;
+
+        // std::cout << "[BoxSphere Demo] Impulse: " << glm::to_string(impulse) << "\n";
     }
+
 };
