@@ -1,8 +1,9 @@
 #include <engine/window/platform.hpp>
 #include <glad/glad.h> // Added for gladLoadGLLoader
 #include <stdexcept>
+#include <iostream>
 
-Platform::Platform(const int &width, const int &height, const std::string &title)
+void Platform::Init(int width, int height, const std::string &title)
 {
     if (!SDL_Init(SDL_INIT_VIDEO))
     {
@@ -40,9 +41,9 @@ Platform::Platform(const int &width, const int &height, const std::string &title
     {
         throw std::runtime_error("Failed to initialize GLAD.");
     }
-    
+
     glViewport(0, 0, width, height); // Set initial viewport
-    
+
     running = true;
 }
 
@@ -63,16 +64,25 @@ void Platform::PollEvent()
     SDL_Event event;
     while (SDL_PollEvent(&event))
     {
-        if (event.type == SDL_EVENT_QUIT)
+        switch (event.type)
         {
+        case SDL_EVENT_QUIT:
             running = false;
-        }
-        else if (event.type == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
+            break;
+        case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
         {
             int w = event.window.data1;
             int h = event.window.data2;
             if (callback)
                 callback(w, h);
+            break;
+        }
+        case SDL_EVENT_KEY_DOWN:
+            // if (event.key.key == SDLK_ESCAPE)
+            // {
+            //     running = false;
+            // }
+            break;
         }
     }
 }

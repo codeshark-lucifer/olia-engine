@@ -4,10 +4,13 @@
 #include <engine/components/physics/collider.hpp>
 #include <engine/components/physics/box.hpp>
 #include <engine/components/physics/sphere.hpp>
+#include <engine/components/collision/collision.hpp>
 #include <glm/glm.hpp>
+#include <glm/gtx/string_cast.hpp> // For glm::to_string
 #include <vector>
 #include <memory>
 #include <algorithm>
+#include <iostream> // For std::cout
 
 class PhysicsSystem : public System
 {
@@ -15,6 +18,10 @@ public:
     glm::vec3 gravity{0.0f, -9.81f, 0.0f};
     const float fixedTimeStep = 0.016f;
     float accumulator = 0.0f;
+
+    // Baumgarte stabilization constants
+    const float BAUMSGARTE_SLOP = 0.01f;
+    const float BAUMSGARTE_ERP = 0.2f;
 
     PhysicsSystem() : System("PhysicsSystem") {}
 
@@ -33,9 +40,9 @@ public:
             for (auto &entity : entities)
             {
                 if (auto rb = entity->GetComponent<Rigidbody>())
-                    rb->Integrate(fixedTimeStep, gravity, colliders);
+                    rb->Integrate(fixedTimeStep, gravity);
 
-                UpdateChildren(entity, fixedTimeStep, colliders);
+                UpdateChildren(entity, fixedTimeStep);
             }
 
             // Solve collisions
@@ -46,13 +53,13 @@ public:
     }
 
 private:
-    void UpdateChildren(std::shared_ptr<Entity> entity, float dt, const std::vector<std::shared_ptr<Collider>> &colliders)
+    void UpdateChildren(std::shared_ptr<Entity> entity, float dt)
     {
         for (auto &child : entity->children)
         {
             if (auto rb = child->GetComponent<Rigidbody>())
-                rb->Integrate(dt, gravity, colliders);
-            UpdateChildren(child, dt, colliders);
+                rb->Integrate(dt, gravity);
+            UpdateChildren(child, dt);
         }
     }
 
@@ -85,61 +92,51 @@ private:
 
         auto rbA = eA->GetComponent<Rigidbody>();
         auto rbB = eB->GetComponent<Rigidbody>();
-        if (!rbA && !rbB)
-            return;
 
-        // World-space AABB
-        glm::vec3 minA = eA->position + A->center - A->size * 0.5f;
-        glm::vec3 maxA = eA->position + A->center + A->size * 0.5f;
-        glm::vec3 minB = eB->position + B->center - B->size * 0.5f;
-        glm::vec3 maxB = eB->position + B->center + B->size * 0.5f;
+        glm::vec3 aMin = eA->position + A->center - A->size;
+        glm::vec3 aMax = eA->position + A->center + A->size;
+        glm::vec3 bMin = eB->position + B->center - B->size;
+        glm::vec3 bMax = eB->position + B->center + B->size;
 
-        // Check overlap
-        if (!(maxA.x > minB.x && minA.x < maxB.x &&
-              maxA.y > minB.y && minA.y < maxB.y &&
-              maxA.z > minB.z && minA.z < maxB.z))
-            return;
+        // Compute overlap on each axis
+        glm::vec3 overlap;
+        overlap.x = std::min(aMax.x, bMax.x) - std::max(aMin.x, bMin.x);
+        overlap.y = std::min(aMax.y, bMax.y) - std::max(aMin.y, bMin.y);
+        overlap.z = std::min(aMax.z, bMax.z) - std::max(aMin.z, bMin.z);
 
-        // Compute penetration
-        glm::vec3 overlap(
-            std::min(maxA.x, maxB.x) - std::max(minA.x, minB.x),
-            std::min(maxA.y, maxB.y) - std::max(minA.y, minB.y),
-            std::min(maxA.z, maxB.z) - std::max(minA.z, minB.z));
+        if (overlap.x <= 0 || overlap.y <= 0 || overlap.z <= 0)
+            return; // No collision
 
-        // Smallest penetration axis
-        int axis = 0;
-        if (overlap.y < overlap.x)
-            axis = 1;
-        if (overlap.z < overlap[axis])
-            axis = 2;
+        // Find the axis of minimum penetration
+        if (overlap.x < overlap.y && overlap.x < overlap.z)
+            overlap = glm::vec3(overlap.x, 0, 0);
+        else if (overlap.y < overlap.x && overlap.y < overlap.z)
+            overlap = glm::vec3(0, overlap.y, 0);
+        else
+            overlap = glm::vec3(0, 0, overlap.z);
 
-        glm::vec3 normal(0.0f);
-        normal[axis] = 1.0f;
-
-        glm::vec3 delta = (eB->position - eA->position);
-        if (glm::dot(delta, normal) < 0)
-            normal = -normal;
-
-        float penetration = overlap[axis];
+        glm::vec3 normal = glm::normalize(overlap);
 
         float invMassA = rbA ? 1.0f / rbA->mass : 0.0f;
         float invMassB = rbB ? 1.0f / rbB->mass : 0.0f;
         float totalInvMass = invMassA + invMassB;
-        if (totalInvMass <= 0.0f)
+        if (totalInvMass <= 0)
             return;
 
-        glm::vec3 correction = normal * (penetration / totalInvMass);
+        // Positional correction
+        glm::vec3 correction = normal * (glm::length(overlap) / totalInvMass);
         if (rbA)
             rbA->position -= correction * invMassA;
         if (rbB)
             rbB->position += correction * invMassB;
 
-        // Velocity impulse
+        // Relative velocity
         glm::vec3 relVel = (rbB ? rbB->velocity : glm::vec3(0)) - (rbA ? rbA->velocity : glm::vec3(0));
         float velAlongNormal = glm::dot(relVel, normal);
         if (velAlongNormal > 0)
             return;
 
+        // Impulse resolution
         float e = std::min(rbA ? rbA->restitution : 0.0f, rbB ? rbB->restitution : 0.0f);
         float j = -(1.0f + e) * velAlongNormal / totalInvMass;
         glm::vec3 impulse = j * normal;
@@ -203,8 +200,8 @@ private:
         if (!eBox || !eSphere)
             return;
 
-        glm::vec3 boxMin = eBox->position + box->center - box->size * 0.5f;
-        glm::vec3 boxMax = eBox->position + box->center + box->size * 0.5f;
+        glm::vec3 boxMin = eBox->position + box->center - box->size;
+        glm::vec3 boxMax = eBox->position + box->center + box->size;
         glm::vec3 spherePos = eSphere->position + sphere->center;
 
         glm::vec3 closest = glm::clamp(spherePos, boxMin, boxMax);

@@ -33,6 +33,18 @@ public:
     glm::quat rotation{1.0f, 0.0f, 0.0f, 0.0f};
     glm::vec3 scale{1.0f};
 
+    glm::vec3 forward()
+    {
+        glm::vec3 f = rotation * glm::vec3(0, 0, -1);
+        return glm::normalize(f);
+    }
+
+    glm::vec3 right()
+    {
+        glm::vec3 r = rotation * glm::vec3(1, 0, 0);
+        return glm::normalize(r);
+    }
+
     glm::mat4 local() const
     {
         glm::mat4 T = glm::translate(glm::mat4(1.0f), position);

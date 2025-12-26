@@ -3,58 +3,10 @@
 #include <engine/components/physics/box.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/string_cast.hpp> // For glm::to_string
 #include <memory>
 #include <vector>
-
-struct AABB
-{
-    glm::vec3 min;
-    glm::vec3 max;
-};
-
-inline AABB GetVolume(std::shared_ptr<BoxCollider> box)
-{
-    auto e = box->entity.lock();
-    glm::vec3 center = (e ? e->position : glm::vec3(0.0f)) + box->center;
-    glm::vec3 half = box->size * 0.5f;
-    return {center - half, center + half};
-}
-
-inline bool CheckBoxOverlap(const AABB &A, const AABB &B)
-{
-    return (A.min.x <= B.max.x && A.max.x >= B.min.x) &&
-           (A.min.y <= B.max.y && A.max.y >= B.min.y) &&
-           (A.min.z <= B.max.z && A.max.z >= B.min.z);
-}
-
-inline bool IsSupported(std::shared_ptr<BoxCollider> box, const std::vector<std::shared_ptr<Collider>> &colliders)
-{
-    auto e = box->entity.lock();
-    if (!e)
-        return false;
-
-    glm::vec3 center = e->position + box->center;
-    glm::vec3 half = box->size * 0.5f;
-
-    // Use bottom center point only
-    glm::vec3 probePoint = center - glm::vec3(0, half.y + 0.01f, 0);
-
-    for (auto &c : colliders)
-    {
-        if (c->type != ColliderType::Cube)
-            continue;
-        auto otherBox = std::dynamic_pointer_cast<BoxCollider>(c);
-        if (otherBox == box)
-            continue;
-
-        AABB v = GetVolume(otherBox);
-        if (probePoint.x >= v.min.x && probePoint.x <= v.max.x &&
-            probePoint.y >= v.min.y && probePoint.y <= v.max.y &&
-            probePoint.z >= v.min.z && probePoint.z <= v.max.z)
-            return true;
-    }
-    return false;
-}
+#include <iostream> // For std::cout
 
 class Rigidbody : public Component
 {
@@ -62,8 +14,8 @@ public:
     float mass = 1.0f;
     float inverseMass = 1.0f;
     float restitution = 0.5f; // bounciness
-    float inertia = 1.0f;
-    float inverseInertia = 1.0f;
+    glm::mat3 inertia{1.0f};
+    glm::mat3 inverseInertia{1.0f};
 
     glm::vec3 position{};
     glm::quat rotation{1, 0, 0, 0};
@@ -80,32 +32,49 @@ public:
 public:
     Rigidbody() = default;
 
+    void SetMass(float m, glm::vec3 size = glm::vec3(1.0f))
+    {
+        mass = m;
+        if (mass > 0.0f)
+        {
+            inverseMass = 1.0f / mass;
+            float Ixx = 0.0833f * mass * (size.y * size.y + size.z * size.z);
+            float Iyy = 0.0833f * mass * (size.x * size.x + size.z * size.z);
+            float Izz = 0.0833f * mass * (size.x * size.x + size.y * size.y);
+            inertia = glm::mat3(Ixx, 0, 0, 0, Iyy, 0, 0, 0, Izz);
+            inverseInertia = glm::inverse(inertia);
+        }
+        else
+        {
+            inverseMass = 0.0f;
+            inverseInertia = glm::mat3(0.0f);
+        }
+    }
+
     void OnAttach() override
     {
         if (auto e = entity.lock())
+        {
             position = e->position;
+            if (auto box = e->GetComponent<BoxCollider>())
+                SetMass(mass, box->size);
+            else
+                SetMass(mass);
+        }
     }
 
     void AddForce(const glm::vec3 &f) { force += f; }
     void AddTorque(const glm::vec3 &t) { torque += t; }
 
-    void Integrate(float dt, const glm::vec3 &gravity, const std::vector<std::shared_ptr<Collider>> &colliders)
+    void Integrate(float dt, const glm::vec3 &gravity)
     {
         if (mass <= 0.0f)
             return;
 
-        inverseMass = 1.0f / mass;
-        inverseInertia = (inertia > 0.0f) ? 1.0f / inertia : 0.0f;
-
         // ---- Linear motion ----
         if (useGravity)
         {
-            bool supported = false;
-            if (auto box = std::dynamic_pointer_cast<BoxCollider>(entity.lock()->GetComponent<BoxCollider>()))
-                supported = IsSupported(box, colliders);
-
-            if (!supported)
-                force += gravity * mass;
+            force += gravity * mass;
         }
 
         glm::vec3 acceleration = force * inverseMass;
@@ -116,13 +85,13 @@ public:
         velocity *= (1.0f - linearFriction * dt);
 
         // ---- Angular motion ----
-        glm::vec3 angularAccel = torque * inverseInertia;
+        glm::vec3 angularAccel = inverseInertia * torque;
         angularVelocity += angularAccel * dt;
 
         glm::quat deltaRot(0, angularVelocity.x, angularVelocity.y, angularVelocity.z);
         rotation += deltaRot * rotation * (0.5f * dt);
         rotation = glm::normalize(rotation);
-
+        
         angularVelocity *= (1.0f - angularFriction * dt);
 
         // ---- Sync entity ----
@@ -135,5 +104,6 @@ public:
         // Reset accumulators
         force = glm::vec3(0.0f);
         torque = glm::vec3(0.0f);
+        
     }
 };

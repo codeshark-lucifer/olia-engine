@@ -2,6 +2,8 @@
 #include <engine/ecs/sys/render.hpp>
 #include <engine/ecs/sys/update.hpp>
 #include <engine/ecs/sys/physics.hpp>
+#include <iostream>
+#include <glm/gtx/string_cast.hpp> // Required for glm::to_string in logging
 
 Scene::Scene(const int &w, const int &h, const std::string &n)
 {
@@ -9,23 +11,28 @@ Scene::Scene(const int &w, const int &h, const std::string &n)
     height = h;
     name = n;
 
+    std::cout << "Scene::Scene - Initializing systems." << std::endl;
     systems.push_back(std::make_unique<PhysicsSystem>());
     systems.push_back(std::make_unique<UpdateSystem>());
     systems.push_back(std::make_unique<RenderSystem>(width, height));
+    std::cout << "Scene::Scene - Systems initialized." << std::endl;
 }
 
 Scene::~Scene()
 {
+    std::cout << "Scene::~Scene - Destroying entities and systems." << std::endl;
     entities.clear();
     systems.clear();
 }
 
 void Scene::Begin()
 {
+    std::cout << "Scene::Begin - Calling Begin for all systems." << std::endl;
     for (auto &system : systems)
     {
         system->Begin(entities);
     }
+    std::cout << "Scene::Begin - All systems began." << std::endl;
 }
 
 void Scene::Update(const float &deltaTime)

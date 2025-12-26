@@ -2,18 +2,25 @@
 #include <SDL3/SDL.h>
 #include <string>
 #include <functional>
+#include <engine/singleton.hpp>
 
-class Platform
+class Platform : public Singleton<Platform>
 {
+    friend class Singleton<Platform>;
+
 public:
-    Platform(const int &width, const int &height,const std::string &title);
-    ~Platform();
+    void Init(int width, int height, const std::string &title);
 
     bool ShouldClose();
     void PollEvent();
     void SwapBuffer();
 
     std::function<void(int, int)> callback;
+    SDL_Window *GetWindow() { return window; }
+
+private:
+    Platform() = default;
+    ~Platform();
 
 private:
     bool running{false};
