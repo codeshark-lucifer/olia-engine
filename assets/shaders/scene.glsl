@@ -43,7 +43,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 norm, vec3 lightDir)
 
     float shadow = 0.0;
     // float bias = 0.005; // Old fixed bias
-    float bias = max(0.005 * (1.0 - dot(norm, -lightDir)), 0.0005);
+    float bias = max(0.0025 * (1.0 - dot(norm, -lightDir)), 0.00025);
     int samples = 3;
     float texelSize = 1.0 / 4096.0;
 

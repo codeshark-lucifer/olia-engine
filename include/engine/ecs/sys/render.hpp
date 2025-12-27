@@ -27,6 +27,9 @@ public:
         resolvedFBO = std::make_unique<FBO>(width, height);
         sbo = std::make_unique<SBO>(SHADOW_SIZE);
         quad = std::make_unique<Quad>();
+        glEnable(GL_CULL_FACE);
+        glFrontFace(GL_CCW);
+        glCullFace(GL_BACK);
 
         glEnable(GL_DEPTH_TEST);
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f); // default background color
@@ -93,14 +96,20 @@ private:
     // -------------------------------
     void ShadowPass(const std::vector<std::shared_ptr<Entity>> &entities)
     {
-        glCullFace(GL_FRONT); // prevent shadow acne
         glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LESS);
-        glDepthMask(GL_TRUE);
+        //glEnable(GL_CULL_FACE);
+        //glCullFace(GL_FRONT);
+
         sbo->Bind();
 
-        glm::mat4 lightProj = glm::ortho(-100.f, 100.f, -100.f, 100.f, 0.01f, 200.f);
-        glm::mat4 lightView = glm::lookAt(-lightDir * 20.0f, glm::vec3(0.0f), glm::vec3(0, 1, 0));
+        glm::mat4 lightProj =
+            glm::ortho(-100.f, 100.f, -100.f, 100.f, 1.0f, 120.f); // FIXED near plane
+
+        glm::mat4 lightView =
+            glm::lookAt(-lightDir * 20.0f,
+                        glm::vec3(0.0f),
+                        glm::vec3(0, 1, 0));
+
         glm::mat4 lightSpace = lightProj * lightView;
 
         depthShader->Use();
@@ -110,16 +119,16 @@ private:
             DrawEntity(en, *depthShader, true);
 
         SBO::Unbind(width, height);
-        glCullFace(GL_BACK);
 
-        // Bind shadow map to scene shader
+        // Bind shadow map for scene pass
         sceneShader->Use();
         sceneShader->SetUniform("lightSpace", lightSpace);
         sceneShader->SetUniform("shadowMap", 5);
 
         glActiveTexture(GL_TEXTURE5);
         glBindTexture(GL_TEXTURE_2D, sbo->GetDepthMap());
-        glDisable(GL_DEPTH_TEST); // Disable depth test after depth map generation
+
+        //glCullFace(GL_BACK); // restore
     }
 
     // -------------------------------
@@ -130,7 +139,9 @@ private:
         msaaFBO->Bind();
 
         glEnable(GL_DEPTH_TEST);
-        glClearColor(0.01f, 0.01f, 0.01f, 1.0f);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         sceneShader->Use();
@@ -157,7 +168,10 @@ private:
     void ScreenPass()
     {
         FBO::Unbind(width, height);
+
         glDisable(GL_DEPTH_TEST);
+        glDisable(GL_CULL_FACE);
+
         glClear(GL_COLOR_BUFFER_BIT);
 
         screenShader->Use();
