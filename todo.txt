@@ -1,0 +1,15 @@
+ECS(Entity, Component, System):
+Entity: 
+    Transform(matrix, position, rotation, scale)
+
+Component:
+    Store(Data)
+
+System:
+    Update(update by deltatime)
+    Render(framebuffer, shadow, draw entity)
+    Physics*
+
+Physics:
+    - Rigidbody 
+    - Collisions
