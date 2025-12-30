@@ -10,12 +10,12 @@ Makefile
 *.cmake
 
 # Executables
-*.exe
-*.dll
-*.a
-*.lib
-*.so
-*.dylib
+./build/*.exe
+./build/*.dll
+./build/*.a
+./build/*.lib
+./build/*.so
+./build/*.dylib
 
 # IDE / editor settings
 .vscode/
