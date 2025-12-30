@@ -1,15 +1,15 @@
 #pragma once
-#include <engine/ecs/physics.component.hpp>
-#include <Bullet3/btBulletDynamicsCommon.h>
-#include <glm/glm.hpp>
-#include <engine/systems/physics.hpp>
+#include <engine/components/physics/collider/collider.hpp>
 
-class BoxCollider3D : public Component
+class BoxCollider3D : public Collider
 {
 public:
     glm::vec3 halfSize{1.0f};
 
-    btCollisionShape* CreateShape() const
+public:
+    BoxCollider3D() { type = CollisionType::BOX; }
+
+    btCollisionShape *CreateShape() const override
     {
         return new btBoxShape(btVector3(halfSize.x, halfSize.y, halfSize.z));
     }

@@ -1,11 +1,12 @@
 #pragma once
 #include <engine/ecs/system.hpp>
 #include <engine/ecs/entity.hpp>
-
 #include <engine/ecs/physics.component.hpp>
 #include <engine/components/physics/rigidbody3d.hpp>
 #include <engine/components/physics/collider/boxcollider3d.hpp>
-
+#include <engine/components/physics/collider/spherecollider3d.hpp>
+#include <engine/components/physics/collider/capsulecollider3d.hpp>
+#include <engine/components/physics/collider/meshcollider3d.hpp>
 #include <engine/singleton.hpp>
 
 #include <Bullet3/btBulletDynamicsCommon.h>
@@ -18,18 +19,17 @@ class PhysicsSystem : public Singleton<PhysicsSystem>, public System
 
 public:
     glm::vec3 gravity{0.0f, -9.81f, 0.0f};
-
     float fixedDeltaTime = 1.0f / 60.0f;
     float accumulator = 0.0f;
 
 private:
-    btBroadphaseInterface *broadphase = nullptr;
-    btDefaultCollisionConfiguration *collisionConfig = nullptr;
-    btCollisionDispatcher *dispatcher = nullptr;
-    btSequentialImpulseConstraintSolver *solver = nullptr;
-    btDiscreteDynamicsWorld *world = nullptr;
+    btBroadphaseInterface* broadphase = nullptr;
+    btDefaultCollisionConfiguration* collisionConfig = nullptr;
+    btCollisionDispatcher* dispatcher = nullptr;
+    btSequentialImpulseConstraintSolver* solver = nullptr;
+    btDiscreteDynamicsWorld* world = nullptr;
 
-    std::vector<btCollisionShape *> ownedShapes;
+    std::vector<btCollisionShape*> ownedShapes;
 
 private:
     PhysicsSystem() : System("PhysicsSystem") {}
@@ -38,40 +38,32 @@ public:
     /* =========================
        Initialization / Cleanup
        ========================= */
-
     void Initialize()
     {
         broadphase = new btDbvtBroadphase();
         collisionConfig = new btDefaultCollisionConfiguration();
         dispatcher = new btCollisionDispatcher(collisionConfig);
         solver = new btSequentialImpulseConstraintSolver();
-        world = new btDiscreteDynamicsWorld(
-            dispatcher, broadphase, solver, collisionConfig);
+        world = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfig);
 
         world->setGravity(btVector3(gravity.x, gravity.y, gravity.z));
     }
 
     void Clean() override
     {
-        if (!world)
-            return;
+        if (!world) return;
 
         // Remove all rigid bodies
         for (int i = world->getNumCollisionObjects() - 1; i >= 0; --i)
         {
-            btCollisionObject *obj = world->getCollisionObjectArray()[i];
-            btRigidBody *body = btRigidBody::upcast(obj);
-
-            if (body && body->getMotionState())
-                delete body->getMotionState();
-
+            btCollisionObject* obj = world->getCollisionObjectArray()[i];
+            btRigidBody* body = btRigidBody::upcast(obj);
+            if (body && body->getMotionState()) delete body->getMotionState();
             world->removeCollisionObject(obj);
             delete obj;
         }
 
-        for (auto *shape : ownedShapes)
-            delete shape;
-
+        for (auto* shape : ownedShapes) delete shape;
         ownedShapes.clear();
 
         delete world;
@@ -86,8 +78,7 @@ public:
     /* =========================
        Update Loop
        ========================= */
-
-    void Update(std::vector<std::shared_ptr<Entity>> &entities, float dt) override
+    void Update(std::vector<std::shared_ptr<Entity>>& entities, float dt) override
     {
         accumulator += dt;
 
@@ -96,7 +87,6 @@ public:
             RegisterNewBodies(entities);
             world->stepSimulation(fixedDeltaTime);
             SyncTransforms(entities);
-
             accumulator -= fixedDeltaTime;
         }
     }
@@ -105,52 +95,35 @@ private:
     /* =========================
        Body Creation
        ========================= */
-
-    void RegisterNewBodies(std::vector<std::shared_ptr<Entity>> &entities)
+    void RegisterNewBodies(std::vector<std::shared_ptr<Entity>>& entities)
     {
-        for (auto &entity : entities)
+        for (auto& entity : entities)
         {
             auto phys = entity->GetComponent<PhysicsComponent>();
-            if (!phys)
-                phys = entity->AddComponent<PhysicsComponent>();
+            if (!phys) phys = entity->AddComponent<PhysicsComponent>();
+            if (phys->body) continue;
 
-            if (phys->body)
-                continue;
-
-            auto collider = entity->GetComponent<BoxCollider3D>();
-            if (!collider)
-                continue;
+            auto collider = entity->GetComponent<Collider>();
+            if (!collider) continue;
 
             auto rigidbody = entity->GetComponent<RigidBody3D>();
-            float mass = rigidbody ? rigidbody->mass : 0.0f;
-
             CreateRigidBody(entity, phys, collider, rigidbody);
         }
     }
+
     void CreateRigidBody(
-        const std::shared_ptr<Entity> &entity,
-        const std::shared_ptr<PhysicsComponent> &phys,
-        const std::shared_ptr<BoxCollider3D> &collider,
-        const std::shared_ptr<RigidBody3D> &rigidbody)
+        const std::shared_ptr<Entity>& entity,
+        const std::shared_ptr<PhysicsComponent>& phys,
+        const std::shared_ptr<Collider>& collider,
+        const std::shared_ptr<RigidBody3D>& rigidbody)
     {
         float mass = rigidbody ? rigidbody->mass : 0.0f;
 
-        /* =========================
-           Collision Shape
-           ========================= */
-
-        btCollisionShape *shape = new btBoxShape(
-            btVector3(
-                collider->halfSize.x,
-                collider->halfSize.y,
-                collider->halfSize.z));
-
+        // Create collision shape dynamically
+        btCollisionShape* shape = collider->CreateShape();
         ownedShapes.push_back(shape);
 
-        /* =========================
-           Initial Transform
-           ========================= */
-
+        // Initial transform
         btTransform startTransform;
         startTransform.setIdentity();
         startTransform.setOrigin(btVector3(
@@ -158,48 +131,29 @@ private:
             entity->transform.position.y,
             entity->transform.position.z));
 
-        /* =========================
-           Inertia
-           ========================= */
-
+        // Calculate inertia
         btVector3 inertia(0, 0, 0);
-        if (mass > 0.0f)
-            shape->calculateLocalInertia(mass, inertia);
+        if (mass > 0.0f) shape->calculateLocalInertia(mass, inertia);
 
-        /* =========================
-           Rigid Body Creation
-           ========================= */
+        // Rigid body creation
+        btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
+        btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, motionState, shape, inertia);
+        btRigidBody* body = new btRigidBody(rbInfo);
 
-        btDefaultMotionState *motionState =
-            new btDefaultMotionState(startTransform);
-
-        btRigidBody::btRigidBodyConstructionInfo rbInfo(
-            mass, motionState, shape, inertia);
-
-        btRigidBody *body = new btRigidBody(rbInfo);
-
-        /* =========================
-           Unity-like Flags
-           ========================= */
-
-        if (rigidbody && rigidbody->isKinematic)
+        // Kinematic and gravity settings
+        if (rigidbody)
         {
-            body->setCollisionFlags(
-                body->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
-            body->setActivationState(DISABLE_DEACTIVATION);
-        }
-
-        if (rigidbody && !rigidbody->useGravity)
-        {
-            body->setGravity(btVector3(0, 0, 0));
+            if (rigidbody->isKinematic)
+            {
+                body->setCollisionFlags(body->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
+                body->setActivationState(DISABLE_DEACTIVATION);
+            }
+            if (!rigidbody->useGravity) body->setGravity(btVector3(0, 0, 0));
         }
 
         world->addRigidBody(body);
 
-        /* =========================
-           Store References
-           ========================= */
-
+        // Store references
         phys->body = body;
         phys->shape = shape;
     }
@@ -207,26 +161,21 @@ private:
     /* =========================
        Sync Physics → ECS
        ========================= */
-
-    void SyncTransforms(std::vector<std::shared_ptr<Entity>> &entities)
+    void SyncTransforms(std::vector<std::shared_ptr<Entity>>& entities)
     {
-        for (auto &entity : entities)
+        for (auto& entity : entities)
         {
             auto phys = entity->GetComponent<PhysicsComponent>();
-            if (!phys || !phys->body)
-                continue;
+            if (!phys || !phys->body) continue;
 
             btTransform trans;
             phys->body->getMotionState()->getWorldTransform(trans);
 
-            const btVector3 &pos = trans.getOrigin();
-            const btQuaternion &rot = trans.getRotation();
+            const btVector3& pos = trans.getOrigin();
+            const btQuaternion& rot = trans.getRotation();
 
-            entity->transform.position = {
-                pos.x(), pos.y(), pos.z()};
-
-            entity->transform.rotation = glm::quat(
-                rot.w(), rot.x(), rot.y(), rot.z());
+            entity->transform.position = { pos.x(), pos.y(), pos.z() };
+            entity->transform.rotation = glm::quat(rot.w(), rot.x(), rot.y(), rot.z());
         }
     }
 };

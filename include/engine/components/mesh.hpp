@@ -42,6 +42,16 @@ public:
         }
     }
 
+    std::vector<glm::vec3> GetPoints()
+    {
+        return vbo->GetPoints();
+    }
+
+    std::vector<uint32_t> GetIndices()
+    {
+        return ebo->GetIndices();
+    }
+
     void DrawDepth()
     {
         vao->Bind();

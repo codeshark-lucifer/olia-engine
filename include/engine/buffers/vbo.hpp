@@ -16,6 +16,7 @@ public:
     VBO(const std::vector<T> &data)
         : count(static_cast<unsigned int>(data.size()))
     {
+        this->vertices = data;
         glGenBuffers(1, &id);
         Bind();
         glBufferData(
@@ -43,8 +44,21 @@ public:
 
     unsigned int Size() const { return count; }
     unsigned int GetID() const { return id; }
+    std::vector<glm::vec3> GetPoints() const
+    {
+        std::vector<glm::vec3> points;
+        points.reserve(vertices.size());
+
+        for (const auto &v : vertices)
+        {
+            points.push_back(v.position);
+        }
+
+        return points;
+    }
 
 private:
     unsigned int id = 0;
     unsigned int count = 0;
+    std::vector<T> vertices;
 };
