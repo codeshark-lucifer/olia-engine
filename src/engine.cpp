@@ -92,6 +92,10 @@ namespace Engine
 
         PhysicsSystem::Get().Clean();
 
-        std::cout << "Engine shutdown complete.\n";
+
+        std::cout << "=============================================\n";
+        std::cout << "          ENGINE SHUTDOWN!                     \n";
+        std::cout << "=============================================\n\n";
+
     }
 } // namespace Engine
