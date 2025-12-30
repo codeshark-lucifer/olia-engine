@@ -18,7 +18,7 @@ public:
         this->width = width;
         this->height = height;
 
-        systems.push_back(std::make_shared<PhysicsSystem>());
+        // systems.push_back(std::make_shared<PhysicsSystem>());
         systems.push_back(std::make_shared<UpdateSystem>());
         systems.push_back(std::make_shared<RenderSystem>(width, height));
     }
@@ -42,6 +42,7 @@ public:
 
     void Begin()
     {
+        PhysicsSystem::Get().OnAttach(entities);
         for (auto &s : systems)
         {
             s->OnAttach(entities);
@@ -51,6 +52,7 @@ public:
 
     void Update(float deltaTime)
     {
+        PhysicsSystem::Get().Update(entities, deltaTime);
         for (auto &s : systems)
         {
             s->Update(entities, deltaTime);

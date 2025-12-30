@@ -11,6 +11,8 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <engine/ecs/physics.component.hpp> // PhysicsComponent
+#include <Bullet3/btBulletDynamicsCommon.h> // btBoxShape
 struct Transform
 {
     glm::vec3 position{0.0f};
@@ -151,9 +153,13 @@ public:
         auto comp = std::make_shared<T>(std::forward<Args>(args)...);
         comp->entity = shared_from_this();
         comp->OnAttach();
-        components.push_back(comp);
+        components.push_back(std::static_pointer_cast<Component>(comp));
+
+
+
         return comp;
     }
+
     template <typename T>
     std::shared_ptr<T> GetComponent()
     {

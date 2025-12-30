@@ -11,7 +11,7 @@ class Platform : public Singleton<Platform>
 
 public:
 Platform()=default;
-    void Init(int width, int height, const char *title)
+    void Initialize(int width, int height, const char *title)
     {
         if (!SDL_Init(SDL_INIT_VIDEO))
         {

@@ -19,14 +19,15 @@ add_executable(engine ${SRC_FILES})
 # Include directories
 target_include_directories(engine PUBLIC
     ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/lib/SDL3/include
-    ${CMAKE_SOURCE_DIR}/lib       # for Assimp headers
+    ${CMAKE_SOURCE_DIR}/include/Bullet3
+    ${CMAKE_SOURCE_DIR}/lib # for Assimp headers
 )
 
 # Link directories
 target_link_directories(engine PRIVATE
     ${CMAKE_SOURCE_DIR}/lib/SDL3/x64
-    ${CMAKE_SOURCE_DIR}/lib       # For libassimp.dll.a
+    ${CMAKE_SOURCE_DIR}/lib/Bullet3
+    ${CMAKE_SOURCE_DIR}/lib # For libassimp.dll.a
 )
 
 # Find OpenGL
@@ -36,15 +37,21 @@ if(NOT OPENGL_FOUND)
 endif()
 target_include_directories(engine PUBLIC ${OPENGL_INCLUDE_DIR})
 target_link_libraries(engine
-    ${OPENGL_gl_LIBRARY}   # Use the variable, not OpenGL::GL
+    ${OPENGL_gl_LIBRARY} # Use the variable, not OpenGL::GL
     SDL3
     assimp
+
+    BulletDynamics
+    BulletCollision
+    BulletSoftBody
+    LinearMath
+    Bullet3Common
 )
 
 # Copy DLLs after build
 add_custom_command(TARGET engine POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${CMAKE_SOURCE_DIR}/lib/SDL3/x64/SDL3.dll
-        ${CMAKE_SOURCE_DIR}/lib/libassimp-6.dll
-        $<TARGET_FILE_DIR:engine>
+    ${CMAKE_SOURCE_DIR}/lib/SDL3/x64/SDL3.dll
+    ${CMAKE_SOURCE_DIR}/lib/libassimp-6.dll
+    $<TARGET_FILE_DIR:engine>
 )
