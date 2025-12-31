@@ -18,6 +18,8 @@
 #include "components/physics/collider/capsulecollider3d.hpp"
 #include "components/physics/collider/meshcollider3d.hpp"
 
+#include "components/ui/canvas.hpp"
+#include "components/ui/image.hpp"
 namespace Engine
 {
     class Engine

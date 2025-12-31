@@ -20,7 +20,7 @@ public:
     Type type;
     std::string path;
 
-    Texture2D(const std::string &path,const Type &type = Type::DIFFUSE, bool gamma = true)
+    Texture2D(const std::string &path, const Type &type = Type::DIFFUSE, bool gamma = true)
     {
         this->type = type;
         this->path = path;
@@ -91,8 +91,9 @@ private:
         glGenerateMipmap(GL_TEXTURE_2D);
 
         // Texture parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 

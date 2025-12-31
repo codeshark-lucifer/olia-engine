@@ -5,6 +5,7 @@
 
 #include <engine/ecs/entity.hpp>
 #include <engine/ecs/system.hpp>
+#include <engine/components/ui/canvas.hpp> // <--- Add this include
 
 #include <engine/systems/render.hpp>
 #include <engine/systems/update.hpp>
@@ -68,6 +69,15 @@ public:
         for (auto &s : systems)
         {
             s->OnResize(width, height, entities);
+        }
+
+        // Iterate through entities and call OnResize for Canvas components
+        for (auto &entity : entities)
+        {
+            if (auto canvas = entity->GetComponent<Canvas>())
+            {
+                canvas->OnResize(w, h);
+            }
         }
     }
 

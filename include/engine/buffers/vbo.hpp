@@ -1,12 +1,28 @@
 #pragma once
 #include <vector>
 #include <glad/glad.h>
+#define MAX_BONE_INFLUENCE 4
 
 struct Vertex
 {
     glm::vec3 position;
     glm::vec3 normal;
     glm::vec2 uv;
+
+    int boneIDs[MAX_BONE_INFLUENCE]{0};
+    float weights[MAX_BONE_INFLUENCE]{0.0f};
+};
+
+struct Skeleton
+{
+    std::unordered_map<std::string, int> boneMap;
+    std::vector<BoneInfo> bones;
+};
+
+struct BoneInfo
+{
+    glm::mat4 offset; // inverse bind pose
+    glm::mat4 finalTransform;
 };
 
 template <typename T>

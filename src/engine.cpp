@@ -3,7 +3,7 @@
 
 namespace Engine
 {
-    void Engine::Initialize(int width, int height, const char* title)
+    void Engine::Initialize(int width, int height, const char *title)
     {
         screenWidth = width;
         screenHeight = height;
@@ -25,8 +25,8 @@ namespace Engine
         SetupDefaultScene();
 
         // Window resize callback
-        Platform::Get().SetCallback([this](int w, int h)
-                                    { scene->OnResize(w, h); });
+        Platform::Get().ListenCallback([this](int w, int h)
+                                       { scene->OnResize(w, h); });
     }
 
     void Engine::SetupDefaultScene()
@@ -63,11 +63,32 @@ namespace Engine
         model1->AddComponent<BoxCollider3D>();
         model1->transform.position.y = -3.0f;
         // model1->AddComponent<RigidBody3D>();
+
+        auto model2 = Model::Load("assets/resources/arce.fbx", scene);
+        model2->transform.scale = glm::vec3(0.01f);
+
+        auto canvas = scene->CreateObject("Canvas");
+        canvas->AddComponent<Canvas>(screenWidth, screenHeight);
+
+        // Example Image
+        auto image = scene->CreateObject("Image");
+        image->AddComponent<Image>("assets/textures/wall.jpg");
+        canvas->AddChild(image);
+
+        // // Example Text
+        // auto text = scene->CreateObject("text");
+        // auto uiFont = std::make_shared<Font>(
+        //     "assets/fonts/roboto.ttf",
+        //     32);
+
+        // text->AddComponent<Text>(uiFont, "Hello, World!");
+        // canvas->AddChild(text);
     }
 
     void Engine::Run()
     {
-        if (!scene) return;
+        if (!scene)
+            return;
 
         scene->Begin();
 
@@ -92,10 +113,8 @@ namespace Engine
 
         PhysicsSystem::Get().Clean();
 
-
         std::cout << "=============================================\n";
         std::cout << "          ENGINE SHUTDOWN!                     \n";
         std::cout << "=============================================\n\n";
-
     }
 } // namespace Engine

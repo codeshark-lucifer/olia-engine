@@ -10,7 +10,7 @@ class Platform : public Singleton<Platform>
     friend class Singleton<Platform>; // REQUIRED
 
 public:
-Platform()=default;
+    Platform() = default;
     void Initialize(int width, int height, const char *title)
     {
         if (!SDL_Init(SDL_INIT_VIDEO))
@@ -94,7 +94,7 @@ Platform()=default;
         return !running;
     }
 
-    void SetCallback(std::function<void(int, int)> func)
+    void ListenCallback(std::function<void(int, int)> func)
     {
         callback = func;
     }
@@ -104,6 +104,7 @@ Platform()=default;
     }
 
     SDL_Window *GetWindow() { return window; }
+
 
 private:
     bool running = false;
