@@ -9,6 +9,7 @@
 #include <engine/buffers/fbo.hpp>
 #include <engine/buffers/sbo.hpp>
 
+#include <engine/components/ui/canvas.hpp>
 #include <engine/input.hpp>
 
 class RenderSystem : public System
@@ -60,6 +61,32 @@ public:
         RenderShadowMap(entities, lightVP);
         RenderScene(entities, lightVP);
         RenderFinalQuad();
+
+        // --- Start UI Rendering ---
+        glEnable(GL_BLEND); // Enable blending for UI
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // Standard alpha blending
+
+        for (auto &en : entities)
+        {
+            DrawUI(en);
+        }
+
+        glDisable(GL_BLEND); // Disable blending after UI rendering
+        // --- End UI Rendering ---
+
+
+
+    }
+
+    void DrawUI(std::shared_ptr<Entity> &entity)
+    {
+        if(auto canvas = entity->GetComponent<Canvas>()) {
+            canvas->Render();
+        }
+        for (auto &en : entity->GetChildren())
+        {
+            DrawUI(en);
+        }
     }
 
     void OnResize(int w, int h, std::vector<std::shared_ptr<Entity>> &entities) override
@@ -130,6 +157,7 @@ private:
         glEnable(GL_CULL_FACE);
         glCullFace(GL_BACK);
 
+        fbo->BindLayer(0);
         defaultShader->Use();
         defaultShader->SetUniform("lightViewProjection", lightVP);
 
@@ -167,13 +195,11 @@ private:
     // ------------------------
     void RenderFinalQuad()
     {
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
-        glClear(GL_COLOR_BUFFER_BIT);
+
 
         bufferShader->Use();
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, ifbo->GetColorTexture());
+        glBindTexture(GL_TEXTURE_2D, ifbo->GetColorTexture(0));
         screen->Draw();
     }
 
