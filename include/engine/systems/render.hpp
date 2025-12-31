@@ -197,6 +197,9 @@ private:
     {
 
 
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_CULL_FACE);
+
         bufferShader->Use();
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, ifbo->GetColorTexture(0));
