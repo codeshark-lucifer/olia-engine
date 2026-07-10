@@ -6,6 +6,7 @@
 
 #include <core/ecs.h>
 #include <core/input.h>
+#include <core/physics.h>
 
 #include <renderer/batch.h>
 #include <renderer/renderer2D.h>
@@ -27,6 +28,7 @@ namespace Olia
         InputManager *input = nullptr;
         ECS *ecs = nullptr;
         Shader *shader = nullptr;
+        PhysicsSystem* physics = nullptr;
 
         Renderer2D *renderer = nullptr;
         TextRenderer *textRenderer = nullptr;

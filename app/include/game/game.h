@@ -12,11 +12,8 @@ struct Platform
 struct Player
 {
     Olia::Entity id;
-
     int frameWidth = 32;
-
     std::unordered_map<std::string, Animation> animations;
-
     Animation* current = nullptr;
 
     // Physics state
@@ -28,6 +25,9 @@ struct Player
     // Colliders (inset relative to the 64x64 visual size)
     glm::vec2 colliderSize{26.0f, 54.0f};
     glm::vec2 colliderOffset{19.0f, 10.0f};
+
+    btRigidBody* rbody = nullptr;
+    float animationTime = 0.0f;
 };
 
 static void LoadAnimation(
@@ -56,7 +56,7 @@ static void PlayAnimation(Player& p, const std::string& name)
     if (p.current != &it->second)
     {
         p.current = &it->second;
-        frametime = 0.0f;
+        p.animationTime = 0.0f;
     }
 }
 
@@ -68,7 +68,7 @@ static void UpdateAnimation(Player& p)
     Animation& animation = *p.current;
 
     int frame =
-        static_cast<int>(frametime / animation.frameDuration) %
+        static_cast<int>(p.animationTime / animation.frameDuration) %
         animation.frames;
 
     // Calculate sub-pixel padding to prevent texture bleeding

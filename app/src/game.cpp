@@ -3,6 +3,15 @@
 #include <mmsystem.h>
 #include <core.h>
 #include <game/game.h>
+#include <thread>
+
+static void PlayGameSound(const std::string& relativePath)
+{
+    std::string soundPath = Olia::Filesystem::ResolvePath(relativePath);
+    std::thread([soundPath]() {
+        PlaySoundA(soundPath.c_str(), NULL, SND_FILENAME | SND_NODEFAULT);
+    }).detach();
+}
 #include <btBulletDynamicsCommon.h>
 #include <vector>
 #include <algorithm>
@@ -13,11 +22,42 @@ Player player;
 std::vector<Platform> platforms;
 Olia::Texture backgroundTexture;
 
-// Bullet Physics Globals
-btDiscreteDynamicsWorld* dynamicsWorld = nullptr;
-btRigidBody* playerBody = nullptr;
+static std::vector<std::string> s_CharacterNames = {
+    "Virtual Guy",
+    "Mask Dude",
+    "Ninja Frog",
+    "Pink Man"
+};
+static int s_CurrentCharacterIndex = 0;
 
-//------------------------------------------------------------
+static void LoadCharacter(const std::string& characterName)
+{
+    // Clear existing textures to avoid memory leaks
+    for (auto& pair : player.animations)
+    {
+        glDeleteTextures(1, &pair.second.texture.id);
+    }
+    player.animations.clear();
+
+    std::string base = "assets/Free/Main Characters/" + characterName + "/";
+    LoadAnimation(player, "idle", base + "Idle (32x32).png", 11);
+    LoadAnimation(player, "run", base + "Run (32x32).png", 12);
+    LoadAnimation(player, "jump", base + "Jump (32x32).png", 1);
+    LoadAnimation(player, "double_jump", base + "Double Jump (32x32).png", 6);
+    LoadAnimation(player, "fall", base + "Fall (32x32).png", 1);
+    LoadAnimation(player, "hit", base + "Hit (32x32).png", 7);
+    LoadAnimation(player, "wall_jump", base + "Wall Jump (32x32).png", 5);
+
+    // Replay current animation or default idle
+    player.current = nullptr;
+    PlayAnimation(player, "idle");
+}
+
+static void SwitchCharacter()
+{
+    s_CurrentCharacterIndex = (s_CurrentCharacterIndex + 1) % s_CharacterNames.size();
+    LoadCharacter(s_CharacterNames[s_CurrentCharacterIndex]);
+}
 
 void setup()
 {
@@ -33,21 +73,37 @@ void setup()
     backgroundTexture = Olia::Filesystem::LoadTexture("assets/Free/Background/Purple.png");
 
     //--------------------------------------------------------
-    // Load animations
+    // Load text renderer & character animations
     //--------------------------------------------------------
-    LoadAnimation(player, "idle", "assets/Free/Main Characters/Virtual Guy/Idle (32x32).png", 11);
-    LoadAnimation(player, "run", "assets/Free/Main Characters/Virtual Guy/Run (32x32).png", 12);
-    LoadAnimation(player, "jump", "assets/Free/Main Characters/Virtual Guy/Jump (32x32).png", 1);
-    LoadAnimation(player, "double_jump", "assets/Free/Main Characters/Virtual Guy/Double Jump (32x32).png", 6);
-    LoadAnimation(player, "fall", "assets/Free/Main Characters/Virtual Guy/Fall (32x32).png", 1);
-    LoadAnimation(player, "hit", "assets/Free/Main Characters/Virtual Guy/Hit (32x32).png", 7);
-    LoadAnimation(player, "wall_jump", "assets/Free/Main Characters/Virtual Guy/Wall Jump (32x32).png", 5);
+    Olia::InitText("assets/fonts/PixelOperator8.ttf", 48);
+    LoadCharacter("Virtual Guy");
+
+    // Create Switch Character Button
+    Olia::CreateButton(
+        "Switch Skin",
+        { 740.0f, 30.0f },
+        { 180.0f, 35.0f },
+        []() {
+            SwitchCharacter();
+        },
+        { 0.15f, 0.45f, 0.25f, 1.0f }, // color
+        { 0.20f, 0.55f, 0.30f, 1.0f }, // hoverColor
+        { 0.10f, 0.35f, 0.20f, 1.0f }, // clickColor
+        { 1.0f, 1.0f, 1.0f, 1.0f }    // textColor
+    );
 
     //--------------------------------------------------------
     // Define Platforms (Level Design)
     //--------------------------------------------------------
     // Main floor
     platforms.push_back({ { 0.0f, 480.0f }, { 956.0f, 60.0f }, { 0.12f, 0.08f, 0.15f, 1.0f } });
+    
+    // Left Wall
+    platforms.push_back({ { 0.0f, 0.0f }, { 20.0f, 480.0f }, { 0.15f, 0.1f, 0.2f, 1.0f } });
+    // Right Wall
+    platforms.push_back({ { 936.0f, 0.0f }, { 20.0f, 480.0f }, { 0.15f, 0.1f, 0.2f, 1.0f } });
+    // Top Ceiling
+    platforms.push_back({ { 0.0f, 0.0f }, { 956.0f, 20.0f }, { 0.15f, 0.1f, 0.2f, 1.0f } });
     
     // Higher platforms
     platforms.push_back({ { 100.0f, 370.0f }, { 220.0f, 20.0f }, { 0.15f, 0.1f, 0.2f, 1.0f } });
@@ -83,18 +139,6 @@ void setup()
     PlayAnimation(player, "idle");
 
     //--------------------------------------------------------
-    // Initialize Bullet Physics World
-    //--------------------------------------------------------
-    btDefaultCollisionConfiguration* collisionConfiguration = new btDefaultCollisionConfiguration();
-    btCollisionDispatcher* dispatcher = new btCollisionDispatcher(collisionConfiguration);
-    btBroadphaseInterface* overlappingPairCache = new btDbvtBroadphase();
-    btSequentialImpulseConstraintSolver* solver = new btSequentialImpulseConstraintSolver();
-    dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
-    
-    // Positive Y gravity because Y grows downwards in screen coordinates
-    dynamicsWorld->setGravity(btVector3(0.0f, 1400.0f, 0.0f));
-
-    //--------------------------------------------------------
     // Add Platforms to Bullet Physics World (Static rigid bodies)
     //--------------------------------------------------------
     for (const auto& platform : platforms)
@@ -116,7 +160,7 @@ void setup()
         body->setFriction(0.1f);
         body->setRestitution(0.0f);
         
-        dynamicsWorld->addRigidBody(body);
+        Olia::context.physics->GetWorld()->addRigidBody(body);
     }
 
     //--------------------------------------------------------
@@ -138,16 +182,17 @@ void setup()
 
     btDefaultMotionState* motionState = new btDefaultMotionState(playerTransform);
     btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, motionState, playerShape, localInertia);
-    playerBody = new btRigidBody(rbInfo);
+    player.rbody = new btRigidBody(rbInfo);
     
-    playerBody->setFriction(0.1f);
-    playerBody->setRestitution(0.0f);
+    player.rbody->setFriction(0.1f);
+    player.rbody->setRestitution(0.0f);
     
     // Lock rotation and lock Z depth axis movement
-    playerBody->setAngularFactor(btVector3(0.0f, 0.0f, 0.0f));
-    playerBody->setLinearFactor(btVector3(1.0f, 1.0f, 0.0f));
+    player.rbody->setAngularFactor(btVector3(0.0f, 0.0f, 0.0f));
+    player.rbody->setLinearFactor(btVector3(1.0f, 1.0f, 0.0f));
+    player.rbody->setActivationState(DISABLE_DEACTIVATION);
 
-    dynamicsWorld->addRigidBody(playerBody);
+    Olia::context.physics->GetWorld()->addRigidBody(player.rbody);
 }
 
 //------------------------------------------------------------
@@ -162,6 +207,8 @@ void loop()
     // Safety check for first frame or major lag spikes
     if (dt <= 0.0f) dt = 1.0f / 60.0f;
     if (dt > 0.1f) dt = 1.0f / 60.0f;
+
+    player.animationTime += dt;
 
     auto& transform = Olia::context.ecs->Get<Olia::Transform>(player.id);
 
@@ -187,16 +234,16 @@ void loop()
     //--------------------------------------------------------
     // Step Bullet Physics Simulation
     //--------------------------------------------------------
-    if (dynamicsWorld)
+    if (Olia::context.physics->GetWorld())
     {
-        dynamicsWorld->stepSimulation(dt, 10);
+        Olia::context.physics->GetWorld()->stepSimulation(dt, 10);
     }
 
     //--------------------------------------------------------
     // Ground Raycast Testing
     //--------------------------------------------------------
     btTransform trans;
-    playerBody->getMotionState()->getWorldTransform(trans);
+    player.rbody->getMotionState()->getWorldTransform(trans);
     btVector3 origin = trans.getOrigin();
 
     bool hit = false;
@@ -207,9 +254,9 @@ void loop()
         btVector3 rayEnd = origin + btVector3(rayOffsets[i], player.colliderSize.y * 0.5f + 4.0f, 0.0f);
         
         btCollisionWorld::ClosestRayResultCallback rayCallback(rayStart, rayEnd);
-        dynamicsWorld->rayTest(rayStart, rayEnd, rayCallback);
+        Olia::context.physics->GetWorld()->rayTest(rayStart, rayEnd, rayCallback);
         
-        if (rayCallback.hasHit() && rayCallback.m_collisionObject != playerBody)
+        if (rayCallback.hasHit() && rayCallback.m_collisionObject != player.rbody)
         {
             hit = true;
             break;
@@ -223,14 +270,67 @@ void loop()
     }
 
     //--------------------------------------------------------
+    // Wall Detection & Slide Mechanics
+    //--------------------------------------------------------
+    bool touchingLeftWall = false;
+    bool touchingRightWall = false;
+    bool isWallSliding = false;
+
+    btVector3 currentVel = player.rbody->getLinearVelocity();
+
+    if (!player.isGrounded)
+    {
+        float wallYOffsets[2] = { -player.colliderSize.y * 0.3f, player.colliderSize.y * 0.3f };
+
+        // Check left wall
+        for (int i = 0; i < 2; ++i)
+        {
+            btVector3 rayStart = origin + btVector3(0.0f, wallYOffsets[i], 0.0f);
+            btVector3 rayEnd = origin + btVector3(-player.colliderSize.x * 0.5f - 4.0f, wallYOffsets[i], 0.0f);
+
+            btCollisionWorld::ClosestRayResultCallback rayCallback(rayStart, rayEnd);
+            Olia::context.physics->GetWorld()->rayTest(rayStart, rayEnd, rayCallback);
+
+            if (rayCallback.hasHit() && rayCallback.m_collisionObject != player.rbody)
+            {
+                touchingLeftWall = true;
+                break;
+            }
+        }
+
+        // Check right wall
+        for (int i = 0; i < 2; ++i)
+        {
+            btVector3 rayStart = origin + btVector3(0.0f, wallYOffsets[i], 0.0f);
+            btVector3 rayEnd = origin + btVector3(player.colliderSize.x * 0.5f + 4.0f, wallYOffsets[i], 0.0f);
+
+            btCollisionWorld::ClosestRayResultCallback rayCallback(rayStart, rayEnd);
+            Olia::context.physics->GetWorld()->rayTest(rayStart, rayEnd, rayCallback);
+
+            if (rayCallback.hasHit() && rayCallback.m_collisionObject != player.rbody)
+            {
+                touchingRightWall = true;
+                break;
+            }
+        }
+    }
+
+    //--------------------------------------------------------
     // Movement Controls (Input Handling)
     //--------------------------------------------------------
-    btVector3 currentVel = playerBody->getLinearVelocity();
     float targetSpeedX = 0.0f;
     float moveSpeed = 300.0f;
 
     bool moveLeft = Olia::InputManager::GetKey(GLFW_KEY_A);
     bool moveRight = Olia::InputManager::GetKey(GLFW_KEY_D);
+
+    if (!player.isGrounded && currentVel.getY() > 0.0f)
+    {
+        if ((touchingLeftWall && moveLeft) || (touchingRightWall && moveRight))
+        {
+            isWallSliding = true;
+        }
+    }
 
     if (moveLeft && !moveRight)
     {
@@ -247,6 +347,14 @@ void loop()
     float newVelX = currentVel.getX() + (targetSpeedX - currentVel.getX()) * blend;
     float newVelY = currentVel.getY();
 
+    if (isWallSliding)
+    {
+        if (newVelY > 120.0f)
+        {
+            newVelY = 120.0f;
+        }
+    }
+
     // Jumps Input Handling
     float jumpForce = 540.0f;
     float doubleJumpForce = 460.0f;
@@ -260,8 +368,24 @@ void loop()
             player.isGrounded = false;
             PlayAnimation(player, "jump");
 
-            std::string soundPath = Olia::Filesystem::ResolvePath("assets/sounds/jump.wav");
-            PlaySoundA(soundPath.c_str(), NULL, SND_FILENAME | SND_ASYNC);
+            PlayGameSound("assets/sounds/jump.wav");
+        }
+        else if (isWallSliding)
+        {
+            newVelY = -jumpForce;
+            if (touchingLeftWall)
+            {
+                newVelX = moveSpeed;
+                player.facingRight = true;
+            }
+            else if (touchingRightWall)
+            {
+                newVelX = -moveSpeed;
+                player.facingRight = false;
+            }
+            player.doubleJumpsLeft = 1; // Restore double jump on wall jump!
+            PlayAnimation(player, "jump");
+            PlayGameSound("assets/sounds/jump.wav");
         }
         else if (player.doubleJumpsLeft > 0)
         {
@@ -269,12 +393,11 @@ void loop()
             player.doubleJumpsLeft--;
             PlayAnimation(player, "double_jump");
 
-            std::string soundPath = Olia::Filesystem::ResolvePath("assets/sounds/jump.wav");
-            PlaySoundA(soundPath.c_str(), NULL, SND_FILENAME | SND_ASYNC);
+            PlayGameSound("assets/sounds/jump.wav");
         }
     }
 
-    playerBody->setLinearVelocity(btVector3(newVelX, newVelY, 0.0f));
+    player.rbody->setLinearVelocity(btVector3(newVelX, newVelY, 0.0f));
 
     //--------------------------------------------------------
     // Bullet World Bounds Clamp and Screen Reset
@@ -299,16 +422,16 @@ void loop()
     {
         btTransform newTrans = trans;
         newTrans.setOrigin(origin);
-        playerBody->setWorldTransform(newTrans);
-        playerBody->getMotionState()->setWorldTransform(newTrans);
-        playerBody->setLinearVelocity(btVector3(0.0f, playerBody->getLinearVelocity().getY(), 0.0f));
+        player.rbody->setWorldTransform(newTrans);
+        player.rbody->getMotionState()->setWorldTransform(newTrans);
+        player.rbody->setLinearVelocity(btVector3(0.0f, player.rbody->getLinearVelocity().getY(), 0.0f));
     }
 
     // Reset player if fallen out of screen
     if (origin.getY() > 540.0f + player.colliderSize.y)
     {
-        playerBody->clearForces();
-        playerBody->setLinearVelocity(btVector3(0.0f, 0.0f, 0.0f));
+        player.rbody->clearForces();
+        player.rbody->setLinearVelocity(btVector3(0.0f, 0.0f, 0.0f));
         
         btTransform resetTrans;
         resetTrans.setIdentity();
@@ -317,8 +440,8 @@ void loop()
             100.0f + player.colliderOffset.y + player.colliderSize.y * 0.5f,
             0.0f
         ));
-        playerBody->setWorldTransform(resetTrans);
-        playerBody->getMotionState()->setWorldTransform(resetTrans);
+        player.rbody->setWorldTransform(resetTrans);
+        player.rbody->getMotionState()->setWorldTransform(resetTrans);
         player.isGrounded = false;
         player.doubleJumpsLeft = 1;
         PlayAnimation(player, "idle");
@@ -328,11 +451,11 @@ void loop()
     // Sync Position and Velocity from Bullet to ECS
     //--------------------------------------------------------
     btTransform finalTrans;
-    playerBody->getMotionState()->getWorldTransform(finalTrans);
+    player.rbody->getMotionState()->getWorldTransform(finalTrans);
     transform.position.x = finalTrans.getOrigin().getX() - player.colliderSize.x * 0.5f - player.colliderOffset.x;
     transform.position.y = finalTrans.getOrigin().getY() - player.colliderSize.y * 0.5f - player.colliderOffset.y;
 
-    btVector3 vel = playerBody->getLinearVelocity();
+    btVector3 vel = player.rbody->getLinearVelocity();
     player.velocity = glm::vec2(vel.getX(), vel.getY());
 
     //--------------------------------------------------------
@@ -349,6 +472,16 @@ void loop()
             PlayAnimation(player, "idle");
         }
     }
+    else if (isWallSliding)
+    {
+        PlayAnimation(player, "wall_jump");
+        
+        // Orient facing direction toward the wall while sliding
+        if (touchingLeftWall)
+            player.facingRight = false;
+        else if (touchingRightWall)
+            player.facingRight = true;
+    }
     else
     {
         if (player.velocity.y < -50.0f)
@@ -356,7 +489,7 @@ void loop()
             if (player.current == &player.animations["double_jump"])
             {
                 float duration = player.current->frames * player.current->frameDuration;
-                if (frametime >= duration)
+                if (player.animationTime >= duration)
                 {
                     PlayAnimation(player, "jump");
                 }

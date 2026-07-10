@@ -16,19 +16,19 @@ namespace Olia
   std::function<void(float)> onPhysicsUpdate = nullptr;
   std::function<void(float)> onAppUpdate = nullptr;
 
-  void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+  void framebuffer_size_callback(GLFWwindow *window, int width, int height)
   {
-      glViewport(0, 0, width, height);
+    glViewport(0, 0, width, height);
   }
 
-  void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+  void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
   {
-      g_ScrollYDelta = yoffset;
+    g_ScrollYDelta = yoffset;
   }
 
   void DrawQuad(glm::vec2 pos, glm::vec2 size,
                 glm::vec4 color,
-                Texture* texture)
+                Texture *texture)
   {
     Entity sprite = context.ecs->Create();
 
@@ -70,6 +70,7 @@ namespace Olia
     }
 
     glfwMakeContextCurrent(window);
+    glfwFocusWindow(window);
     context.window = window;
     context.virtualWidth = width;
     context.virtualHeight = height;
@@ -84,9 +85,8 @@ namespace Olia
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-    glfwSetCharCallback(window, [](GLFWwindow* window, unsigned int codepoint) {
-        UISystem::CharCallback(codepoint);
-    });
+    glfwSetCharCallback(window, [](GLFWwindow *window, unsigned int codepoint)
+                        { UISystem::CharCallback(codepoint); });
 
     glfwSetScrollCallback(window, scroll_callback);
 
@@ -101,6 +101,7 @@ namespace Olia
     context.renderer = new Renderer2D();
     context.renderer->Init();
     context.input = new InputManager();
+    context.physics = new PhysicsSystem();
     context.input->Initialize(context.window);
 
     const char *vertex = R"(
@@ -190,7 +191,7 @@ void main()
     context.shader->Bind();
     for (int i = 0; i < 8; ++i)
     {
-        context.shader->SetInt("u_Textures[" + std::to_string(i) + "]", i);
+      context.shader->SetInt("u_Textures[" + std::to_string(i) + "]", i);
     }
 
     {
@@ -223,6 +224,13 @@ void main()
 
     while (!glfwWindowShouldClose(context.window))
     {
+      if (glfwGetWindowAttrib(context.window, GLFW_ICONIFIED))
+      {
+        glfwWaitEvents();
+        lastTime = glfwGetTime();
+        continue;
+      }
+
       glfwPollEvents();
 
       double currentTime = glfwGetTime();
@@ -233,7 +241,7 @@ void main()
       // snap it to a standard single-frame step (1/60s) to prevent physics glitches.
       if (deltaTime > 0.1f)
       {
-          deltaTime = 1.0f / 60.0f;
+        deltaTime = 1.0f / 60.0f;
       }
 
       glClearColor(context.backgroundColor.x, context.backgroundColor.y,
@@ -254,81 +262,87 @@ void main()
     glfwTerminate();
   }
 
-  bool InitText(const std::string& fontPath, unsigned int fontSize)
+  bool InitText(const std::string &fontPath, unsigned int fontSize)
   {
-      if (!context.textRenderer)
-      {
-          context.textRenderer = new TextRenderer();
-      }
-      return context.textRenderer->LoadFont(fontPath, fontSize);
+    if (!context.textRenderer)
+    {
+      context.textRenderer = new TextRenderer();
+    }
+    return context.textRenderer->LoadFont(fontPath, fontSize);
   }
 
   struct QueuedText
   {
-      std::string text;
-      float x;
-      float y;
-      float scale;
-      glm::vec4 color;
+    std::string text;
+    float x;
+    float y;
+    float scale;
+    glm::vec4 color;
   };
   static std::vector<QueuedText> s_QueuedTexts;
 
-  void RenderText(const std::string& text, float x, float y, float scale, const glm::vec4& color)
+  void RenderText(const std::string &text, float x, float y, float scale, const glm::vec4 &color)
   {
-      s_QueuedTexts.push_back({text, x, y, scale, color});
+    s_QueuedTexts.push_back({text, x, y, scale, color});
   }
 
   struct QueuedQuad
   {
-      glm::vec2 pos;
-      glm::vec2 size;
-      glm::vec4 color;
-      Texture* texture;
-      bool useTexCoords;
-      glm::vec2 texCoords[4];
+    glm::vec2 pos;
+    glm::vec2 size;
+    glm::vec4 color;
+    Texture *texture;
+    bool useTexCoords;
+    glm::vec2 texCoords[4];
   };
   static std::vector<QueuedQuad> s_QueuedQuads;
 
-  void RenderQuad(glm::vec2 pos, glm::vec2 size, glm::vec4 color, Texture* texture, bool useTexCoords, const glm::vec2* texCoords)
+  void RenderQuad(glm::vec2 pos, glm::vec2 size, glm::vec4 color, Texture *texture, bool useTexCoords, const glm::vec2 *texCoords)
   {
-      QueuedQuad qq;
-      qq.pos = pos;
-      qq.size = size;
-      qq.color = color;
-      qq.texture = texture;
-      qq.useTexCoords = useTexCoords;
-      if (useTexCoords && texCoords)
-      {
-          for (int i = 0; i < 4; ++i) qq.texCoords[i] = texCoords[i];
-      }
-      s_QueuedQuads.push_back(qq);
+    QueuedQuad qq;
+    qq.pos = pos;
+    qq.size = size;
+    qq.color = color;
+    qq.texture = texture;
+    qq.useTexCoords = useTexCoords;
+    if (useTexCoords && texCoords)
+    {
+      for (int i = 0; i < 4; ++i)
+        qq.texCoords[i] = texCoords[i];
+    }
+    s_QueuedQuads.push_back(qq);
   }
 
-  void DrawText(const std::string& text, glm::vec2 pos, float scale, glm::vec4 color)
+  void DrawText(const std::string &text, glm::vec2 pos, float scale, glm::vec4 color)
   {
-      Entity entity = context.ecs->Create();
-      TextComponent textComp;
-      textComp.text = text;
-      textComp.position = pos;
-      textComp.scale = scale;
-      textComp.color = color;
-      context.ecs->Add(entity, textComp);
+    Entity entity = context.ecs->Create();
+    TextComponent textComp;
+    textComp.text = text;
+    textComp.position = pos;
+    textComp.scale = scale;
+    textComp.color = color;
+    context.ecs->Add(entity, textComp);
   }
 
-  float GetTextWidth(const std::string& text, float scale)
+  float GetTextWidth(const std::string &text, float scale)
   {
-      if (context.textRenderer)
-      {
-          return context.textRenderer->GetTextWidth(text, scale);
-      }
-      return 0.0f;
+    if (context.textRenderer)
+    {
+      return context.textRenderer->GetTextWidth(text, scale);
+    }
+    return 0.0f;
   }
 
   void Clear()
   {
+    if (context.physics)
+    {
+      context.physics->Shutdown();
+      delete context.physics;
+    }
+
     if (context.shader)
       delete context.shader;
-      
     if (context.input)
       delete context.input;
     if (context.ecs)
@@ -380,6 +394,22 @@ void main()
 
     context.renderer->BeginScene(camera);
 
+    // 1. Render queued immediate-mode quads (background, platforms, player, etc.)
+    for (const auto &qq : s_QueuedQuads)
+    {
+      uint32_t texID = qq.texture ? qq.texture->id : 0;
+      if (qq.useTexCoords)
+      {
+        context.renderer->DrawQuad(glm::vec3(qq.pos.x, qq.pos.y, 0.0f), qq.size, qq.color, texID, qq.texCoords);
+      }
+      else
+      {
+        context.renderer->DrawQuad(glm::vec3(qq.pos.x, qq.pos.y, 0.0f), qq.size, qq.color, texID);
+      }
+    }
+    s_QueuedQuads.clear();
+
+    // 2. Render ECS SpriteRenderer components on top (UI button backgrounds, images, etc.)
     auto sprites = context.ecs->Query<SpriteRenderer>();
 
     // Collect all scroll view children to skip rendering them here (they are rendered in UIScrollView's scissor block)
@@ -387,7 +417,7 @@ void main()
     auto scrollViews = context.ecs->Query<UIScrollViewComponent>();
     for (Entity entity : scrollViews)
     {
-      auto& sv = context.ecs->Get<UIScrollViewComponent>(entity);
+      auto &sv = context.ecs->Get<UIScrollViewComponent>(entity);
       for (Entity child : sv.children)
       {
         scrollChildren.insert(child);
@@ -405,21 +435,6 @@ void main()
       context.renderer->DrawSprite(transform, sprite);
     }
 
-    // Render queued immediate-mode quads
-    for (const auto& qq : s_QueuedQuads)
-    {
-        uint32_t texID = qq.texture ? qq.texture->id : 0;
-        if (qq.useTexCoords)
-        {
-            context.renderer->DrawQuad(glm::vec3(qq.pos.x, qq.pos.y, 0.0f), qq.size, qq.color, texID, qq.texCoords);
-        }
-        else
-        {
-            context.renderer->DrawQuad(glm::vec3(qq.pos.x, qq.pos.y, 0.0f), qq.size, qq.color, texID);
-        }
-    }
-    s_QueuedQuads.clear();
-
     context.renderer->EndScene();
 
     // Render ECS text components
@@ -434,13 +449,13 @@ void main()
     UISystem::Render();
 
     // Render all queued texts (immediate-mode and ECS text components)
-    for (const auto& qt : s_QueuedTexts)
+    for (const auto &qt : s_QueuedTexts)
     {
       if (context.textRenderer)
       {
-          glEnable(GL_BLEND);
-          glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-          context.textRenderer->RenderText(qt.text, qt.x, qt.y, qt.scale, qt.color);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        context.textRenderer->RenderText(qt.text, qt.x, qt.y, qt.scale, qt.color);
       }
     }
     s_QueuedTexts.clear();
