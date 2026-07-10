@@ -13,6 +13,7 @@
 #include <olia/utils/shader.h>
 #include <olia/utils/filesystem.h>
 #include <olia/utils/text_renderer.h>
+#include <olia/utils/thread_pool.h>
 #include <olia/ui/ui.h>
 
 namespace Olia
@@ -29,6 +30,7 @@ namespace Olia
         ECS *ecs = nullptr;
         Shader *shader = nullptr;
         PhysicsSystem* physics = nullptr;
+        ThreadPool *threadPool = nullptr;
 
         Renderer2D *renderer = nullptr;
         TextRenderer *textRenderer = nullptr;

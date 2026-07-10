@@ -91,10 +91,75 @@ namespace Olia
         glGenerateMipmap(GL_TEXTURE_2D);
 
         stbi_image_free(data);
-
+ 
         texture.width = width;
         texture.height = height;
+ 
+        return texture;
+    }
+
+    DecodedImageData Filesystem::DecodeImage(const std::string& path)
+    {
+        DecodedImageData decoded;
+        std::string resolvedPath = ResolvePath(path);
+        stbi_set_flip_vertically_on_load(false);
+        decoded.data = stbi_load(resolvedPath.c_str(), &decoded.width, &decoded.height, &decoded.channels, 0);
+        if (!decoded.data)
+        {
+            std::cerr << "Failed to decode image at path: " << path << " (resolved as: " << resolvedPath << ")" << std::endl;
+        }
+        return decoded;
+    }
+
+    Texture Filesystem::UploadTexture(const DecodedImageData& img)
+    {
+        Texture texture{ 0, 0, 0 };
+        if (!img.data)
+            return texture;
+
+        GLenum internalFormat = GL_RGB;
+        GLenum dataFormat = GL_RGB;
+
+        if (img.channels == 1)
+        {
+            internalFormat = GL_RED;
+            dataFormat = GL_RED;
+        }
+        else if (img.channels == 3)
+        {
+            internalFormat = GL_RGB;
+            dataFormat = GL_RGB;
+        }
+        else if (img.channels == 4)
+        {
+            internalFormat = GL_RGBA;
+            dataFormat = GL_RGBA;
+        }
+
+        glGenTextures(1, &texture.id);
+        glBindTexture(GL_TEXTURE_2D, texture.id);
+
+        // Setup parameters
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, img.width, img.height, 0, dataFormat, GL_UNSIGNED_BYTE, img.data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        texture.width = img.width;
+        texture.height = img.height;
 
         return texture;
+    }
+
+    void Filesystem::FreeImageData(DecodedImageData& img)
+    {
+        if (img.data)
+        {
+            stbi_image_free(img.data);
+            img.data = nullptr;
+        }
     }
 }

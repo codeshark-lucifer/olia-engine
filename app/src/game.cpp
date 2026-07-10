@@ -4,6 +4,7 @@
 #include <core.h>
 #include <game/game.h>
 #include <thread>
+#include <future>
 
 static void PlayGameSound(const std::string& relativePath)
 {
@@ -40,13 +41,54 @@ static void LoadCharacter(const std::string& characterName)
     player.animations.clear();
 
     std::string base = "assets/Free/Main Characters/" + characterName + "/";
-    LoadAnimation(player, "idle", base + "Idle (32x32).png", 11);
-    LoadAnimation(player, "run", base + "Run (32x32).png", 12);
-    LoadAnimation(player, "jump", base + "Jump (32x32).png", 1);
-    LoadAnimation(player, "double_jump", base + "Double Jump (32x32).png", 6);
-    LoadAnimation(player, "fall", base + "Fall (32x32).png", 1);
-    LoadAnimation(player, "hit", base + "Hit (32x32).png", 7);
-    LoadAnimation(player, "wall_jump", base + "Wall Jump (32x32).png", 5);
+
+    struct AnimInfo {
+        std::string name;
+        std::string path;
+        int frames;
+    };
+    std::vector<AnimInfo> anims = {
+        { "idle", base + "Idle (32x32).png", 11 },
+        { "run", base + "Run (32x32).png", 12 },
+        { "jump", base + "Jump (32x32).png", 1 },
+        { "double_jump", base + "Double Jump (32x32).png", 6 },
+        { "fall", base + "Fall (32x32).png", 1 },
+        { "hit", base + "Hit (32x32).png", 7 },
+        { "wall_jump", base + "Wall Jump (32x32).png", 5 }
+    };
+
+    // Parallel Decode using ThreadPool!
+    struct LoadedAnimData {
+        std::string name;
+        int frames;
+        Olia::DecodedImageData img;
+    };
+    std::vector<std::future<LoadedAnimData>> futures;
+
+    for (const auto& anim : anims)
+    {
+        futures.push_back(Olia::context.threadPool->Enqueue([anim]() {
+            LoadedAnimData data;
+            data.name = anim.name;
+            data.frames = anim.frames;
+            data.img = Olia::Filesystem::DecodeImage(anim.path);
+            return data;
+        }));
+    }
+
+    // Main thread uploads textures to GPU and stores in animations map
+    for (auto& fut : futures)
+    {
+        LoadedAnimData data = fut.get(); // blocks until this thread finishes loading/decoding
+        Animation animation;
+        animation.texture = Olia::Filesystem::UploadTexture(data.img);
+        animation.frames = data.frames;
+        animation.frameDuration = 0.05f;
+
+        Olia::Filesystem::FreeImageData(data.img);
+
+        player.animations.emplace(data.name, std::move(animation));
+    }
 
     // Replay current animation or default idle
     player.current = nullptr;

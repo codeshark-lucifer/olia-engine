@@ -103,6 +103,7 @@ namespace Olia
     context.input = new InputManager();
     context.physics = new PhysicsSystem();
     context.input->Initialize(context.window);
+    context.threadPool = new ThreadPool();
 
     const char *vertex = R"(
 
@@ -349,6 +350,11 @@ void main()
       delete context.ecs;
     if (context.textRenderer)
       delete context.textRenderer;
+    if (context.threadPool)
+    {
+      delete context.threadPool;
+      context.threadPool = nullptr;
+    }
 
     if (context.window)
     {
