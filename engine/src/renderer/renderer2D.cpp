@@ -37,17 +37,51 @@ namespace Olia
             textureID = sprite.texture->id;
         }
 
-        batch.DrawQuad(
-            transform.position,
-            sprite.size,
-            sprite.color,
-            textureID,
-            transform.rotation.z);
+        if (sprite.useTexCoords)
+        {
+            batch.DrawQuad(
+                transform.position,
+                sprite.size,
+                sprite.color,
+                textureID,
+                sprite.texCoords,
+                transform.rotation.z);
+        }
+        else
+        {
+            batch.DrawQuad(
+                transform.position,
+                sprite.size,
+                sprite.color,
+                textureID,
+                transform.rotation.z);
+        }
     }
 
     void Renderer2D::EndScene()
     {
         batch.End();
         batch.Flush(*context.shader);
+    }
+
+    void Renderer2D::DrawQuad(
+        const glm::vec3 &position,
+        const glm::vec2 &size,
+        const glm::vec4 &color,
+        uint32_t textureID,
+        float rotation)
+    {
+        batch.DrawQuad(position, size, color, textureID, rotation);
+    }
+
+    void Renderer2D::DrawQuad(
+        const glm::vec3 &position,
+        const glm::vec2 &size,
+        const glm::vec4 &color,
+        uint32_t textureID,
+        const glm::vec2 texCoords[4],
+        float rotation)
+    {
+        batch.DrawQuad(position, size, color, textureID, texCoords, rotation);
     }
 }

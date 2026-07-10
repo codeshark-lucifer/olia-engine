@@ -191,6 +191,126 @@ void Batch::DrawQuad(
     m_Indices.push_back(start + 0);
 }
 
+void Batch::DrawQuad(
+    const glm::vec3& position,
+    const glm::vec2& size,
+    const glm::vec4& color,
+    uint32_t textureID,
+    const glm::vec2 texCoords[4],
+    float rotation)
+{
+    float texIndex = 0.0f;
+
+    if (textureID != 0)
+    {
+        int slot = -1;
+        for (size_t i = 0; i < m_TextureSlots.size(); ++i)
+        {
+            if (m_TextureSlots[i] == textureID)
+            {
+                slot = static_cast<int>(i);
+                break;
+            }
+        }
+
+        if (slot == -1)
+        {
+            if (m_TextureSlots.size() < 8)
+            {
+                m_TextureSlots.push_back(textureID);
+                slot = static_cast<int>(m_TextureSlots.size() - 1);
+            }
+            else
+            {
+                slot = 0;
+            }
+        }
+
+        texIndex = static_cast<float>(slot + 1);
+    }
+
+    uint32_t start = static_cast<uint32_t>(m_Vertices.size());
+
+    if (glm::abs(rotation) < 0.0001f)
+    {
+        m_Vertices.push_back({
+            position,
+            color,
+            texCoords[0],
+            texIndex
+        });
+
+        m_Vertices.push_back({
+            {position.x + size.x, position.y, position.z},
+            color,
+            texCoords[1],
+            texIndex
+        });
+
+        m_Vertices.push_back({
+            {position.x + size.x, position.y + size.y, position.z},
+            color,
+            texCoords[2],
+            texIndex
+        });
+
+        m_Vertices.push_back({
+            {position.x, position.y + size.y, position.z},
+            color,
+            texCoords[3],
+            texIndex
+        });
+    }
+    else
+    {
+        glm::vec2 center = glm::vec2(position.x + size.x * 0.5f, position.y + size.y * 0.5f);
+        float cosRot = glm::cos(rotation);
+        float sinRot = glm::sin(rotation);
+
+        auto rotatePoint = [&](float x, float y) -> glm::vec3 {
+            float rx = (x - center.x) * cosRot - (y - center.y) * sinRot + center.x;
+            float ry = (x - center.x) * sinRot + (y - center.y) * cosRot + center.y;
+            return glm::vec3(rx, ry, position.z);
+        };
+
+        m_Vertices.push_back({
+            rotatePoint(position.x, position.y),
+            color,
+            texCoords[0],
+            texIndex
+        });
+
+        m_Vertices.push_back({
+            rotatePoint(position.x + size.x, position.y),
+            color,
+            texCoords[1],
+            texIndex
+        });
+
+        m_Vertices.push_back({
+            rotatePoint(position.x + size.x, position.y + size.y),
+            color,
+            texCoords[2],
+            texIndex
+        });
+
+        m_Vertices.push_back({
+            rotatePoint(position.x, position.y + size.y),
+            color,
+            texCoords[3],
+            texIndex
+        });
+    }
+
+    m_Indices.push_back(start + 0);
+    m_Indices.push_back(start + 1);
+    m_Indices.push_back(start + 2);
+
+    m_Indices.push_back(start + 2);
+    m_Indices.push_back(start + 3);
+    m_Indices.push_back(start + 0);
+}
+
 void Batch::End()
 {
     glBindVertexArray(m_VAO);

@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_set>
+#include <vector>
 
 namespace Olia
 {
@@ -91,6 +92,9 @@ namespace Olia
 
     glViewport(0, 0, width, height);
 
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     context.shader = new Shader();
 
     context.ecs = new ECS();
@@ -144,16 +148,37 @@ void main()
     }
     else
     {
-        vec4 texColor = v_Color;
-        if (index == 1) texColor = texture(u_Textures[0], v_TexCoords) * v_Color;
-        else if (index == 2) texColor = texture(u_Textures[1], v_TexCoords) * v_Color;
-        else if (index == 3) texColor = texture(u_Textures[2], v_TexCoords) * v_Color;
-        else if (index == 4) texColor = texture(u_Textures[3], v_TexCoords) * v_Color;
-        else if (index == 5) texColor = texture(u_Textures[4], v_TexCoords) * v_Color;
-        else if (index == 6) texColor = texture(u_Textures[5], v_TexCoords) * v_Color;
-        else if (index == 7) texColor = texture(u_Textures[6], v_TexCoords) * v_Color;
-        else if (index == 8) texColor = texture(u_Textures[7], v_TexCoords) * v_Color;
-        FragColor = texColor;
+        vec4 c = vec4(1.0);
+        if (index == 1) c = texture(u_Textures[0], v_TexCoords);
+        else if (index == 2) c = texture(u_Textures[1], v_TexCoords);
+        else if (index == 3) c = texture(u_Textures[2], v_TexCoords);
+        else if (index == 4) c = texture(u_Textures[3], v_TexCoords);
+        else if (index == 5) c = texture(u_Textures[4], v_TexCoords);
+        else if (index == 6) c = texture(u_Textures[5], v_TexCoords);
+        else if (index == 7) c = texture(u_Textures[6], v_TexCoords);
+        else if (index == 8) c = texture(u_Textures[7], v_TexCoords);
+        
+        // Selective chroma key: if alpha is around 0.99, key out black
+        if (abs(v_Color.a - 0.99) < 0.005)
+        {
+            if (c.r < 0.08 && c.g < 0.08 && c.b < 0.08)
+            {
+                discard;
+            }
+            FragColor = vec4(c.rgb, c.a);
+        }
+        else if (abs(v_Color.a - 0.98) < 0.005)
+        {
+            // Key out hazard sprite sheet grey background colors
+            if (abs(c.r - 0.80) < 0.04 && abs(c.g - 0.80) < 0.04 && abs(c.b - 0.80) < 0.04) discard;
+            if (abs(c.r - 0.76) < 0.04 && abs(c.g - 0.76) < 0.04 && abs(c.b - 0.76) < 0.04) discard;
+            if (abs(c.r - 0.65) < 0.04 && abs(c.g - 0.65) < 0.04 && abs(c.b - 0.67) < 0.04) discard;
+            FragColor = vec4(c.rgb, c.a);
+        }
+        else
+        {
+            FragColor = c * v_Color;
+        }
     }
 }
 
@@ -238,17 +263,45 @@ void main()
       return context.textRenderer->LoadFont(fontPath, fontSize);
   }
 
+  struct QueuedText
+  {
+      std::string text;
+      float x;
+      float y;
+      float scale;
+      glm::vec4 color;
+  };
+  static std::vector<QueuedText> s_QueuedTexts;
+
   void RenderText(const std::string& text, float x, float y, float scale, const glm::vec4& color)
   {
-      if (context.textRenderer)
+      s_QueuedTexts.push_back({text, x, y, scale, color});
+  }
+
+  struct QueuedQuad
+  {
+      glm::vec2 pos;
+      glm::vec2 size;
+      glm::vec4 color;
+      Texture* texture;
+      bool useTexCoords;
+      glm::vec2 texCoords[4];
+  };
+  static std::vector<QueuedQuad> s_QueuedQuads;
+
+  void RenderQuad(glm::vec2 pos, glm::vec2 size, glm::vec4 color, Texture* texture, bool useTexCoords, const glm::vec2* texCoords)
+  {
+      QueuedQuad qq;
+      qq.pos = pos;
+      qq.size = size;
+      qq.color = color;
+      qq.texture = texture;
+      qq.useTexCoords = useTexCoords;
+      if (useTexCoords && texCoords)
       {
-          glEnable(GL_BLEND);
-          glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-          context.textRenderer->RenderText(text, x, y, scale, color);
-
-          glDisable(GL_BLEND);
+          for (int i = 0; i < 4; ++i) qq.texCoords[i] = texCoords[i];
       }
+      s_QueuedQuads.push_back(qq);
   }
 
   void DrawText(const std::string& text, glm::vec2 pos, float scale, glm::vec4 color)
@@ -317,7 +370,11 @@ void main()
   {
     auto cameras = context.ecs->Query<Camera2D>();
     if (cameras.empty())
+    {
+      s_QueuedTexts.clear();
+      s_QueuedQuads.clear();
       return;
+    }
 
     auto &camera = context.ecs->Get<Camera2D>(cameras.front());
 
@@ -348,6 +405,21 @@ void main()
       context.renderer->DrawSprite(transform, sprite);
     }
 
+    // Render queued immediate-mode quads
+    for (const auto& qq : s_QueuedQuads)
+    {
+        uint32_t texID = qq.texture ? qq.texture->id : 0;
+        if (qq.useTexCoords)
+        {
+            context.renderer->DrawQuad(glm::vec3(qq.pos.x, qq.pos.y, 0.0f), qq.size, qq.color, texID, qq.texCoords);
+        }
+        else
+        {
+            context.renderer->DrawQuad(glm::vec3(qq.pos.x, qq.pos.y, 0.0f), qq.size, qq.color, texID);
+        }
+    }
+    s_QueuedQuads.clear();
+
     context.renderer->EndScene();
 
     // Render ECS text components
@@ -360,6 +432,18 @@ void main()
 
     // Render UI overlays
     UISystem::Render();
+
+    // Render all queued texts (immediate-mode and ECS text components)
+    for (const auto& qt : s_QueuedTexts)
+    {
+      if (context.textRenderer)
+      {
+          glEnable(GL_BLEND);
+          glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+          context.textRenderer->RenderText(qt.text, qt.x, qt.y, qt.scale, qt.color);
+      }
+    }
+    s_QueuedTexts.clear();
   }
 
 } // namespace Olia

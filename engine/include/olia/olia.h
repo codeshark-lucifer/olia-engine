@@ -47,6 +47,12 @@ namespace Olia
                   glm::vec4 color = {1.0f, 1.0f, 1.0f, 1.0f},
                   Texture *texture = nullptr);
 
+    void RenderQuad(glm::vec2 pos, glm::vec2 size,
+                    glm::vec4 color = {1.0f, 1.0f, 1.0f, 1.0f},
+                    Texture *texture = nullptr,
+                    bool useTexCoords = false,
+                    const glm::vec2* texCoords = nullptr);
+
     bool InitText(const std::string& fontPath, unsigned int fontSize);
     void RenderText(const std::string& text, float x, float y, float scale = 1.0f, const glm::vec4& color = glm::vec4(1.0f));
     void DrawText(const std::string& text, glm::vec2 pos, float scale = 1.0f, glm::vec4 color = glm::vec4(1.0f));

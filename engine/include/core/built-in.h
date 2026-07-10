@@ -26,6 +26,13 @@ namespace Olia
         Texture *texture = nullptr;
         glm::vec4 color{1.0f};
         glm::vec2 size{64.0f, 64.0f};
+        bool useTexCoords = false;
+        glm::vec2 texCoords[4] = {
+            { 0.0f, 0.0f },
+            { 1.0f, 0.0f },
+            { 1.0f, 1.0f },
+            { 0.0f, 1.0f }
+        };
     };
 
     struct TextComponent
