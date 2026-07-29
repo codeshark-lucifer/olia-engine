@@ -1,57 +1,37 @@
 #pragma once
+
 #include "./mesh.h"
 #include <memory>
 #include "vulkan/device.hpp"
+#include "vulkan/shader/buffer.hpp"   // new include
 
 class MeshRenderer
 {
 public:
     MeshRenderer() = default;
 
-    // MeshRenderer(const MeshRenderer &) = delete;
-    // MeshRenderer &operator=(const MeshRenderer &) = delete;
+    // No need for custom destructor – unique_ptrs will clean up automatically
+    ~MeshRenderer() = default;
 
-    ~MeshRenderer()
-    {
-        vkDestroyBuffer(device->device(), vertexBuffer, nullptr);
-        vkFreeMemory(device->device(), vertexBufferMemory, nullptr);
-
-        // Added index buffer cleanup
-        vkDestroyBuffer(device->device(), indexBuffer, nullptr);
-        vkFreeMemory(device->device(), indexBufferMemory, nullptr);
-    }
-
-    void SetMesh(std::unique_ptr<Mesh> meshPtr)
-    {
-        mesh = std::move(meshPtr);
-    }
-
-    void Setup(Engine::EngineDevice *devicePtr)
-    {
-        device = devicePtr;
-
-        CreateVertexBuffers(mesh->vertices);
-        CreateIndicesBuffers(mesh->indices);
-    }
+    void SetMesh(std::unique_ptr<Mesh> meshPtr) { mesh = std::move(meshPtr); }
+    void Setup(Engine::EngineDevice* devicePtr);
 
     void BindBuffers(VkCommandBuffer commandBuffer);
     void Draw(VkCommandBuffer commandBuffer);
-    bool HasMesh() { return mesh != nullptr; }
+
+    bool HasMesh() const { return mesh != nullptr; }
     std::unique_ptr<Mesh> GetMesh() { return std::move(mesh); }
 
 private:
-    void CreateVertexBuffers(const std::vector<Engine::Vertex> &vertices);
-    void CreateIndicesBuffers(const std::vector<uint16_t> &indices);
+    void CreateVertexBuffers(const std::vector<Engine::Vertex>& vertices);
+    void CreateIndicesBuffers(const std::vector<uint16_t>& indices);
 
     std::unique_ptr<Mesh> mesh = nullptr;
-    Engine::EngineDevice *device = nullptr;
+    Engine::EngineDevice* device = nullptr;
 
-    VkBuffer vertexBuffer = VK_NULL_HANDLE;
-    VkDeviceMemory vertexBufferMemory = VK_NULL_HANDLE;
-
-    // Added index buffer handles
-    VkBuffer indexBuffer = VK_NULL_HANDLE;
-    VkDeviceMemory indexBufferMemory = VK_NULL_HANDLE;
+    // Use EngineBuffer wrappers instead of raw Vulkan handles
+    std::unique_ptr<Engine::EngineBuffer> vertexBuffer;
+    std::unique_ptr<Engine::EngineBuffer> indexBuffer;
 
     uint32_t vertexCount = 0;
     uint32_t indicesCount = 0;

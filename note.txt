@@ -32,68 +32,39 @@ struct Material
 FILE: D:\Program Education\c++\olia-engine\engine\include\components\mesh-renderer.h
 ============================================================
 #pragma once
+
 #include "./mesh.h"
 #include <memory>
 #include "vulkan/device.hpp"
+#include "vulkan/shader/buffer.hpp"   // new include
 
 class MeshRenderer
 {
 public:
     MeshRenderer() = default;
 
-    MeshRenderer(const MeshRenderer &) = delete;
-    MeshRenderer &operator=(const MeshRenderer &) = delete;
+    // No need for custom destructor – unique_ptrs will clean up automatically
+    ~MeshRenderer() = default;
 
-    MeshRenderer(MeshRenderer &&) noexcept = default;
-    MeshRenderer &operator=(MeshRenderer &&) noexcept = default;
-
-    ~MeshRenderer()
-    {
-        if (device) // only clean up if device was set
-        {
-            if (vertexBuffer)
-                vkDestroyBuffer(device->device(), vertexBuffer, nullptr);
-            if (vertexBufferMemory)
-                vkFreeMemory(device->device(), vertexBufferMemory, nullptr);
-
-            if (indexBuffer)
-                vkDestroyBuffer(device->device(), indexBuffer, nullptr);
-            if (indexBufferMemory)
-                vkFreeMemory(device->device(), indexBufferMemory, nullptr);
-        }
-    }
-
-    void SetMesh(std::unique_ptr<Mesh> meshPtr)
-    {
-        mesh = std::move(meshPtr);
-    }
-
-    void Setup(Engine::EngineDevice *devicePtr)
-    {
-        device = devicePtr;
-
-        CreateVertexBuffers(mesh->vertices);
-        CreateIndicesBuffers(mesh->indices);
-    }
+    void SetMesh(std::unique_ptr<Mesh> meshPtr) { mesh = std::move(meshPtr); }
+    void Setup(Engine::EngineDevice* devicePtr);
 
     void BindBuffers(VkCommandBuffer commandBuffer);
     void Draw(VkCommandBuffer commandBuffer);
-    bool HasMesh() { return mesh != nullptr; }
+
+    bool HasMesh() const { return mesh != nullptr; }
     std::unique_ptr<Mesh> GetMesh() { return std::move(mesh); }
 
 private:
-    void CreateVertexBuffers(const std::vector<Engine::Vertex> &vertices);
-    void CreateIndicesBuffers(const std::vector<uint16_t> &indices);
+    void CreateVertexBuffers(const std::vector<Engine::Vertex>& vertices);
+    void CreateIndicesBuffers(const std::vector<uint16_t>& indices);
 
     std::unique_ptr<Mesh> mesh = nullptr;
-    Engine::EngineDevice *device = nullptr;
+    Engine::EngineDevice* device = nullptr;
 
-    VkBuffer vertexBuffer = VK_NULL_HANDLE;
-    VkDeviceMemory vertexBufferMemory = VK_NULL_HANDLE;
-
-    // Added index buffer handles
-    VkBuffer indexBuffer = VK_NULL_HANDLE;
-    VkDeviceMemory indexBufferMemory = VK_NULL_HANDLE;
+    // Use EngineBuffer wrappers instead of raw Vulkan handles
+    std::unique_ptr<Engine::EngineBuffer> vertexBuffer;
+    std::unique_ptr<Engine::EngineBuffer> indexBuffer;
 
     uint32_t vertexCount = 0;
     uint32_t indicesCount = 0;
@@ -288,7 +259,6 @@ struct Camera
         return GetProjection() * GetView(transform);
     }
 };
-
 
 ============================================================
 FILE: D:\Program Education\c++\olia-engine\engine\include\core\ecs\ecs.h
@@ -829,7 +799,6 @@ namespace Engine
         EngineDevice *device                        = nullptr;
         std::unique_ptr<EngineSwapChain> swapchain  = nullptr;
         std::unique_ptr<Pipeline> pipeline          = nullptr;
-        PipelineConfigInfo pipelineConfig;
     };
 
     struct EngineContext
@@ -902,10 +871,10 @@ FILE: D:\Program Education\c++\olia-engine\engine\include\engine\olia.h
 #include "engine/globals.h"
 #include "engine/export.h"
 
+#include "core/ecs/model.h"
 #include "components/structure/data.h"
 #include "components/mesh.h"
 #include "components/mesh-renderer.h"
-#include "core/ecs/model.h"
 
 using Vertex = Engine::Vertex;
 
@@ -27164,46 +27133,6 @@ Features deliberately excluded from the scope of this library:
 
 
 ============================================================
-FILE: D:\Program Education\c++\olia-engine\engine\include\vulkan\descriptor.hpp
-============================================================
-// descriptor.hpp
-#pragma once
-#include <vulkan/vulkan.h>
-#include <vector>
-
-namespace Engine {
-
-// Create a single descriptor set layout from bindings
-VkDescriptorSetLayout createDescriptorSetLayout(
-    VkDevice device,
-    const std::vector<VkDescriptorSetLayoutBinding>& bindings);
-
-// Create a descriptor pool capable of allocating 'maxSets' sets
-// with given pool sizes (type -> count)
-VkDescriptorPool createDescriptorPool(
-    VkDevice device,
-    const std::vector<VkDescriptorPoolSize>& poolSizes,
-    uint32_t maxSets);
-
-// Allocate one descriptor set from a pool using a given layout
-VkDescriptorSet allocateDescriptorSet(
-    VkDevice device,
-    VkDescriptorPool pool,
-    VkDescriptorSetLayout layout);
-
-// Write buffer info into a descriptor set binding
-void updateDescriptorSetWithBuffer(
-    VkDevice device,
-    VkDescriptorSet dstSet,
-    uint32_t binding,
-    VkDescriptorType type,
-    VkBuffer buffer,
-    VkDeviceSize offset,
-    VkDeviceSize range);
-
-} // namespace Engine
-
-============================================================
 FILE: D:\Program Education\c++\olia-engine\engine\include\vulkan\device.hpp
 ============================================================
 #pragma once
@@ -27350,7 +27279,7 @@ namespace Engine
         VkExtent2D getSwapChainExtent() { return swapChainExtent; }
         uint32_t width() { return swapChainExtent.width; }
         uint32_t height() { return swapChainExtent.height; }
-        uint32_t getCurrentFrame() const { return currentFrame; }
+
         float extentAspectRatio()
         {
             return static_cast<float>(swapChainExtent.width) / static_cast<float>(swapChainExtent.height);
@@ -27403,6 +27332,70 @@ namespace Engine
 } // namespace lve
 
 ============================================================
+FILE: D:\Program Education\c++\olia-engine\engine\include\vulkan\shader\buffer.hpp
+============================================================
+#pragma once
+
+#include "vulkan/device.hpp"
+
+namespace Engine
+{
+    class EngineBuffer
+    {
+    public:
+        EngineBuffer(
+            EngineDevice &device,
+            VkDeviceSize instanceSize,
+            uint32_t instanceCount,
+            VkBufferUsageFlags usageFlags,
+            VkMemoryPropertyFlags memoryPropertyFlags,
+            VkDeviceSize minOffsetAlignment = 1);
+        ~EngineBuffer();
+
+        EngineBuffer(const EngineBuffer &) = delete;
+        EngineBuffer &operator=(const EngineBuffer &) = delete;
+
+        VkResult map(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+        void unmap();
+
+        void writeToBuffer(void *data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+        VkResult flush(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+        VkDescriptorBufferInfo descriptorInfo(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+        VkResult invalidate(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+
+        void writeToIndex(void *data, int index);
+        VkResult flushIndex(int index);
+        VkDescriptorBufferInfo descriptorInfoForIndex(int index);
+        VkResult invalidateIndex(int index);
+
+        VkBuffer getBuffer() const { return buffer; }
+        void *getMappedMemory() const { return mapped; }
+        uint32_t getInstanceCount() const { return instanceCount; }
+        VkDeviceSize getInstanceSize() const { return instanceSize; }
+        VkDeviceSize getAlignmentSize() const { return instanceSize; }
+        VkBufferUsageFlags getUsageFlags() const { return usageFlags; }
+        VkMemoryPropertyFlags getMemoryPropertyFlags() const { return memoryPropertyFlags; }
+        VkDeviceSize getBufferSize() const { return bufferSize; }
+
+    private:
+        static VkDeviceSize getAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment);
+
+        EngineDevice &device;
+        void *mapped = nullptr;
+        VkBuffer buffer = VK_NULL_HANDLE;
+        VkDeviceMemory memory = VK_NULL_HANDLE;
+
+        VkDeviceSize bufferSize;
+        uint32_t instanceCount;
+        VkDeviceSize instanceSize;
+        VkDeviceSize alignmentSize;
+        VkBufferUsageFlags usageFlags;
+        VkMemoryPropertyFlags memoryPropertyFlags;
+    };
+
+} // namespace Engine
+
+============================================================
 FILE: D:\Program Education\c++\olia-engine\engine\include\vulkan\shader\pipeline.hpp
 ============================================================
 #pragma once
@@ -27435,8 +27428,6 @@ namespace Engine
 
         std::vector<VkDynamicState> dynamicStateEnables;
         VkPipelineDynamicStateCreateInfo dynamicStateInfo;
-
-        std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
 
         VkPipelineLayout pipelineLayout = nullptr;
         VkRenderPass renderPass = nullptr;
@@ -27491,27 +27482,9 @@ FILE: D:\Program Education\c++\olia-engine\engine\src\engine.cpp
 
 #include "components/mesh-renderer.h"
 #include "ufbx/ufbx.h"
-#include "vulkan/descriptor.hpp"
 
 namespace Engine
 {
-    // Light data matching the shader uniform block
-    struct LightData {
-        alignas(16) glm::vec3 color;
-        float padding; // for alignment
-    };
-
-    // Descriptor resources (layout, pool, per‑frame sets and UBOs)
-    struct DescriptorResources {
-        VkDescriptorSetLayout layout = VK_NULL_HANDLE;
-        VkDescriptorPool pool = VK_NULL_HANDLE;
-        std::vector<VkDescriptorSet> sets;
-        std::vector<VkBuffer> ubos;
-        std::vector<VkDeviceMemory> uboMemories;
-    };
-    static DescriptorResources g_descResources;
-
-    // Push constant structure (kept as is)
     struct PushConstantData
     {
         alignas(16) glm::mat4 model;
@@ -27520,14 +27493,28 @@ namespace Engine
     };
 
     EngineContext *g_context = nullptr;
-
-    // Forward declarations
     void CreateContextInfo(Platform &platform);
-    void CreateDescriptorResources();
-    void DestroyDescriptorResources();
 
     void Run(SetupFn setup, LoopFn loop)
     {
+        // {
+        //     // temp blocker
+        //     ufbx_load_opts opts = {0}; // Use default loading options
+        //     ufbx_error error;
+        //     std::filesystem::path model_path = GetExecutableDir() / "assets" / "models" / ("character.fbx");
+
+        //     // Use .string().c_str() to get a standard const char*
+        //     ufbx_scene *scene = ufbx_load_file(model_path.string().c_str(), &opts, &error);
+        //     if (!scene)
+        //     {
+        //         fprintf(stderr, "Failed to load FBX: %s\n", error.description.data);
+        //         return;
+        //     }
+        //     printf("Successfully loaded FBX scene!\n");
+
+        //     // Clean up when done
+        //     ufbx_free_scene(scene);
+        // }
         PlatformData platformData{};
 
         g_context = new EngineContext();
@@ -27568,12 +27555,7 @@ namespace Engine
     {
         if (!g_context)
             return;
-
         vkDeviceWaitIdle(g_context->vk_context.device->device());
-
-        // Destroy descriptor resources
-        DestroyDescriptorResources();
-
         vkDestroyPipelineLayout(g_context->vk_context.device->device(), g_context->vk_context.pipelineLayout, nullptr);
 
         delete g_context->vk_context.device;
@@ -27585,128 +27567,26 @@ namespace Engine
 
     void CreateContextInfo(Platform &platform)
     {
-        // Setup MeshRenderers
-        auto entities = ecs->Query<MeshRenderer>();
-        for (auto &entity : entities)
         {
-            auto &renderer = ecs->Get<MeshRenderer>(entity);
-            if (renderer.HasMesh())
+            // query all mesh-renderer to setup mesh if it has mesh
+            auto entities = ecs->Query<MeshRenderer>();
+            for (auto &entity : entities)
             {
-                renderer.Setup(g_context->vk_context.device);
+                auto &renderer = ecs->Get<MeshRenderer>(entity);
+                if (renderer.HasMesh())
+                {
+                    renderer.Setup(g_context->vk_context.device);
+                }
             }
         }
 
-        // Create descriptor resources (layout, pool, UBOs, descriptor sets)
-        CreateDescriptorResources();
-
-        // Now create pipeline layout (which includes descriptor set layouts)
         CreatePipelineLayout();
-
         RecreateSwapChain();
         CreateCommandBuffers();
     }
 
-    // -------------------------------------------------------------------------
-    // Descriptor resources creation
-    // -------------------------------------------------------------------------
-    void CreateDescriptorResources()
-    {
-        auto &device = g_context->vk_context.device;
-        VkDevice vkDevice = device->device();
-
-        // 1. Descriptor set layout (binding 0 = UBO)
-        VkDescriptorSetLayoutBinding binding{};
-        binding.binding = 0;
-        binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        binding.descriptorCount = 1;
-        binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT; // only fragment shader uses light
-
-        std::vector<VkDescriptorSetLayoutBinding> bindings = { binding };
-        g_descResources.layout = createDescriptorSetLayout(vkDevice, bindings);
-
-        // 2. Descriptor pool
-        VkDescriptorPoolSize poolSize{};
-        poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSize.descriptorCount = EngineSwapChain::MAX_FRAMES_IN_FLIGHT;
-
-        std::vector<VkDescriptorPoolSize> poolSizes = { poolSize };
-        g_descResources.pool = createDescriptorPool(vkDevice, poolSizes, EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
-
-        // 3. Allocate descriptor sets (one per frame)
-        g_descResources.sets.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
-        for (int i = 0; i < EngineSwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
-        {
-            g_descResources.sets[i] = allocateDescriptorSet(vkDevice, g_descResources.pool, g_descResources.layout);
-        }
-
-        // 4. Create UBO buffers (one per frame)
-        g_descResources.ubos.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
-        g_descResources.uboMemories.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
-        VkDeviceSize bufferSize = sizeof(LightData);
-
-        for (int i = 0; i < EngineSwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
-        {
-            device->createBuffer(
-                bufferSize,
-                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                g_descResources.ubos[i],
-                g_descResources.uboMemories[i]
-            );
-        }
-
-        // 5. Update descriptor sets (point to the buffers)
-        for (int i = 0; i < EngineSwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
-        {
-            updateDescriptorSetWithBuffer(
-                vkDevice,
-                g_descResources.sets[i],
-                0, // binding
-                VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                g_descResources.ubos[i],
-                0,
-                bufferSize
-            );
-        }
-
-        // 6. Register the layout in the pipeline config so it's used when creating the pipeline layout
-        g_context->vk_context.pipelineConfig.descriptorSetLayouts.push_back(g_descResources.layout);
-    }
-
-    void DestroyDescriptorResources()
-    {
-        VkDevice vkDevice = g_context->vk_context.device->device();
-
-        // Destroy UBO buffers and memory
-        for (size_t i = 0; i < g_descResources.ubos.size(); ++i)
-        {
-            if (g_descResources.ubos[i] != VK_NULL_HANDLE)
-                vkDestroyBuffer(vkDevice, g_descResources.ubos[i], nullptr);
-            if (g_descResources.uboMemories[i] != VK_NULL_HANDLE)
-                vkFreeMemory(vkDevice, g_descResources.uboMemories[i], nullptr);
-        }
-
-        if (g_descResources.pool != VK_NULL_HANDLE)
-            vkDestroyDescriptorPool(vkDevice, g_descResources.pool, nullptr);
-        if (g_descResources.layout != VK_NULL_HANDLE)
-            vkDestroyDescriptorSetLayout(vkDevice, g_descResources.layout, nullptr);
-
-        g_descResources = DescriptorResources{};
-    }
-
-    // -------------------------------------------------------------------------
-    // Pipeline layout creation (now uses descriptor set layouts)
-    // -------------------------------------------------------------------------
     void CreatePipelineLayout()
     {
-        // pipelineConfig is already set to default in CreateContextInfo
-        // but we need to ensure it's initialized before calling this.
-        // In case it's not, we set it here:
-        if (g_context->vk_context.pipelineConfig.descriptorSetLayouts.empty())
-        {
-            // fallback – but we already added it above
-        }
-
         VkPushConstantRange pushConstantRange{};
         pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         pushConstantRange.offset = 0;
@@ -27714,8 +27594,14 @@ namespace Engine
 
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(g_context->vk_context.pipelineConfig.descriptorSetLayouts.size());
-        pipelineLayoutInfo.pSetLayouts = g_context->vk_context.pipelineConfig.descriptorSetLayouts.data();
+        pipelineLayoutInfo.pNext = nullptr;
+        pipelineLayoutInfo.flags = 0;
+
+        // No descriptor sets
+        pipelineLayoutInfo.setLayoutCount = 0;
+        pipelineLayoutInfo.pSetLayouts = nullptr;
+
+        // No push constants
         pipelineLayoutInfo.pushConstantRangeCount = 1;
         pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
@@ -27734,15 +27620,11 @@ namespace Engine
         assert(g_context->vk_context.swapchain != nullptr && "Cannot create pipeline before swap chain.");
         assert(g_context->vk_context.pipelineLayout != nullptr && "Cannot create pipeline before layout");
 
-        g_context->vk_context.pipelineConfig.renderPass = g_context->vk_context.swapchain->getRenderPass();
-        g_context->vk_context.pipelineConfig.pipelineLayout = g_context->vk_context.pipelineLayout;
+        auto pipelineConfig = Pipeline::DefaultPipelineConfigInfo();
+        pipelineConfig.renderPass = g_context->vk_context.swapchain->getRenderPass();
+        pipelineConfig.pipelineLayout = g_context->vk_context.pipelineLayout;
 
-        g_context->vk_context.pipeline = std::make_unique<Pipeline>(
-            *g_context->vk_context.device,
-            "main.vert",
-            "main.frag",
-            std::move(g_context->vk_context.pipelineConfig)
-        );
+        g_context->vk_context.pipeline = std::make_unique<Pipeline>(*g_context->vk_context.device, "main.vert", "main.frag", std::move(pipelineConfig));
     }
 
     void CreateCommandBuffers()
@@ -27872,30 +27754,6 @@ namespace Engine
             throw std::runtime_error("Failed to acquire swap chain image!");
         }
 
-        // --------------------------------------------------------------
-        // Update light UBO for the current frame
-        // --------------------------------------------------------------
-        uint32_t currentFrame = g_context->vk_context.swapchain->getCurrentFrame(); // we need to add this getter
-
-        LightData light;
-        // For now, use a warm light; could be fetched from ECS later
-        light.color = glm::vec3(1.0f, 0.8f, 0.6f);
-        light.padding = 0.0f;
-
-        void* data;
-        vkMapMemory(
-            g_context->vk_context.device->device(),
-            g_descResources.uboMemories[currentFrame],
-            0,
-            sizeof(light),
-            0,
-            &data);
-        memcpy(data, &light, sizeof(light));
-        vkUnmapMemory(g_context->vk_context.device->device(), g_descResources.uboMemories[currentFrame]);
-
-        // --------------------------------------------------------------
-        // Record and submit command buffer
-        // --------------------------------------------------------------
         RecordCommandBuffer(imageIndex);
         result = g_context->vk_context.swapchain->submitCommandBuffers(&g_context->vk_context.commandBuffers[imageIndex], &imageIndex);
         if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || g_context->platform->WasResized())
@@ -27910,12 +27768,8 @@ namespace Engine
         }
     }
 
-    // -------------------------------------------------------------------------
-    // DrawScene – binds descriptor set and draws all meshes
-    // -------------------------------------------------------------------------
     void DrawScene(VkCommandBuffer commandBuffer)
     {
-        // Get camera
         Camera camera;
         Transform cameraTransform;
         auto cameras = ecs->Query<Camera>();
@@ -27932,18 +27786,6 @@ namespace Engine
         }
         camera.aspect = g_context->vk_context.swapchain->extentAspectRatio();
 
-        // Bind descriptor set (set index 0)
-        uint32_t currentFrame = g_context->vk_context.swapchain->getCurrentFrame();
-        vkCmdBindDescriptorSets(
-            commandBuffer,
-            VK_PIPELINE_BIND_POINT_GRAPHICS,
-            g_context->vk_context.pipelineLayout,
-            0,                     // first set
-            1,                     // set count
-            &g_descResources.sets[currentFrame],
-            0, nullptr);
-
-        // Draw all meshes
         auto entities = ecs->Query<MeshRenderer>();
         for (auto &entity : entities)
         {
@@ -27960,25 +27802,35 @@ namespace Engine
                 VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                 0, sizeof(PushConstantData), &push);
 
+            // find meshrender and bind & draw
             auto &renderer = ecs->Get<MeshRenderer>(entity);
             renderer.BindBuffers(commandBuffer);
             renderer.Draw(commandBuffer);
         }
     }
-} // namespace Engine
+
+}
 
 ============================================================
 FILE: D:\Program Education\c++\olia-engine\engine\src\components\mesh-renderer.cpp
 ============================================================
 #include "components/mesh-renderer.h"
 #include <cstring>
+#include <cassert>
+
+void MeshRenderer::Setup(Engine::EngineDevice* devicePtr)
+{
+    device = devicePtr;
+    CreateVertexBuffers(mesh->vertices);
+    CreateIndicesBuffers(mesh->indices);
+}
 
 void MeshRenderer::BindBuffers(VkCommandBuffer commandBuffer)
 {
-    VkBuffer buffers[] = { vertexBuffer };
+    VkBuffer buffers[] = { vertexBuffer->getBuffer() };
     VkDeviceSize offsets[] = { 0 };
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
-    vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+    vkCmdBindIndexBuffer(commandBuffer, indexBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT16);
 }
 
 void MeshRenderer::Draw(VkCommandBuffer commandBuffer)
@@ -27986,43 +27838,55 @@ void MeshRenderer::Draw(VkCommandBuffer commandBuffer)
     vkCmdDrawIndexed(commandBuffer, indicesCount, 1, 0, 0, 0);
 }
 
-void MeshRenderer::CreateVertexBuffers(const std::vector<Engine::Vertex> &vertices)
+void MeshRenderer::CreateVertexBuffers(const std::vector<Engine::Vertex>& vertices)
 {
     vertexCount = static_cast<uint32_t>(vertices.size());
     assert(vertexCount >= 3 && "Vertex count must be at least 3");
-    VkDeviceSize bufferSize = sizeof(vertices[0]) * vertexCount;
 
-    device->createBuffer(
-        bufferSize,
+    // Create a buffer with one "instance" per vertex (or use 1 instance with total size).
+    // Using instanceCount = vertexCount and instanceSize = sizeof(Vertex) keeps alignment simple.
+    vertexBuffer = std::make_unique<Engine::EngineBuffer>(
+        *device,                                     // dereference pointer
+        sizeof(Engine::Vertex),                     // instance size
+        vertexCount,                                // instance count
         VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-        vertexBuffer,
-        vertexBufferMemory);
+        1                                           // minOffsetAlignment (1 is fine for vertex data)
+    );
 
-    void *data;
-    vkMapMemory(device->device(), vertexBufferMemory, 0, bufferSize, 0, &data);
-    std::memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
-    vkUnmapMemory(device->device(), vertexBufferMemory);
+    // Map the whole buffer, copy vertex data, then unmap.
+    VkResult result = vertexBuffer->map();
+    assert(result == VK_SUCCESS);
+    vertexBuffer->writeToBuffer(
+        const_cast<void*>(static_cast<const void*>(vertices.data())),
+        sizeof(Engine::Vertex) * vertexCount,
+        0
+    );
+    vertexBuffer->unmap();
 }
 
-void MeshRenderer::CreateIndicesBuffers(const std::vector<uint16_t> &indices)
+void MeshRenderer::CreateIndicesBuffers(const std::vector<uint16_t>& indices)
 {
     indicesCount = static_cast<uint32_t>(indices.size());
     assert(indicesCount >= 3 && "Indices count must be at least 3");
-    VkDeviceSize bufferSize = sizeof(indices[0]) * indicesCount;
-    
-    device->createBuffer(
-        bufferSize,
-        VK_BUFFER_USAGE_INDEX_BUFFER_BIT, // Fixed: Use index buffer bit
+
+    indexBuffer = std::make_unique<Engine::EngineBuffer>(
+        *device,
+        sizeof(uint16_t),                          // each index is one instance
+        indicesCount,
+        VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-        indexBuffer,
-        indexBufferMemory
+        1
     );
 
-    void *data;
-    vkMapMemory(device->device(), indexBufferMemory, 0, bufferSize, 0, &data);
-    std::memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
-    vkUnmapMemory(device->device(), indexBufferMemory);
+    VkResult result = indexBuffer->map();
+    assert(result == VK_SUCCESS);
+    indexBuffer->writeToBuffer(
+        const_cast<void*>(static_cast<const void*>(indices.data())),
+        sizeof(uint16_t) * indicesCount,
+        0
+    );
+    indexBuffer->unmap();
 }
 
 ============================================================
@@ -28511,96 +28375,6 @@ namespace Engine
         }
     }
 } // namespace Engine
-
-============================================================
-FILE: D:\Program Education\c++\olia-engine\engine\src\vk\descriptor.cpp
-============================================================
-#pragma once
-#include "vulkan/descriptor.hpp"
-#include <stdexcept>
-
-namespace Engine
-{
-    VkDescriptorSetLayout createDescriptorSetLayout(
-        VkDevice device,
-        const std::vector<VkDescriptorSetLayoutBinding> &bindings)
-    {
-        VkDescriptorSetLayoutCreateInfo layoutInfo{};
-        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-        layoutInfo.pBindings = bindings.data();
-
-        VkDescriptorSetLayout layout;
-        if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &layout) != VK_SUCCESS)
-        {
-            throw std::runtime_error("Failed to create descriptor set layout");
-        }
-        return layout;
-    }
-
-    VkDescriptorPool createDescriptorPool(
-        VkDevice device,
-        const std::vector<VkDescriptorPoolSize> &poolSizes,
-        uint32_t maxSets)
-    {
-        VkDescriptorPoolCreateInfo poolInfo{};
-        poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-        poolInfo.pPoolSizes = poolSizes.data();
-        poolInfo.maxSets = maxSets;
-
-        VkDescriptorPool pool;
-        if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &pool) != VK_SUCCESS)
-        {
-            throw std::runtime_error("Failed to create descriptor pool");
-        }
-        return pool;
-    }
-
-    VkDescriptorSet allocateDescriptorSet(
-        VkDevice device,
-        VkDescriptorPool pool,
-        VkDescriptorSetLayout layout)
-    {
-        VkDescriptorSetAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        allocInfo.descriptorPool = pool;
-        allocInfo.descriptorSetCount = 1;
-        allocInfo.pSetLayouts = &layout;
-
-        VkDescriptorSet set;
-        if (vkAllocateDescriptorSets(device, &allocInfo, &set) != VK_SUCCESS)
-        {
-            throw std::runtime_error("Failed to allocate descriptor set");
-        }
-        return set;
-    }
-
-    void updateDescriptorSetWithBuffer(
-        VkDevice device,
-        VkDescriptorSet dstSet,
-        uint32_t binding,
-        VkDescriptorType type,
-        VkBuffer buffer,
-        VkDeviceSize offset,
-        VkDeviceSize range)
-    {
-        VkDescriptorBufferInfo bufferInfo{};
-        bufferInfo.buffer = buffer;
-        bufferInfo.offset = offset;
-        bufferInfo.range = range;
-
-        VkWriteDescriptorSet write{};
-        write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        write.dstSet = dstSet;
-        write.dstBinding = binding;
-        write.descriptorCount = 1;
-        write.descriptorType = type;
-        write.pBufferInfo = &bufferInfo;
-
-        vkUpdateDescriptorSets(device, 1, &write, 0, nullptr);
-    }
-}
 
 ============================================================
 FILE: D:\Program Education\c++\olia-engine\engine\src\vk\device.cpp
@@ -29710,6 +29484,230 @@ namespace Engine
 } // namespace lve
 
 ============================================================
+FILE: D:\Program Education\c++\olia-engine\engine\src\vk\shader\buffer.cpp
+============================================================
+/*
+ * Encapsulates a vulkan buffer
+ *
+ * Initially based off VulkanBuffer by Sascha Willems -
+ * https://github.com/SaschaWillems/Vulkan/blob/master/base/VulkanBuffer.h
+ */
+
+#include "vulkan/shader/buffer.hpp"
+
+// std
+#include <cassert>
+#include <cstring>
+
+namespace Engine
+{
+
+    /**
+     * Returns the minimum instance size required to be compatible with devices minOffsetAlignment
+     *
+     * @param instanceSize The size of an instance
+     * @param minOffsetAlignment The minimum required alignment, in bytes, for the offset member (eg
+     * minUniformBufferOffsetAlignment)
+     *
+     * @return VkResult of the buffer mapping call
+     */
+    VkDeviceSize EngineBuffer::getAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment)
+    {
+        if (minOffsetAlignment > 0)
+        {
+            return (instanceSize + minOffsetAlignment - 1) & ~(minOffsetAlignment - 1);
+        }
+        return instanceSize;
+    }
+
+    EngineBuffer::EngineBuffer(
+        EngineDevice &device,
+        VkDeviceSize instanceSize,
+        uint32_t instanceCount,
+        VkBufferUsageFlags usageFlags,
+        VkMemoryPropertyFlags memoryPropertyFlags,
+        VkDeviceSize minOffsetAlignment)
+        : device{device},
+          instanceSize{instanceSize},
+          instanceCount{instanceCount},
+          usageFlags{usageFlags},
+          memoryPropertyFlags{memoryPropertyFlags}
+    {
+        alignmentSize = getAlignment(instanceSize, minOffsetAlignment);
+        bufferSize = alignmentSize * instanceCount;
+        device.createBuffer(bufferSize, usageFlags, memoryPropertyFlags, buffer, memory);
+    }
+
+    EngineBuffer::~EngineBuffer()
+    {
+        unmap();
+        vkDestroyBuffer(device.device(), buffer, nullptr);
+        vkFreeMemory(device.device(), memory, nullptr);
+    }
+
+    /**
+     * Map a memory range of this buffer. If successful, mapped points to the specified buffer range.
+     *
+     * @param size (Optional) Size of the memory range to map. Pass VK_WHOLE_SIZE to map the complete
+     * buffer range.
+     * @param offset (Optional) Byte offset from beginning
+     *
+     * @return VkResult of the buffer mapping call
+     */
+    VkResult EngineBuffer::map(VkDeviceSize size, VkDeviceSize offset)
+    {
+        assert(buffer && memory && "Called map on buffer before create");
+        return vkMapMemory(device.device(), memory, offset, size, 0, &mapped);
+    }
+
+    /**
+     * Unmap a mapped memory range
+     *
+     * @note Does not return a result as vkUnmapMemory can't fail
+     */
+    void EngineBuffer::unmap()
+    {
+        if (mapped)
+        {
+            vkUnmapMemory(device.device(), memory);
+            mapped = nullptr;
+        }
+    }
+
+    /**
+     * Copies the specified data to the mapped buffer. Default value writes whole buffer range
+     *
+     * @param data Pointer to the data to copy
+     * @param size (Optional) Size of the data to copy. Pass VK_WHOLE_SIZE to flush the complete buffer
+     * range.
+     * @param offset (Optional) Byte offset from beginning of mapped region
+     *
+     */
+    void EngineBuffer::writeToBuffer(void *data, VkDeviceSize size, VkDeviceSize offset)
+    {
+        assert(mapped && "Cannot copy to unmapped buffer");
+
+        if (size == VK_WHOLE_SIZE)
+        {
+            memcpy(mapped, data, bufferSize);
+        }
+        else
+        {
+            char *memOffset = (char *)mapped;
+            memOffset += offset;
+            memcpy(memOffset, data, size);
+        }
+    }
+
+    /**
+     * Flush a memory range of the buffer to make it visible to the device
+     *
+     * @note Only required for non-coherent memory
+     *
+     * @param size (Optional) Size of the memory range to flush. Pass VK_WHOLE_SIZE to flush the
+     * complete buffer range.
+     * @param offset (Optional) Byte offset from beginning
+     *
+     * @return VkResult of the flush call
+     */
+    VkResult EngineBuffer::flush(VkDeviceSize size, VkDeviceSize offset)
+    {
+        VkMappedMemoryRange mappedRange = {};
+        mappedRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+        mappedRange.memory = memory;
+        mappedRange.offset = offset;
+        mappedRange.size = size;
+        return vkFlushMappedMemoryRanges(device.device(), 1, &mappedRange);
+    }
+
+    /**
+     * Invalidate a memory range of the buffer to make it visible to the host
+     *
+     * @note Only required for non-coherent memory
+     *
+     * @param size (Optional) Size of the memory range to invalidate. Pass VK_WHOLE_SIZE to invalidate
+     * the complete buffer range.
+     * @param offset (Optional) Byte offset from beginning
+     *
+     * @return VkResult of the invalidate call
+     */
+    VkResult EngineBuffer::invalidate(VkDeviceSize size, VkDeviceSize offset)
+    {
+        VkMappedMemoryRange mappedRange = {};
+        mappedRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+        mappedRange.memory = memory;
+        mappedRange.offset = offset;
+        mappedRange.size = size;
+        return vkInvalidateMappedMemoryRanges(device.device(), 1, &mappedRange);
+    }
+
+    /**
+     * Create a buffer info descriptor
+     *
+     * @param size (Optional) Size of the memory range of the descriptor
+     * @param offset (Optional) Byte offset from beginning
+     *
+     * @return VkDescriptorBufferInfo of specified offset and range
+     */
+    VkDescriptorBufferInfo EngineBuffer::descriptorInfo(VkDeviceSize size, VkDeviceSize offset)
+    {
+        return VkDescriptorBufferInfo{
+            buffer,
+            offset,
+            size,
+        };
+    }
+
+    /**
+     * Copies "instanceSize" bytes of data to the mapped buffer at an offset of index * alignmentSize
+     *
+     * @param data Pointer to the data to copy
+     * @param index Used in offset calculation
+     *
+     */
+    void EngineBuffer::writeToIndex(void *data, int index)
+    {
+        writeToBuffer(data, instanceSize, index * alignmentSize);
+    }
+
+    /**
+     *  Flush the memory range at index * alignmentSize of the buffer to make it visible to the device
+     *
+     * @param index Used in offset calculation
+     *
+     */
+    VkResult EngineBuffer::flushIndex(int index) { return flush(alignmentSize, index * alignmentSize); }
+
+    /**
+     * Create a buffer info descriptor
+     *
+     * @param index Specifies the region given by index * alignmentSize
+     *
+     * @return VkDescriptorBufferInfo for instance at index
+     */
+    VkDescriptorBufferInfo EngineBuffer::descriptorInfoForIndex(int index)
+    {
+        return descriptorInfo(alignmentSize, index * alignmentSize);
+    }
+
+    /**
+     * Invalidate a memory range of the buffer to make it visible to the host
+     *
+     * @note Only required for non-coherent memory
+     *
+     * @param index Specifies the region to invalidate: index * alignmentSize
+     *
+     * @return VkResult of the invalidate call
+     */
+    VkResult EngineBuffer::invalidateIndex(int index)
+    {
+        return invalidate(alignmentSize, index * alignmentSize);
+    }
+
+} // namespace Engine
+
+
+============================================================
 FILE: D:\Program Education\c++\olia-engine\engine\src\vk\shader\pipeline.cpp
 ============================================================
 #include "vulkan/shader/pipeline.hpp"
@@ -30037,17 +30035,14 @@ void main()
 ============================================================
 FILE: D:\Program Education\c++\olia-engine\assets\shaders\main.frag
 ============================================================
-#version 450
+#version 450 
 
-layout(location = 0) out vec4 outColor;
-layout(location = 0) in vec3 fragColor;
+layout (location = 0) out vec4 outColor;
 
-layout(binding = 0) uniform LightUBO {
-    vec3 lightColor;
-    float padding;
-} light;
+layout(location = 0) in vec3 fragColor;   
 
-void main() {
-    outColor = vec4(fragColor * light.lightColor, 1.0);
+void main()
+{
+    outColor = vec4(fragColor, 1.0);     
 }
 

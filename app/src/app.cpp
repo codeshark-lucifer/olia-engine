@@ -17,7 +17,6 @@ void setup()
         auto& trans = ecs->Get<Transform>(model);
         cube = &trans;
     }
-
 }
 
 void loop()
