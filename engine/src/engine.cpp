@@ -80,26 +80,54 @@ namespace Engine
         if (!g_context)
             return;
 
-        vkDeviceWaitIdle(g_context->vk_context.device->device());
+        auto &vk = g_context->vk_context;
 
-        // Destroy resources that depend on the device
-        g_context->vk_context.pipeline.reset();
+        if (vk.device)
+        {
+            vkDeviceWaitIdle(vk.device->device());
+        }
 
-        g_context->vk_context.cameraBuffer.reset();
-        g_context->vk_context.lightBuffer.reset();
+        // Destroy ECS components (frees mesh buffers) while device is alive.
+        if (ecs)
+        {
+            ecs->Clear();
+        }
 
-        g_context->vk_context.descriptorPoolPtr.reset();
-        g_context->vk_context.descriptorSetLayoutPtr.reset();
+        // Shut down resource manager.
+        if (vk.resourceManager)
+        {
+            vk.resourceManager->Shutdown();
+            vk.resourceManager.reset();
+        }
 
-        g_context->vk_context.swapchain.reset();
+        // Free command buffers.
+        if (vk.device && !vk.commandBuffers.empty())
+        {
+            vkFreeCommandBuffers(
+                vk.device->device(),
+                vk.device->getCommandPool(),
+                static_cast<uint32_t>(vk.commandBuffers.size()),
+                vk.commandBuffers.data());
+            vk.commandBuffers.clear();
+        }
 
-        vkDestroyPipelineLayout(
-            g_context->vk_context.device->device(),
-            g_context->vk_context.pipelineLayout,
-            nullptr);
+        // Destroy pipeline layout.
+        if (vk.pipelineLayout != VK_NULL_HANDLE)
+        {
+            vkDestroyPipelineLayout(vk.device->device(), vk.pipelineLayout, nullptr);
+            vk.pipelineLayout = VK_NULL_HANDLE;
+        }
 
-        delete g_context->vk_context.device;
-        delete static_cast<Platform *>(g_context->platform);
+        // Destroy pipeline, swapchain (unique_ptrs will do).
+        vk.pipeline.reset();
+        vk.swapchain.reset();
+
+        // Destroy device and platform.
+        delete vk.device;
+        vk.device = nullptr;
+
+        delete g_context->platform;
+        g_context->platform = nullptr;
 
         delete g_context;
         g_context = nullptr;
@@ -107,101 +135,41 @@ namespace Engine
 
     void CreateContextInfo(Platform &platform)
     {
+        // Create resource manager
+        g_context->vk_context.resourceManager = std::make_unique<ResourceManager>(
+            *g_context->vk_context.device,
+            EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
+
+        // Register buffers
+        const uint32_t MAX_LIGHTS = 10;
+        g_context->vk_context.resourceManager->RegisterBuffer(
+            "LightBuffer",
+            ResourceType::Storage,
+            sizeof(GPULight) * MAX_LIGHTS,
+            0, // binding 0
+            VK_SHADER_STAGE_FRAGMENT_BIT);
+
+        g_context->vk_context.resourceManager->RegisterBuffer(
+            "CameraBuffer",
+            ResourceType::Uniform,
+            sizeof(GPUCamera),
+            1, // binding 1
+            VK_SHADER_STAGE_FRAGMENT_BIT);
+
+        // (Optional) Build descriptor sets now; otherwise BuildDescriptorSets() will be called on first Bind().
+        g_context->vk_context.resourceManager->BuildDescriptorSets();
+
+        // Setup mesh renderers
+        auto entities = ecs->Query<MeshRenderer>();
+        for (auto &entity : entities)
         {
-            // create light buffer
-            const uint32_t MAX_LIGHTS = 10;
-            g_context->vk_context.lightBuffer = std::make_unique<Engine::EngineBuffer>(
-                *g_context->vk_context.device,
-                sizeof(GPULight),
-                MAX_LIGHTS,
-                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        }
-
-        {
-            // create camera buffer
-            g_context->vk_context.cameraBuffer =
-                std::make_unique<EngineBuffer>(
-                    *g_context->vk_context.device,
-                    sizeof(GPUCamera),
-                    1,
-                    VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                        VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        }
-
-        g_context->vk_context.lightBuffer->map();
-        g_context->vk_context.cameraBuffer->map();
-
-        {
-            // Create descriptor set layout
-            EngineDescriptorSetLayout::Builder layoutBuilder(*g_context->vk_context.device);
-            layoutBuilder
-                .addBinding(
-                    0,
-                    VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                    VK_SHADER_STAGE_FRAGMENT_BIT)
-
-                .addBinding(
-                    1,
-                    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                    VK_SHADER_STAGE_FRAGMENT_BIT);
-            auto descriptorSetLayout = layoutBuilder.build();
-            g_context->vk_context.descriptorSetLayoutPtr = std::move(descriptorSetLayout);
-            g_context->vk_context.descriptorSetLayout = g_context->vk_context.descriptorSetLayoutPtr->getDescriptorSetLayout();
-
-            // Create descriptor pool
-            EngineDescriptorPool::Builder poolBuilder(*g_context->vk_context.device);
-
-            poolBuilder
-                .addPoolSize(
-                    VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                    EngineSwapChain::MAX_FRAMES_IN_FLIGHT)
-                .addPoolSize(
-                    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                    EngineSwapChain::MAX_FRAMES_IN_FLIGHT)
-                .setMaxSets(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
-            auto descriptorPool = poolBuilder.build();
-            g_context->vk_context.descriptorPoolPtr = std::move(descriptorPool);
-            g_context->vk_context.descriptorPool = g_context->vk_context.descriptorPoolPtr->getDescriptorPool();
-
-            // Allocate descriptor sets
-            g_context->vk_context.descriptorSets.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
-            for (int i = 0; i < EngineSwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
+            auto &renderer = ecs->Get<MeshRenderer>(entity);
+            if (renderer.HasMesh())
             {
-                EngineDescriptorWriter writer(*g_context->vk_context.descriptorSetLayoutPtr,
-                                              *g_context->vk_context.descriptorPoolPtr);
-                VkDescriptorBufferInfo lightInfo{};
-                lightInfo.buffer = g_context->vk_context.lightBuffer->getBuffer();
-                lightInfo.offset = 0;
-                lightInfo.range = g_context->vk_context.lightBuffer->getBufferSize();
-                writer.writeBuffer(0, &lightInfo);
-
-                VkDescriptorBufferInfo cameraInfo{};
-                cameraInfo.buffer = g_context->vk_context.cameraBuffer->getBuffer();
-                cameraInfo.offset = 0;
-                cameraInfo.range = sizeof(GPUCamera);
-                writer.writeBuffer(1, &cameraInfo);
-
-                if (!writer.build(g_context->vk_context.descriptorSets[i]))
-                {
-                    throw std::runtime_error("Failed to allocate descriptor set for light!");
-                }
+                renderer.Setup(g_context->vk_context.device);
             }
         }
 
-        {
-            // query all mesh-renderer to setup mesh if it has mesh
-            auto entities = ecs->Query<MeshRenderer>();
-            for (auto &entity : entities)
-            {
-                auto &renderer = ecs->Get<MeshRenderer>(entity);
-                if (renderer.HasMesh())
-                {
-                    renderer.Setup(g_context->vk_context.device);
-                }
-            }
-        }
         CreatePipelineLayout();
         RecreateSwapChain();
         CreateCommandBuffers();
@@ -214,13 +182,17 @@ namespace Engine
         pushConstantRange.offset = 0;
         pushConstantRange.size = sizeof(PushConstantData);
 
-        // Add descriptor set layout
-        VkDescriptorSetLayout setLayouts[] = {g_context->vk_context.descriptorSetLayout};
+        // Make sure descriptor sets are built
+        if (!g_context->vk_context.resourceManager->IsBuilt())
+        {
+            g_context->vk_context.resourceManager->BuildDescriptorSets();
+        }
+        VkDescriptorSetLayout setLayout = g_context->vk_context.resourceManager->GetDescriptorSetLayout();
 
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipelineLayoutInfo.setLayoutCount = 1;
-        pipelineLayoutInfo.pSetLayouts = setLayouts;
+        pipelineLayoutInfo.pSetLayouts = &setLayout;
         pipelineLayoutInfo.pushConstantRangeCount = 1;
         pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
@@ -392,7 +364,6 @@ namespace Engine
         Camera camera;
         Transform cameraTransform;
         {
-            // block capture camera
             auto cameras = ecs->Query<Camera>();
             if (!cameras.empty())
             {
@@ -402,22 +373,16 @@ namespace Engine
             }
             else
             {
-                // fallback camera
                 cameraTransform.position = glm::vec3(0.0f, 0.0f, 10.0f);
             }
             camera.aspect = g_context->vk_context.swapchain->extentAspectRatio();
+
             GPUCamera gpuCamera{};
             gpuCamera.viewPos = glm::vec4(cameraTransform.position, 1.0f);
-
-            g_context->vk_context.cameraBuffer->writeToBuffer(
-                &gpuCamera,
-                sizeof(GPUCamera));
-
-            g_context->vk_context.cameraBuffer->flush();
+            g_context->vk_context.resourceManager->UpdateBuffer("CameraBuffer", &gpuCamera, sizeof(GPUCamera));
         }
 
         {
-            // update light
             std::vector<GPULight> lights;
             auto entities = ecs->Query<Light>();
             for (auto &entity : entities)
@@ -428,19 +393,23 @@ namespace Engine
                     .position = glm::vec4(trans.position, 1.0f),
                     .color = glm::vec4(light.color, 1.0f)});
             }
-            g_context->vk_context.lightBuffer->writeToBuffer(
-                lights.data(), lights.size() * sizeof(GPULight), 0);
-
-            g_context->vk_context.lightBuffer->flush();
-
-            // Bind the descriptor set for the current frame
-            uint32_t frameIndex = g_context->vk_context.swapchain->getCurrentFrame();
-            VkDescriptorSet descSet = g_context->vk_context.descriptorSets[frameIndex];
-            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                    g_context->vk_context.pipelineLayout,
-                                    0, 1, &descSet, 0, nullptr);
+            if (!lights.empty())
+            {
+                g_context->vk_context.resourceManager->UpdateBuffer(
+                    "LightBuffer",
+                    lights.data(),
+                    lights.size() * sizeof(GPULight));
+            }
         }
 
+        // Bind descriptor set for the current frame
+        uint32_t frameIndex = g_context->vk_context.swapchain->getCurrentFrame();
+        g_context->vk_context.resourceManager->Bind(
+            commandBuffer,
+            g_context->vk_context.pipelineLayout,
+            frameIndex);
+
+        // Draw meshes
         auto entities = ecs->Query<MeshRenderer>();
         for (auto &entity : entities)
         {
@@ -457,11 +426,9 @@ namespace Engine
                 VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                 0, sizeof(PushConstantData), &push);
 
-            // find meshrender and bind & draw
             auto &renderer = ecs->Get<MeshRenderer>(entity);
             renderer.BindBuffers(commandBuffer);
             renderer.Draw(commandBuffer);
         }
     }
-
 }

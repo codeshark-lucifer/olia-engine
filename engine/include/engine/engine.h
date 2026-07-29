@@ -6,7 +6,8 @@
 #include "vulkan/device.hpp"
 #include "vulkan/shader/pipeline.hpp"
 #include "vulkan/shader/buffer.hpp"
-#include "vulkan/shader/descriptor.hpp" 
+#include "vulkan/shader/descriptor.hpp"
+#include "vulkan/shader/resource-manager.hpp"
 
 #include <memory>
 #include <cstdint>
@@ -14,25 +15,18 @@
 
 struct SDL_Window;
 
-namespace Engine 
+namespace Engine
 {
     struct VKContext
     {
         VkPipelineLayout pipelineLayout;
         std::vector<VkCommandBuffer> commandBuffers;
-        EngineDevice *device                                                = nullptr;
-        std::unique_ptr<EngineSwapChain> swapchain                          = nullptr;
-        std::unique_ptr<Pipeline> pipeline                                  = nullptr;
-        std::unique_ptr<Engine::EngineBuffer> lightBuffer                   = nullptr;
-        std::unique_ptr<EngineBuffer> cameraBuffer                          = nullptr;
-        
-        // Descriptor set handling
-        VkDescriptorSetLayout descriptorSetLayout                           = VK_NULL_HANDLE;
-        VkDescriptorPool descriptorPool                                     = VK_NULL_HANDLE;
-        std::vector<VkDescriptorSet> descriptorSets; // size = MAX_FRAMES_IN_FLIGHT
-        
-        std::unique_ptr<EngineDescriptorSetLayout> descriptorSetLayoutPtr   = nullptr;
-        std::unique_ptr<EngineDescriptorPool> descriptorPoolPtr             = nullptr;
+        EngineDevice *device = nullptr;
+        std::unique_ptr<EngineSwapChain> swapchain = nullptr;
+        std::unique_ptr<Pipeline> pipeline = nullptr;
+
+        // Resource manager handles all buffers & descriptor sets
+        std::unique_ptr<ResourceManager> resourceManager;
     };
 
     struct EngineContext
@@ -54,13 +48,13 @@ namespace Engine
 
     extern "C" OLIA_API void Run(SetupFn setup, LoopFn loop);
     void Clean();
-    
+
     void CreatePipelineLayout();
     void CreatePipeline();
     void CreateCommandBuffers();
     void DrawFrame();
     void DrawScene(VkCommandBuffer commandBuffer);
-    
+
     void RecreateSwapChain();
     void RecordCommandBuffer(int imageIndex);
     void FreeCommandBuffer();
