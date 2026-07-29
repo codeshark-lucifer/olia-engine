@@ -12,6 +12,7 @@
 #include <glm/glm.hpp>
 
 #include "components/mesh-renderer.h"
+#include "ufbx/ufbx.h"
 
 namespace Engine
 {
@@ -27,6 +28,24 @@ namespace Engine
 
     void Run(SetupFn setup, LoopFn loop)
     {
+        // {
+        //     // temp blocker
+        //     ufbx_load_opts opts = {0}; // Use default loading options
+        //     ufbx_error error;
+        //     std::filesystem::path model_path = GetExecutableDir() / "assets" / "models" / ("character.fbx");
+
+        //     // Use .string().c_str() to get a standard const char*
+        //     ufbx_scene *scene = ufbx_load_file(model_path.string().c_str(), &opts, &error);
+        //     if (!scene)
+        //     {
+        //         fprintf(stderr, "Failed to load FBX: %s\n", error.description.data);
+        //         return;
+        //     }
+        //     printf("Successfully loaded FBX scene!\n");
+
+        //     // Clean up when done
+        //     ufbx_free_scene(scene);
+        // }
         PlatformData platformData{};
 
         g_context = new EngineContext();

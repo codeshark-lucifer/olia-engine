@@ -156,6 +156,7 @@ namespace Engine
 
     vkGetPhysicalDeviceProperties(physicalDevice, &properties);
     std::cout << "physical device: " << properties.deviceName << std::endl;
+    std::cout << std::string(40, '=') << std::endl;
   }
 
   void EngineDevice::createLogicalDevice()
@@ -337,7 +338,8 @@ namespace Engine
     std::vector<VkExtensionProperties> extensions(extensionCount);
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
 
-    std::cout << "available extensions:" << std::endl;
+    std::cout << std::string(40, '=') << std::endl;
+    std::cout << "Available extensions:" << std::endl;
     std::unordered_set<std::string> available;
     for (const auto &extension : extensions)
     {

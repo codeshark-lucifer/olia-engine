@@ -1,7 +1,7 @@
 #include "vulkan/shader/pipeline.hpp"
 #include "utils/file.h"
 #include <vector>
-#include "vulkan/shader/model.hpp"
+#include "components/mesh.h"
 
 namespace Engine
 {
@@ -85,8 +85,8 @@ namespace Engine
         shaderStages[1].pNext = nullptr;
         shaderStages[1].pSpecializationInfo = nullptr;
 
-        auto bindingDescriptions = Model::Vertex::GetBindingDescriptions();
-        auto attributeDescritpions = Model::Vertex::GetAttributeDescriptions();
+        auto bindingDescriptions = Mesh::GetBindingDescriptions();
+        auto attributeDescritpions = Mesh::GetAttributeDescriptions();
 
         VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
