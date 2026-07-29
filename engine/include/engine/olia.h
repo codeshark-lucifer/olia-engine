@@ -5,6 +5,7 @@
 #include "engine/globals.h"
 #include "engine/export.h"
 
+#include "core/ecs/model.h"
 #include "components/structure/data.h"
 #include "components/mesh.h"
 #include "components/mesh-renderer.h"
