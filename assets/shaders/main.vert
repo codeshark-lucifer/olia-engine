@@ -10,10 +10,15 @@ layout(push_constant) uniform Push {
     mat4 view;
 } push;
 
-layout(location = 0) out vec3 fragColor; 
+layout(location = 0) out vec3 fragColor;
+layout(location = 1) out vec3 fragNormal;
+layout(location = 2) out vec3 fragWorldPos;
 
 void main()
 {
-    gl_Position = push.proj * push.view * push.model * vec4(aPosition, 1.0);
+    vec4 worldPos = push.model * vec4(aPosition, 1.0);
+    gl_Position = push.proj * push.view * worldPos;
     fragColor = vec3(0.3, 0.3, 1.0);
+    fragNormal = normalize(mat3(push.model) * aNormal);
+    fragWorldPos = worldPos.xyz;
 }

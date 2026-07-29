@@ -13,10 +13,14 @@ void setup()
 
     auto models = LoadModel("models/cube.fbx");
     for (auto &model : models)
-    {   
-        auto& trans = ecs->Get<Transform>(model);
+    {
+        auto &trans = ecs->Get<Transform>(model);
         cube = &trans;
     }
+
+    Entity light = ecs->Create();
+    ecs->Add<Light>(light);
+    ecs->Get<Transform>(light).position = {1, 2, 3};
 }
 
 void loop()

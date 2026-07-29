@@ -9,6 +9,7 @@
 #include "components/structure/data.h"
 #include "components/mesh.h"
 #include "components/mesh-renderer.h"
+#include "components/light.h"
 
 using Vertex = Engine::Vertex;
 

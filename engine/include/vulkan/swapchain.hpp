@@ -34,7 +34,7 @@ namespace Engine
         VkExtent2D getSwapChainExtent() { return swapChainExtent; }
         uint32_t width() { return swapChainExtent.width; }
         uint32_t height() { return swapChainExtent.height; }
-
+        size_t getCurrentFrame() { return currentFrame; }
         float extentAspectRatio()
         {
             return static_cast<float>(swapChainExtent.width) / static_cast<float>(swapChainExtent.height);

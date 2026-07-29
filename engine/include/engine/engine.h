@@ -1,9 +1,12 @@
 #pragma once
 #include "./export.h"
 #include "./platform/platform.h"
+
 #include "vulkan/swapchain.hpp"
 #include "vulkan/device.hpp"
 #include "vulkan/shader/pipeline.hpp"
+#include "vulkan/shader/buffer.hpp"
+#include "vulkan/shader/descriptor.hpp" 
 
 #include <memory>
 #include <cstdint>
@@ -17,9 +20,19 @@ namespace Engine
     {
         VkPipelineLayout pipelineLayout;
         std::vector<VkCommandBuffer> commandBuffers;
-        EngineDevice *device                        = nullptr;
-        std::unique_ptr<EngineSwapChain> swapchain  = nullptr;
-        std::unique_ptr<Pipeline> pipeline          = nullptr;
+        EngineDevice *device                                                = nullptr;
+        std::unique_ptr<EngineSwapChain> swapchain                          = nullptr;
+        std::unique_ptr<Pipeline> pipeline                                  = nullptr;
+        std::unique_ptr<Engine::EngineBuffer> lightBuffer                   = nullptr;
+        std::unique_ptr<EngineBuffer> cameraBuffer                          = nullptr;
+        
+        // Descriptor set handling
+        VkDescriptorSetLayout descriptorSetLayout                           = VK_NULL_HANDLE;
+        VkDescriptorPool descriptorPool                                     = VK_NULL_HANDLE;
+        std::vector<VkDescriptorSet> descriptorSets; // size = MAX_FRAMES_IN_FLIGHT
+        
+        std::unique_ptr<EngineDescriptorSetLayout> descriptorSetLayoutPtr   = nullptr;
+        std::unique_ptr<EngineDescriptorPool> descriptorPoolPtr             = nullptr;
     };
 
     struct EngineContext
