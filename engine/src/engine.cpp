@@ -13,7 +13,11 @@
 
 #include "components/mesh-renderer.h"
 #include "components/light.h"
-
+#include "components/material.h"
+#include "vulkan/texture.hpp"
+#include "vulkan/texture-manager.hpp"
+#include "core/animation/animation.h"
+#include "components/skeleton.h"
 namespace Engine
 {
     struct PushConstantData
@@ -30,8 +34,18 @@ namespace Engine
 
     struct GPULight
     {
-        glm::vec4 position;
-        glm::vec4 color;
+        alignas(16) glm::vec4 position;
+        alignas(16) glm::vec4 color;
+    };
+
+    struct GPUMaterial
+    {
+        alignas(16) glm::vec4 color;
+
+        alignas(4) float roughness;
+        alignas(4) float metallic;
+
+        float padding[2];
     };
 
     EngineContext *g_context = nullptr;
@@ -87,20 +101,23 @@ namespace Engine
             vkDeviceWaitIdle(vk.device->device());
         }
 
-        // Destroy ECS components (frees mesh buffers) while device is alive.
         if (ecs)
         {
             ecs->Clear();
         }
 
-        // Shut down resource manager.
+        if (vk.textureManager)
+        {
+            vk.textureManager->Clear();
+            vk.textureManager.reset();
+        }
+
         if (vk.resourceManager)
         {
             vk.resourceManager->Shutdown();
             vk.resourceManager.reset();
         }
 
-        // Free command buffers.
         if (vk.device && !vk.commandBuffers.empty())
         {
             vkFreeCommandBuffers(
@@ -111,18 +128,15 @@ namespace Engine
             vk.commandBuffers.clear();
         }
 
-        // Destroy pipeline layout.
         if (vk.pipelineLayout != VK_NULL_HANDLE)
         {
             vkDestroyPipelineLayout(vk.device->device(), vk.pipelineLayout, nullptr);
             vk.pipelineLayout = VK_NULL_HANDLE;
         }
 
-        // Destroy pipeline, swapchain (unique_ptrs will do).
         vk.pipeline.reset();
         vk.swapchain.reset();
 
-        // Destroy device and platform.
         delete vk.device;
         vk.device = nullptr;
 
@@ -135,39 +149,62 @@ namespace Engine
 
     void CreateContextInfo(Platform &platform)
     {
-        // Create resource manager
         g_context->vk_context.resourceManager = std::make_unique<ResourceManager>(
             *g_context->vk_context.device,
             EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
 
-        // Register buffers
+        // Initialize TextureManager
+        g_context->vk_context.textureManager = std::make_unique<TextureManager>(
+            *g_context->vk_context.device);
+
+        auto defaultTex = g_context->vk_context.textureManager->GetDefaultTexture();
+
         const uint32_t MAX_LIGHTS = 10;
         g_context->vk_context.resourceManager->RegisterBuffer(
             "LightBuffer",
             ResourceType::Storage,
             sizeof(GPULight) * MAX_LIGHTS,
-            0, // binding 0
+            0,
             VK_SHADER_STAGE_FRAGMENT_BIT);
 
         g_context->vk_context.resourceManager->RegisterBuffer(
             "CameraBuffer",
             ResourceType::Uniform,
             sizeof(GPUCamera),
-            1, // binding 1
+            1,
             VK_SHADER_STAGE_FRAGMENT_BIT);
 
-        // (Optional) Build descriptor sets now; otherwise BuildDescriptorSets() will be called on first Bind().
+        g_context->vk_context.resourceManager->RegisterBuffer(
+            "MaterialBuffer",
+            ResourceType::Uniform,
+            sizeof(GPUMaterial),
+            2,
+            VK_SHADER_STAGE_FRAGMENT_BIT);
+
+        // Register Storage Buffer for up to 100 bones
+        const uint32_t MAX_BONES = 100;
+        g_context->vk_context.resourceManager->RegisterBuffer(
+            "BoneBuffer",
+            ResourceType::Storage,
+            sizeof(glm::mat4) * MAX_BONES,
+            4, // binding 4
+            VK_SHADER_STAGE_VERTEX_BIT);
+
+        // Register AlbedoMap texture binding
+        g_context->vk_context.resourceManager->RegisterTexture(
+            "AlbedoMap",
+            defaultTex->getImageView(),
+            defaultTex->getSampler(),
+            3,
+            VK_SHADER_STAGE_FRAGMENT_BIT);
+
         g_context->vk_context.resourceManager->BuildDescriptorSets();
 
-        // Setup mesh renderers
         auto entities = ecs->Query<MeshRenderer>();
         for (auto &entity : entities)
         {
             auto &renderer = ecs->Get<MeshRenderer>(entity);
-            if (renderer.HasMesh())
-            {
-                renderer.Setup(g_context->vk_context.device);
-            }
+            renderer.Setup(g_context->vk_context.device);
         }
 
         CreatePipelineLayout();
@@ -182,7 +219,6 @@ namespace Engine
         pushConstantRange.offset = 0;
         pushConstantRange.size = sizeof(PushConstantData);
 
-        // Make sure descriptor sets are built
         if (!g_context->vk_context.resourceManager->IsBuilt())
         {
             g_context->vk_context.resourceManager->BuildDescriptorSets();
@@ -378,7 +414,8 @@ namespace Engine
             camera.aspect = g_context->vk_context.swapchain->extentAspectRatio();
 
             GPUCamera gpuCamera{};
-            gpuCamera.viewPos = glm::vec4(cameraTransform.position, 1.0f);
+            // Pass world position of camera to shader UBO
+            gpuCamera.viewPos = glm::vec4(cameraTransform.GetWorldPosition(ecs), 1.0f);
             g_context->vk_context.resourceManager->UpdateBuffer("CameraBuffer", &gpuCamera, sizeof(GPUCamera));
         }
 
@@ -389,9 +426,10 @@ namespace Engine
             {
                 auto &trans = ecs->Get<Transform>(entity);
                 auto &light = ecs->Get<Light>(entity);
+                // Pass world position of light to shader
                 lights.push_back(GPULight{
-                    .position = glm::vec4(trans.position, 1.0f),
-                    .color = glm::vec4(light.color, 1.0f)});
+                    .position = glm::vec4(trans.GetWorldPosition(ecs), 1.0f),
+                    .color = glm::vec4(light.color, light.intensity)});
             }
             if (!lights.empty())
             {
@@ -402,29 +440,67 @@ namespace Engine
             }
         }
 
-        // Bind descriptor set for the current frame
         uint32_t frameIndex = g_context->vk_context.swapchain->getCurrentFrame();
         g_context->vk_context.resourceManager->Bind(
             commandBuffer,
             g_context->vk_context.pipelineLayout,
             frameIndex);
 
-        // Draw meshes
+        // Draw scene meshes
         auto entities = ecs->Query<MeshRenderer>();
+
         for (auto &entity : entities)
         {
             auto &trans = ecs->Get<Transform>(entity);
 
             PushConstantData push{};
-            push.model = trans.GetMatrix();
+            // Pass calculated World Matrix to push constants
+            push.model = trans.GetWorldMatrix(ecs);
             push.proj = camera.GetProjection();
-            push.view = camera.GetView(cameraTransform);
+            push.view = camera.GetView(cameraTransform, ecs);
 
             vkCmdPushConstants(
                 commandBuffer,
                 g_context->vk_context.pipelineLayout,
                 VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                 0, sizeof(PushConstantData), &push);
+
+            GPUMaterial material{};
+            std::shared_ptr<Texture> activeTex = nullptr;
+
+            if (ecs->Has<Material>(entity))
+            {
+                auto &mat = ecs->Get<Material>(entity);
+                material.color = mat.color;
+                material.roughness = mat.roughness;
+                material.metallic = mat.metallic;
+
+                if (!mat.texture && !mat.albedoTexture.empty())
+                {
+                    mat.texture = g_context->vk_context.textureManager->LoadTexture(mat.albedoTexture);
+                }
+
+                activeTex = mat.texture ? mat.texture : g_context->vk_context.textureManager->GetDefaultTexture();
+            }
+            else
+            {
+                material.color = glm::vec4(110.0f / 255.0f, 160.0f / 255.0f, 220.0f / 255.0f, 1.0f);
+                material.roughness = 0.5f;
+                material.metallic = 0.0f;
+                activeTex = g_context->vk_context.textureManager->GetDefaultTexture();
+            }
+
+            if (ecs->Has<Skeleton>(entity))
+            {
+                auto &skel = ecs->Get<Skeleton>(entity);
+                g_context->vk_context.resourceManager->UpdateBuffer(
+                    "BoneBuffer",
+                    skel.finalBoneMatrices.data(),
+                    skel.finalBoneMatrices.size() * sizeof(glm::mat4));
+            }
+
+            g_context->vk_context.resourceManager->UpdateTexture("AlbedoMap", activeTex->getImageView(), activeTex->getSampler());
+            g_context->vk_context.resourceManager->UpdateBuffer("MaterialBuffer", &material, sizeof(GPUMaterial));
 
             auto &renderer = ecs->Get<MeshRenderer>(entity);
             renderer.BindBuffers(commandBuffer);

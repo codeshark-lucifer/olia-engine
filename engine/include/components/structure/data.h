@@ -10,5 +10,9 @@ namespace Engine
         glm::vec3 position;
         glm::vec3 normal;
         glm::vec2 uv;
+
+        // Skeletal Animation Data
+        glm::ivec4 boneIndices = glm::ivec4(0);
+        glm::vec4 boneWeights  = glm::vec4(0.0f);
     };
 } // namespace Engine

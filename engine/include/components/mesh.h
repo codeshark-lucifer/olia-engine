@@ -1,8 +1,9 @@
 #pragma once
 #include "./structure/data.h"
 #include <vulkan/vulkan.h>
+#include "engine/export.h"
 
-struct Mesh
+struct OLIA_API Mesh
 {
     Mesh() = default;
 

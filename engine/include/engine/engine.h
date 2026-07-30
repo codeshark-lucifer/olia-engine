@@ -8,6 +8,8 @@
 #include "vulkan/shader/buffer.hpp"
 #include "vulkan/shader/descriptor.hpp"
 #include "vulkan/shader/resource-manager.hpp"
+#include "vulkan/texture.hpp"
+#include "vulkan/texture-manager.hpp" // <--- INCLUDE TEXTURE MANAGER
 
 #include <memory>
 #include <cstdint>
@@ -17,16 +19,18 @@ struct SDL_Window;
 
 namespace Engine
 {
+    class TextureManager;
+
     struct VKContext
     {
         VkPipelineLayout pipelineLayout;
         std::vector<VkCommandBuffer> commandBuffers;
-        EngineDevice *device = nullptr;
-        std::unique_ptr<EngineSwapChain> swapchain = nullptr;
-        std::unique_ptr<Pipeline> pipeline = nullptr;
-
-        // Resource manager handles all buffers & descriptor sets
         std::unique_ptr<ResourceManager> resourceManager;
+        std::unique_ptr<TextureManager> textureManager; // <--- REPLACED defaultTexture WITH textureManager
+
+        EngineDevice *device                        = nullptr;
+        std::unique_ptr<EngineSwapChain> swapchain  = nullptr;
+        std::unique_ptr<Pipeline> pipeline          = nullptr;
     };
 
     struct EngineContext
@@ -34,17 +38,15 @@ namespace Engine
         uint32_t width = 956;
         uint32_t height = 540;
         bool running = true;
-        const char *title = "olia - engine";
-
+        
         Platform *platform = nullptr;
         VKContext vk_context;
     };
 
-    // This must be inside the namespace to match engine.cpp and vulkan.cpp
     extern OLIA_API EngineContext *g_context;
 
-    using SetupFn = void (*)();
-    using LoopFn = void (*)();
+    using SetupFn   = void (*)();
+    using LoopFn    = void (*)();
 
     extern "C" OLIA_API void Run(SetupFn setup, LoopFn loop);
     void Clean();

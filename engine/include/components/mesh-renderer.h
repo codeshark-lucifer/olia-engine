@@ -3,9 +3,10 @@
 #include "./mesh.h"
 #include <memory>
 #include "vulkan/device.hpp"
-#include "vulkan/shader/buffer.hpp"   // new include
+#include "vulkan/shader/buffer.hpp" 
+#include "engine/export.h"
 
-class MeshRenderer
+class OLIA_API MeshRenderer
 {
 public:
     MeshRenderer() = default;

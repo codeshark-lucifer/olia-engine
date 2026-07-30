@@ -1,0 +1,137 @@
+# Vulkan Rendering Investigation Task
+
+## Objective
+
+Perform a deep root-cause investigation into a Vulkan rendering bug. Do **not** provide generic Vulkan advice or a list of common mistakes. Instead, trace the rendering pipeline from CPU memory to the final framebuffer and determine the exact cause.
+
+---
+
+## Problem
+
+A cube renders correctly.
+
+- Geometry is correct.
+- Normals appear correct.
+- Material color is white.
+- Light color is white.
+- Lighting direction is correct.
+
+However, the shadowed (dark) side of the cube appears **purple/blue** instead of gray.
+
+The lighting itself appears correct until it is multiplied by the material color.
+
+Example:
+
+```glsl
+vec3 result = ambient + diffuse + specular;
+
+outColor = vec4(result, 1.0);          // Correct grayscale
+
+outColor = vec4(result, 1.0) * material.color;
+// Dark regions become purple
+```
+
+Yet:
+
+```glsl
+outColor = material.color;
+```
+
+renders a completely white cube.
+
+Also:
+
+```glsl
+outColor = vec4(lights[0].color.rgb, 1.0);
+```
+
+renders completely white.
+
+This suggests both operands appear correct individually, but not when combined.
+
+---
+
+## Already Verified
+
+- Cube mesh is correct.
+- Vertex normals are correct.
+- `fragWorldPos` is correct.
+- Normal matrix uses inverse transpose.
+- Material color outputs pure white.
+- Light color outputs pure white.
+- Outputting `vec4(result, 1.0)` produces grayscale lighting.
+- Outputting `vec4(0,0,0,1)` produces pure black.
+- Swapchain appears correct.
+- Render pass appears correct.
+- Descriptor bindings appear correct.
+- CPU and GLSL material layouts appear to match.
+- Push constants appear correct.
+
+---
+
+## Engine
+
+The engine contains:
+
+- Vulkan
+- ResourceManager
+- Descriptor management
+- Buffer management
+- Swapchain
+- Graphics pipeline
+- DrawScene()
+- UpdateBuffer()
+- Descriptor set creation
+- Storage buffers
+- Uniform buffers
+- Push constants
+
+The complete engine source code is available.
+
+---
+
+## Investigation Requirements
+
+Please inspect the entire rendering pipeline and verify:
+
+1. CPU ↔ GLSL memory layouts
+2. Uniform buffer alignment
+3. Storage buffer alignment
+4. Push constant layout
+5. Descriptor set layouts
+6. Descriptor writes
+7. Descriptor binding order
+8. Buffer usage flags
+9. Buffer update logic
+10. ResourceManager::UpdateBuffer()
+11. Per-frame synchronization
+12. Multi-buffering issues
+13. Pipeline color blend state
+14. Render pass attachment formats
+15. BGRA vs RGBA mismatches
+16. sRGB vs Linear color formats
+17. Vertex attribute formats
+18. Shader interface matching
+19. Material buffer lifetime
+20. GPU memory aliasing
+21. Buffer offsets
+22. Descriptor indexing
+23. Any undefined Vulkan behavior
+
+---
+
+## Expected Output
+
+Do **not** stop after identifying possible causes.
+
+For every suspected issue:
+
+- Explain **why** it could produce purple shadows.
+- Point to the exact source code responsible.
+- Explain how Vulkan interprets the data.
+- Explain why the observed behavior matches the bug.
+- Provide the exact code change required.
+
+If no issue is found in a component, explicitly state why it can be ruled out.
+
+Your goal is to identify the single root cause responsible for the purple shadow artifact by tracing the data path from CPU → GPU → Shader → Framebuffer.

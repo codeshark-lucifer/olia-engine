@@ -6,9 +6,11 @@
 #include "engine/export.h"
 
 #include "core/ecs/model.h"
+#include "core/animation/animation.h"
 #include "components/structure/data.h"
 #include "components/mesh.h"
 #include "components/mesh-renderer.h"
+#include "components/material.h"
 #include "components/light.h"
 
 using Vertex = Engine::Vertex;

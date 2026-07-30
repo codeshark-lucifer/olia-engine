@@ -1,10 +1,11 @@
 #pragma once
 
 #include "vulkan/device.hpp"
+#include "engine/export.h"
 
 namespace Engine
 {
-    class EngineBuffer
+    class OLIA_API EngineBuffer
     {
     public:
         EngineBuffer(

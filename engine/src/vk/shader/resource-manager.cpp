@@ -25,7 +25,6 @@ namespace Engine
             throw std::runtime_error("Resource already registered: " + name);
         }
 
-        // Determine usage flags and descriptor type.
         VkBufferUsageFlags usage = 0;
         VkDescriptorType descType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         if (type == ResourceType::Uniform)
@@ -38,30 +37,42 @@ namespace Engine
             usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
             descType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
         }
-        else
-        {
-            throw std::runtime_error("Unsupported resource type");
-        }
 
-        // Create the buffer (persistently mapped for fast updates).
         auto buffer = std::make_unique<EngineBuffer>(
-            device,
-            size, // instance size = total size (single instance)
-            1,    // instance count = 1
-            usage,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-            1);
-        buffer->map(); // keep mapped
+            device, size, 1, usage,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 1);
+        buffer->map();
 
-        // Store resource.
         Resource res;
+        res.type = type;
         res.buffer = std::move(buffer);
         res.binding = binding;
-        res.descriptorInfo = res.buffer->descriptorInfo();
         resources[name] = std::move(res);
 
-        // Add binding to layout builder.
         layoutBuilder.addBinding(binding, descType, stageFlags);
+    }
+
+    void ResourceManager::RegisterTexture(const std::string &name,
+                                          VkImageView imageView,
+                                          VkSampler sampler,
+                                          uint32_t binding,
+                                          VkShaderStageFlags stageFlags)
+    {
+        if (resources.find(name) != resources.end())
+        {
+            throw std::runtime_error("Resource already registered: " + name);
+        }
+
+        Resource res;
+        res.type = ResourceType::CombinedImageSampler;
+        res.binding = binding;
+        res.imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        res.imageInfo.imageView = imageView;
+        res.imageInfo.sampler = sampler;
+
+        resources[name] = std::move(res);
+
+        layoutBuilder.addBinding(binding, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, stageFlags);
     }
 
     void ResourceManager::BuildDescriptorSetsInternal()
@@ -69,31 +80,48 @@ namespace Engine
         if (built)
             return;
 
-        // Build layout from all registered bindings.
         descriptorSetLayout = layoutBuilder.build();
 
-        // Create descriptor pool with enough descriptors for all resources per frame.
         EngineDescriptorPool::Builder poolBuilder(device);
         for (const auto &[name, res] : resources)
         {
-            VkDescriptorType descType = (res.buffer->getUsageFlags() & VK_BUFFER_USAGE_STORAGE_BUFFER_BIT)
-                                            ? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
-                                            : VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            VkDescriptorType descType;
+            if (res.type == ResourceType::Storage)
+                descType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+            else if (res.type == ResourceType::CombinedImageSampler)
+                descType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            else
+                descType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+
             poolBuilder.addPoolSize(descType, maxFrames);
         }
         poolBuilder.setMaxSets(maxFrames);
         descriptorPool = poolBuilder.build();
 
-        // Allocate one descriptor set per frame, each containing all resources.
         descriptorSets.resize(maxFrames);
         for (uint32_t i = 0; i < maxFrames; ++i)
         {
             EngineDescriptorWriter writer(*descriptorSetLayout, *descriptorPool);
+
+            std::vector<VkDescriptorBufferInfo> bufferInfos;
+            std::vector<VkDescriptorImageInfo> imageInfos;
+            bufferInfos.reserve(resources.size());
+            imageInfos.reserve(resources.size());
+
             for (const auto &[name, res] : resources)
             {
-                VkDescriptorBufferInfo info = res.buffer->descriptorInfo();
-                writer.writeBuffer(res.binding, &info);
+                if (res.type == ResourceType::CombinedImageSampler)
+                {
+                    imageInfos.push_back(res.imageInfo);
+                    writer.writeImage(res.binding, &imageInfos.back());
+                }
+                else
+                {
+                    bufferInfos.push_back(res.buffer->descriptorInfo());
+                    writer.writeBuffer(res.binding, &bufferInfos.back());
+                }
             }
+
             if (!writer.build(descriptorSets[i]))
             {
                 throw std::runtime_error("Failed to allocate descriptor set");
@@ -129,7 +157,6 @@ namespace Engine
         }
         auto &res = it->second;
         res.buffer->writeToBuffer(const_cast<void *>(data), size, offset);
-        // Since we used HOST_COHERENT, flush is optional but safe.
         res.buffer->flush(size, offset);
     }
 
@@ -146,7 +173,7 @@ namespace Engine
         vkCmdBindDescriptorSets(cmdBuf,
                                 VK_PIPELINE_BIND_POINT_GRAPHICS,
                                 pipelineLayout,
-                                0, // first set
+                                0,
                                 1,
                                 &descriptorSets[frameIndex],
                                 0,
@@ -155,7 +182,6 @@ namespace Engine
 
     void ResourceManager::Shutdown()
     {
-        // Unmap all buffers.
         for (auto &[name, res] : resources)
         {
             if (res.buffer)
@@ -169,5 +195,26 @@ namespace Engine
         descriptorSetLayout.reset();
         built = false;
     }
+void ResourceManager::UpdateTexture(const std::string &name, VkImageView imageView, VkSampler sampler)
+{
+    auto it = resources.find(name);
+    if (it == resources.end())
+    {
+        throw std::runtime_error("Resource not found: " + name);
+    }
 
+    auto &res = it->second;
+    res.imageInfo.imageView = imageView;
+    res.imageInfo.sampler = sampler;
+
+    if (built)
+    {
+        for (uint32_t i = 0; i < maxFrames; ++i)
+        {
+            EngineDescriptorWriter writer(*descriptorSetLayout, *descriptorPool);
+            writer.writeImage(res.binding, &res.imageInfo);
+            writer.overwrite(descriptorSets[i]);
+        }
+    }
+}
 } // namespace Engine

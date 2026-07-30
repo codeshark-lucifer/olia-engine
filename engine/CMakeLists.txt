@@ -4,6 +4,7 @@ project(OliaEngine)
 
 file(GLOB_RECURSE ENGINE_SOURCES
     CONFIGURE_DEPENDS
+    src/vulkan/*.cpp
     src/*.cpp
     src/*.c
 )

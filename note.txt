@@ -8,6 +8,7 @@ FILE: D:\Program Education\c++\olia-engine\engine\include\components\light.h
 struct Light
 {
     glm::vec3 color = glm::vec3(1.0f);
+    float intensity = 1.0f;
 };
 
 
@@ -18,17 +19,22 @@ FILE: D:\Program Education\c++\olia-engine\engine\include\components\material.h
 #pragma once
 
 #include <string>
+#include <memory>
 #include <glm/glm.hpp>
 #include "engine/export.h"
 
+namespace Engine { class Texture; }
+
 struct Material
 {
-    std::string texturePath;
-    glm::vec4 color = glm::vec4(1.0f);
+    glm::vec4 color{110.0f / 255.0f, 160.0f / 255.0f, 220.0f / 255.0f, 1.0f};
+
     float roughness = 0.5f;
     float metallic = 0.0f;
-};
 
+    std::string albedoTexture;
+    std::shared_ptr<Engine::Texture> texture = nullptr; // <--- ADD THIS
+};
 
 ============================================================
 FILE: D:\Program Education\c++\olia-engine\engine\include\components\mesh-renderer.h
@@ -38,9 +44,10 @@ FILE: D:\Program Education\c++\olia-engine\engine\include\components\mesh-render
 #include "./mesh.h"
 #include <memory>
 #include "vulkan/device.hpp"
-#include "vulkan/shader/buffer.hpp"   // new include
+#include "vulkan/shader/buffer.hpp" 
+#include "engine/export.h"
 
-class MeshRenderer
+class OLIA_API MeshRenderer
 {
 public:
     MeshRenderer() = default;
@@ -78,8 +85,9 @@ FILE: D:\Program Education\c++\olia-engine\engine\include\components\mesh.h
 #pragma once
 #include "./structure/data.h"
 #include <vulkan/vulkan.h>
+#include "engine/export.h"
 
-struct Mesh
+struct OLIA_API Mesh
 {
     Mesh() = default;
 
@@ -91,6 +99,43 @@ struct Mesh
 
     static std::vector<VkVertexInputBindingDescription> GetBindingDescriptions();
     static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions();
+};
+
+============================================================
+FILE: D:\Program Education\c++\olia-engine\engine\include\components\skeleton.h
+============================================================
+#pragma once
+
+#include <string>
+#include <vector>
+#include <glm/glm.hpp>
+#include "engine/export.h"
+#include "ufbx/ufbx.h"
+
+struct OLIA_API Bone
+{
+    std::string name;
+    int parentIndex = -1;
+    ufbx_node *node = nullptr; // Pointer to FBX bone node
+    glm::mat4 inverseBindMatrix = glm::mat4(1.0f);
+    glm::mat4 localTransform    = glm::mat4(1.0f);
+};
+
+struct OLIA_API Skeleton
+{
+    std::vector<Bone> bones;
+    std::vector<glm::mat4> finalBoneMatrices; // Uploaded to GPU
+};
+
+struct OLIA_API Animator
+{
+    ufbx_scene *scene = nullptr; // Retained scene reference
+    ufbx_anim *anim   = nullptr; // Current animation stack
+    float currentTime = 0.0f;
+    float duration    = 0.0f;
+    float speed       = 1.0f;
+    bool isPlaying    = true;
+    bool isLooping    = true;
 };
 
 ============================================================
@@ -108,9 +153,25 @@ namespace Engine
         glm::vec3 position;
         glm::vec3 normal;
         glm::vec2 uv;
+
+        // Skeletal Animation Data
+        glm::ivec4 boneIndices = glm::ivec4(0);
+        glm::vec4 boneWeights  = glm::vec4(0.0f);
     };
 } // namespace Engine
 
+============================================================
+FILE: D:\Program Education\c++\olia-engine\engine\include\core\animation\animation.h
+============================================================
+#pragma once
+
+#include "engine/export.h"
+#include "core/ecs/entity.h"
+
+namespace Engine
+{
+    OLIA_API void UpdateSkeletalAnimation(Entity entity, float deltaTime);
+}
 
 ============================================================
 FILE: D:\Program Education\c++\olia-engine\engine\include\core\ecs\built-in.h
@@ -214,7 +275,7 @@ struct Camera
     float nearPlane = 0.1f;
     float farPlane = 1000.0f;
 
-    float fov = 45.0f;
+    float fov = 60.0f;
     float aspect = 16.0f / 9.0f;
 
     float orthoSize = 10.0f;
@@ -225,22 +286,22 @@ struct Camera
         if (projection == ProjectionType::Perspective)
         {
             glm::mat4 proj = glm::perspective(glm::radians(fov), aspect, nearPlane, farPlane);
-            // proj[1][1] *= -1;         // flip Y
-            // proj[2][2] = -proj[2][2]; // adjust depth mapping
-            // proj[3][2] = -proj[3][2];
+            proj[1][1] *= -1; // flip Y for Vulkan coordinate system
             return proj;
         }
         float safeZoom = (zoom <= 0.0001f) ? 0.0001f : zoom;
         float halfHeight = orthoSize / safeZoom;
         float halfWidth = halfHeight * aspect;
 
-        return glm::ortho(
+        glm::mat4 proj = glm::ortho(
             -halfWidth,
             halfWidth,
             -halfHeight,
             halfHeight,
             nearPlane,
             farPlane);
+        proj[1][1] *= -1;
+        return proj;
     }
 
     glm::mat4 GetView(const Transform &transform) const
@@ -787,8 +848,10 @@ FILE: D:\Program Education\c++\olia-engine\engine\include\engine\engine.h
 #include "vulkan/device.hpp"
 #include "vulkan/shader/pipeline.hpp"
 #include "vulkan/shader/buffer.hpp"
-#include "vulkan/shader/descriptor.hpp" 
-// #include "vulkan/shader/resource-manager.hpp"
+#include "vulkan/shader/descriptor.hpp"
+#include "vulkan/shader/resource-manager.hpp"
+#include "vulkan/texture.hpp"
+#include "vulkan/texture-manager.hpp" // <--- INCLUDE TEXTURE MANAGER
 
 #include <memory>
 #include <cstdint>
@@ -796,25 +859,20 @@ FILE: D:\Program Education\c++\olia-engine\engine\include\engine\engine.h
 
 struct SDL_Window;
 
-namespace Engine 
+namespace Engine
 {
+    class TextureManager;
+
     struct VKContext
     {
         VkPipelineLayout pipelineLayout;
         std::vector<VkCommandBuffer> commandBuffers;
-        EngineDevice *device                                                = nullptr;
-        std::unique_ptr<EngineSwapChain> swapchain                          = nullptr;
-        std::unique_ptr<Pipeline> pipeline                                  = nullptr;
-        std::unique_ptr<EngineBuffer> lightBuffer                           = nullptr;
-        std::unique_ptr<EngineBuffer> cameraBuffer                          = nullptr;
-        
-        // Descriptor set handling
-        VkDescriptorSetLayout descriptorSetLayout                           = VK_NULL_HANDLE;
-        VkDescriptorPool descriptorPool                                     = VK_NULL_HANDLE;
-        std::vector<VkDescriptorSet> descriptorSets; // size = MAX_FRAMES_IN_FLIGHT
-        
-        std::unique_ptr<EngineDescriptorSetLayout> descriptorSetLayoutPtr   = nullptr;
-        std::unique_ptr<EngineDescriptorPool> descriptorPoolPtr             = nullptr;
+        std::unique_ptr<ResourceManager> resourceManager;
+        std::unique_ptr<TextureManager> textureManager; // <--- REPLACED defaultTexture WITH textureManager
+
+        EngineDevice *device                        = nullptr;
+        std::unique_ptr<EngineSwapChain> swapchain  = nullptr;
+        std::unique_ptr<Pipeline> pipeline          = nullptr;
     };
 
     struct EngineContext
@@ -822,27 +880,25 @@ namespace Engine
         uint32_t width = 956;
         uint32_t height = 540;
         bool running = true;
-        const char *title = "olia - engine";
-
+        
         Platform *platform = nullptr;
         VKContext vk_context;
     };
 
-    // This must be inside the namespace to match engine.cpp and vulkan.cpp
     extern OLIA_API EngineContext *g_context;
 
-    using SetupFn = void (*)();
-    using LoopFn = void (*)();
+    using SetupFn   = void (*)();
+    using LoopFn    = void (*)();
 
     extern "C" OLIA_API void Run(SetupFn setup, LoopFn loop);
     void Clean();
-    
+
     void CreatePipelineLayout();
     void CreatePipeline();
     void CreateCommandBuffers();
     void DrawFrame();
     void DrawScene(VkCommandBuffer commandBuffer);
-    
+
     void RecreateSwapChain();
     void RecordCommandBuffer(int imageIndex);
     void FreeCommandBuffer();
@@ -888,9 +944,11 @@ FILE: D:\Program Education\c++\olia-engine\engine\include\engine\olia.h
 #include "engine/export.h"
 
 #include "core/ecs/model.h"
+#include "core/animation/animation.h"
 #include "components/structure/data.h"
 #include "components/mesh.h"
 #include "components/mesh-renderer.h"
+#include "components/material.h"
 #include "components/light.h"
 
 using Vertex = Engine::Vertex;
@@ -27349,15 +27407,96 @@ namespace Engine
 } // namespace lve
 
 ============================================================
+FILE: D:\Program Education\c++\olia-engine\engine\include\vulkan\texture-manager.hpp
+============================================================
+#pragma once
+
+#include "vulkan/texture.hpp"
+#include "engine/export.h"
+#include <unordered_map>
+#include <memory>
+#include <string>
+
+namespace Engine
+{
+    class OLIA_API TextureManager
+    {
+    public:
+        TextureManager(EngineDevice &device);
+        ~TextureManager() = default;
+
+        TextureManager(const TextureManager &) = delete;
+        TextureManager &operator=(const TextureManager &) = delete;
+
+        // Loads and caches texture from file path. Returns fallback default texture if loading fails/empty.
+        std::shared_ptr<Texture> LoadTexture(const std::string &filePath);
+
+        // Returns 1x1 solid white fallback texture
+        std::shared_ptr<Texture> GetDefaultTexture() const { return defaultTexture; }
+
+        void Clear();
+
+    private:
+        EngineDevice &device;
+        std::shared_ptr<Texture> defaultTexture;
+        std::unordered_map<std::string, std::shared_ptr<Texture>> textureCache;
+    };
+} // namespace Engine
+
+============================================================
+FILE: D:\Program Education\c++\olia-engine\engine\include\vulkan\texture.hpp
+============================================================
+#pragma once
+
+#include "vulkan/device.hpp"
+#include "engine/export.h"
+#include <string>
+
+namespace Engine
+{
+    class OLIA_API Texture
+    {
+    public:
+        Texture(EngineDevice &device, const std::string &filePath);
+        Texture(EngineDevice &device); // Default 1x1 White fallback texture
+        ~Texture();
+
+        Texture(const Texture &) = delete;
+        Texture &operator=(const Texture &) = delete;
+
+        VkImageView getImageView() const { return imageView; }
+        VkSampler getSampler() const { return sampler; }
+
+    private:
+        void createTextureImage(const std::string &filePath);
+        void createDefaultTexture();
+        void createImageView();
+        void createTextureSampler();
+        void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+
+        EngineDevice &device;
+
+        uint32_t width = 0;
+        uint32_t height = 0;
+
+        VkImage image = VK_NULL_HANDLE;
+        VkDeviceMemory imageMemory = VK_NULL_HANDLE;
+        VkImageView imageView = VK_NULL_HANDLE;
+        VkSampler sampler = VK_NULL_HANDLE;
+    };
+} // namespace Engine
+
+============================================================
 FILE: D:\Program Education\c++\olia-engine\engine\include\vulkan\shader\buffer.hpp
 ============================================================
 #pragma once
 
 #include "vulkan/device.hpp"
+#include "engine/export.h"
 
 namespace Engine
 {
-    class EngineBuffer
+    class OLIA_API EngineBuffer
     {
     public:
         EngineBuffer(
@@ -27599,121 +27738,79 @@ FILE: D:\Program Education\c++\olia-engine\engine\include\vulkan\shader\resource
 ============================================================
 #pragma once
 
-#include <unordered_map>
-#include <memory>
-#include <stdexcept>
-
 #include "vulkan/device.hpp"
 #include "vulkan/shader/buffer.hpp"
+#include "vulkan/shader/descriptor.hpp"
+#include <unordered_map>
+#include <memory>
+#include <string>
 
 namespace Engine
 {
 
-    using ResID = uint32_t;
+    enum class ResourceType
+    {
+        Uniform,
+        Storage,
+        CombinedImageSampler
+    };
 
     class ResourceManager
     {
-    private:
-        std::unordered_map<ResID, std::unique_ptr<EngineBuffer>> buffers;
+    public:
+        ResourceManager(EngineDevice &device, uint32_t maxFramesInFlight);
+        ~ResourceManager();
 
-        ResID nextID = 0;
+        void RegisterBuffer(const std::string &name,
+                            ResourceType type,
+                            VkDeviceSize size,
+                            uint32_t binding,
+                            VkShaderStageFlags stageFlags);
+
+        void RegisterTexture(const std::string &name,
+                             VkImageView imageView,
+                             VkSampler sampler,
+                             uint32_t binding,
+                             VkShaderStageFlags stageFlags);
+
+        void UpdateBuffer(const std::string &name,
+                          const void *data,
+                          VkDeviceSize size,
+                          VkDeviceSize offset = 0);
+        void UpdateTexture(const std::string &name, VkImageView imageView, VkSampler sampler);
+
+        void Bind(VkCommandBuffer cmdBuf, VkPipelineLayout pipelineLayout, uint32_t frameIndex);
+        void BuildDescriptorSets();
+        bool IsBuilt() const { return built; }
+        VkDescriptorSetLayout GetDescriptorSetLayout() const;
+        void Shutdown();
+
+    private:
+        struct Resource
+        {
+            ResourceType type;
+            std::unique_ptr<EngineBuffer> buffer;
+            VkDescriptorImageInfo imageInfo;
+            uint32_t binding;
+            VkDescriptorBufferInfo descriptorInfo;
+        };
 
         EngineDevice &device;
+        uint32_t maxFrames;
 
-    public:
-        ResourceManager(EngineDevice &device)
-            : device(device)
-        {
-        }
+        std::unordered_map<std::string, Resource> resources;
 
-        ~ResourceManager()
-        {
-            Reset();
-        }
+        EngineDescriptorSetLayout::Builder layoutBuilder;
+        std::unique_ptr<EngineDescriptorSetLayout> descriptorSetLayout;
+        std::unique_ptr<EngineDescriptorPool> descriptorPool;
+        std::vector<VkDescriptorSet> descriptorSets;
 
-        ResID RegisterBuffer(
-            VkDeviceSize instanceSize,
-            uint32_t instanceCount,
-            VkBufferUsageFlags usageFlags,
-            VkMemoryPropertyFlags memoryPropertyFlags,
-            VkDeviceSize minOffsetAlignment = 1)
-        {
-            ResID id = nextID++;
+        bool built = false;
 
-            auto buffer =
-                std::make_unique<EngineBuffer>(
-                    device,
-                    instanceSize,
-                    instanceCount,
-                    usageFlags,
-                    memoryPropertyFlags,
-                    minOffsetAlignment);
-
-            buffer->map();
-
-            buffers.emplace(
-                id,
-                std::move(buffer));
-
-            return id;
-        }
-
-        EngineBuffer &GetBuffer(ResID id)
-        {
-            auto it = buffers.find(id);
-
-            if (it == buffers.end())
-                throw std::runtime_error(
-                    "Invalid Resource ID");
-
-            return *it->second;
-        }
-
-        void UpdateBuffer(
-            ResID id,
-            void *data,
-            VkDeviceSize size,
-            VkDeviceSize offset = 0)
-        {
-            auto &buffer = GetBuffer(id);
-
-            buffer.writeToBuffer(
-                data,
-                size,
-                offset);
-
-            buffer.flush();
-        }
-
-        void WriteDescriptor(
-            EngineDescriptorWriter &writer,
-            uint32_t binding,
-            ResID id)
-        {
-            auto &buffer = GetBuffer(id);
-
-            VkDescriptorBufferInfo info{};
-
-            info.buffer =
-                buffer.getBuffer();
-
-            info.offset = 0;
-
-            info.range =
-                buffer.getBufferSize();
-
-            writer.writeBuffer(
-                binding,
-                &info);
-        }
-
-        void Reset()
-        {
-            buffers.clear();
-        }
+        void BuildDescriptorSetsInternal();
     };
 
-}
+} // namespace Engine
 
 ============================================================
 FILE: D:\Program Education\c++\olia-engine\engine\src\engine.cpp
@@ -27733,7 +27830,11 @@ FILE: D:\Program Education\c++\olia-engine\engine\src\engine.cpp
 
 #include "components/mesh-renderer.h"
 #include "components/light.h"
-
+#include "components/material.h"
+#include "vulkan/texture.hpp"
+#include "vulkan/texture-manager.hpp"
+#include "core/animation/animation.h"
+#include "components/skeleton.h"
 namespace Engine
 {
     struct PushConstantData
@@ -27750,8 +27851,18 @@ namespace Engine
 
     struct GPULight
     {
-        glm::vec4 position;
-        glm::vec4 color;
+        alignas(16) glm::vec4 position;
+        alignas(16) glm::vec4 color;
+    };
+
+    struct GPUMaterial
+    {
+        alignas(16) glm::vec4 color;
+
+        alignas(4) float roughness;
+        alignas(4) float metallic;
+
+        float padding[2];
     };
 
     EngineContext *g_context = nullptr;
@@ -27802,11 +27913,28 @@ namespace Engine
 
         auto &vk = g_context->vk_context;
 
-        // Wait until GPU is idle if device exists
         if (vk.device)
+        {
             vkDeviceWaitIdle(vk.device->device());
+        }
 
-        // Free command buffers before destroying device
+        if (ecs)
+        {
+            ecs->Clear();
+        }
+
+        if (vk.textureManager)
+        {
+            vk.textureManager->Clear();
+            vk.textureManager.reset();
+        }
+
+        if (vk.resourceManager)
+        {
+            vk.resourceManager->Shutdown();
+            vk.resourceManager.reset();
+        }
+
         if (vk.device && !vk.commandBuffers.empty())
         {
             vkFreeCommandBuffers(
@@ -27814,30 +27942,18 @@ namespace Engine
                 vk.device->getCommandPool(),
                 static_cast<uint32_t>(vk.commandBuffers.size()),
                 vk.commandBuffers.data());
-
             vk.commandBuffers.clear();
         }
 
-        // Destroy Vulkan objects that are NOT managed by smart pointers
         if (vk.pipelineLayout != VK_NULL_HANDLE)
         {
-            vkDestroyPipelineLayout(
-                vk.device->device(),
-                vk.pipelineLayout,
-                nullptr);
-
+            vkDestroyPipelineLayout(vk.device->device(), vk.pipelineLayout, nullptr);
             vk.pipelineLayout = VK_NULL_HANDLE;
         }
 
-        // Release unique_ptr-managed resources in dependency order
         vk.pipeline.reset();
         vk.swapchain.reset();
-        vk.lightBuffer.reset();
-        vk.cameraBuffer.reset();
-        vk.descriptorPoolPtr.reset();
-        vk.descriptorSetLayoutPtr.reset();
 
-        // Destroy device and platform
         delete vk.device;
         vk.device = nullptr;
 
@@ -27850,101 +27966,64 @@ namespace Engine
 
     void CreateContextInfo(Platform &platform)
     {
+        g_context->vk_context.resourceManager = std::make_unique<ResourceManager>(
+            *g_context->vk_context.device,
+            EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
+
+        // Initialize TextureManager
+        g_context->vk_context.textureManager = std::make_unique<TextureManager>(
+            *g_context->vk_context.device);
+
+        auto defaultTex = g_context->vk_context.textureManager->GetDefaultTexture();
+
+        const uint32_t MAX_LIGHTS = 10;
+        g_context->vk_context.resourceManager->RegisterBuffer(
+            "LightBuffer",
+            ResourceType::Storage,
+            sizeof(GPULight) * MAX_LIGHTS,
+            0,
+            VK_SHADER_STAGE_FRAGMENT_BIT);
+
+        g_context->vk_context.resourceManager->RegisterBuffer(
+            "CameraBuffer",
+            ResourceType::Uniform,
+            sizeof(GPUCamera),
+            1,
+            VK_SHADER_STAGE_FRAGMENT_BIT);
+
+        g_context->vk_context.resourceManager->RegisterBuffer(
+            "MaterialBuffer",
+            ResourceType::Uniform,
+            sizeof(GPUMaterial),
+            2,
+            VK_SHADER_STAGE_FRAGMENT_BIT);
+
+        // Register Storage Buffer for up to 100 bones
+        const uint32_t MAX_BONES = 100;
+        g_context->vk_context.resourceManager->RegisterBuffer(
+            "BoneBuffer",
+            ResourceType::Storage,
+            sizeof(glm::mat4) * MAX_BONES,
+            4, // binding 4
+            VK_SHADER_STAGE_VERTEX_BIT);
+
+        // Register AlbedoMap texture binding
+        g_context->vk_context.resourceManager->RegisterTexture(
+            "AlbedoMap",
+            defaultTex->getImageView(),
+            defaultTex->getSampler(),
+            3,
+            VK_SHADER_STAGE_FRAGMENT_BIT);
+
+        g_context->vk_context.resourceManager->BuildDescriptorSets();
+
+        auto entities = ecs->Query<MeshRenderer>();
+        for (auto &entity : entities)
         {
-            // create light buffer
-            const uint32_t MAX_LIGHTS = 10;
-            g_context->vk_context.lightBuffer = std::make_unique<Engine::EngineBuffer>(
-                *g_context->vk_context.device,
-                sizeof(GPULight),
-                MAX_LIGHTS,
-                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+            auto &renderer = ecs->Get<MeshRenderer>(entity);
+            renderer.Setup(g_context->vk_context.device);
         }
 
-        {
-            // create camera buffer
-            g_context->vk_context.cameraBuffer =
-                std::make_unique<EngineBuffer>(
-                    *g_context->vk_context.device,
-                    sizeof(GPUCamera),
-                    1,
-                    VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                        VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        }
-
-        {
-            // Create descriptor set layout
-            EngineDescriptorSetLayout::Builder layoutBuilder(*g_context->vk_context.device);
-            layoutBuilder
-                .addBinding(
-                    0,
-                    VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                    VK_SHADER_STAGE_FRAGMENT_BIT)
-
-                .addBinding(
-                    1,
-                    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                    VK_SHADER_STAGE_FRAGMENT_BIT);
-            auto descriptorSetLayout = layoutBuilder.build();
-            g_context->vk_context.descriptorSetLayoutPtr = std::move(descriptorSetLayout);
-            g_context->vk_context.descriptorSetLayout = g_context->vk_context.descriptorSetLayoutPtr->getDescriptorSetLayout();
-
-            // Create descriptor pool
-            EngineDescriptorPool::Builder poolBuilder(*g_context->vk_context.device);
-
-            poolBuilder
-                .addPoolSize(
-                    VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                    EngineSwapChain::MAX_FRAMES_IN_FLIGHT)
-                .addPoolSize(
-                    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                    EngineSwapChain::MAX_FRAMES_IN_FLIGHT)
-                .setMaxSets(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
-            auto descriptorPool = poolBuilder.build();
-            g_context->vk_context.descriptorPoolPtr = std::move(descriptorPool);
-            g_context->vk_context.descriptorPool = g_context->vk_context.descriptorPoolPtr->getDescriptorPool();
-
-            // Allocate descriptor sets
-            g_context->vk_context.descriptorSets.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
-            for (int i = 0; i < EngineSwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
-            {
-                EngineDescriptorWriter writer(*g_context->vk_context.descriptorSetLayoutPtr,
-                                              *g_context->vk_context.descriptorPoolPtr);
-                VkDescriptorBufferInfo lightInfo{};
-                lightInfo.buffer = g_context->vk_context.lightBuffer->getBuffer();
-                lightInfo.offset = 0;
-                lightInfo.range = g_context->vk_context.lightBuffer->getBufferSize();
-                writer.writeBuffer(0, &lightInfo);
-
-                VkDescriptorBufferInfo cameraInfo{};
-                cameraInfo.buffer = g_context->vk_context.cameraBuffer->getBuffer();
-                cameraInfo.offset = 0;
-                cameraInfo.range = sizeof(GPUCamera);
-                writer.writeBuffer(1, &cameraInfo);
-
-                if (!writer.build(g_context->vk_context.descriptorSets[i]))
-                {
-                    throw std::runtime_error("Failed to allocate descriptor set for light!");
-                }
-
-                g_context->vk_context.lightBuffer->map();
-                g_context->vk_context.cameraBuffer->map();
-            }
-        }
-
-        {
-            // query all mesh-renderer to setup mesh if it has mesh
-            auto entities = ecs->Query<MeshRenderer>();
-            for (auto &entity : entities)
-            {
-                auto &renderer = ecs->Get<MeshRenderer>(entity);
-                if (renderer.HasMesh())
-                {
-                    renderer.Setup(g_context->vk_context.device);
-                }
-            }
-        }
         CreatePipelineLayout();
         RecreateSwapChain();
         CreateCommandBuffers();
@@ -27957,13 +28036,16 @@ namespace Engine
         pushConstantRange.offset = 0;
         pushConstantRange.size = sizeof(PushConstantData);
 
-        // Add descriptor set layout
-        VkDescriptorSetLayout setLayouts[] = {g_context->vk_context.descriptorSetLayout};
+        if (!g_context->vk_context.resourceManager->IsBuilt())
+        {
+            g_context->vk_context.resourceManager->BuildDescriptorSets();
+        }
+        VkDescriptorSetLayout setLayout = g_context->vk_context.resourceManager->GetDescriptorSetLayout();
 
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipelineLayoutInfo.setLayoutCount = 1;
-        pipelineLayoutInfo.pSetLayouts = setLayouts;
+        pipelineLayoutInfo.pSetLayouts = &setLayout;
         pipelineLayoutInfo.pushConstantRangeCount = 1;
         pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
@@ -28135,7 +28217,6 @@ namespace Engine
         Camera camera;
         Transform cameraTransform;
         {
-            // block capture camera
             auto cameras = ecs->Query<Camera>();
             if (!cameras.empty())
             {
@@ -28145,22 +28226,16 @@ namespace Engine
             }
             else
             {
-                // fallback camera
                 cameraTransform.position = glm::vec3(0.0f, 0.0f, 10.0f);
             }
             camera.aspect = g_context->vk_context.swapchain->extentAspectRatio();
+
             GPUCamera gpuCamera{};
             gpuCamera.viewPos = glm::vec4(cameraTransform.position, 1.0f);
-
-            g_context->vk_context.cameraBuffer->writeToBuffer(
-                &gpuCamera,
-                sizeof(GPUCamera));
-
-            g_context->vk_context.cameraBuffer->flush();
+            g_context->vk_context.resourceManager->UpdateBuffer("CameraBuffer", &gpuCamera, sizeof(GPUCamera));
         }
 
         {
-            // update light
             std::vector<GPULight> lights;
             auto entities = ecs->Query<Light>();
             for (auto &entity : entities)
@@ -28169,22 +28244,26 @@ namespace Engine
                 auto &light = ecs->Get<Light>(entity);
                 lights.push_back(GPULight{
                     .position = glm::vec4(trans.position, 1.0f),
-                    .color = glm::vec4(light.color, 1.0f)});
+                    .color = glm::vec4(light.color, light.intensity)});
             }
-            g_context->vk_context.lightBuffer->writeToBuffer(
-                lights.data(), lights.size() * sizeof(GPULight), 0);
-
-            g_context->vk_context.lightBuffer->flush();
-
-            // Bind the descriptor set for the current frame
-            uint32_t frameIndex = g_context->vk_context.swapchain->getCurrentFrame();
-            VkDescriptorSet descSet = g_context->vk_context.descriptorSets[frameIndex];
-            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                    g_context->vk_context.pipelineLayout,
-                                    0, 1, &descSet, 0, nullptr);
+            if (!lights.empty())
+            {
+                g_context->vk_context.resourceManager->UpdateBuffer(
+                    "LightBuffer",
+                    lights.data(),
+                    lights.size() * sizeof(GPULight));
+            }
         }
 
+        uint32_t frameIndex = g_context->vk_context.swapchain->getCurrentFrame();
+        g_context->vk_context.resourceManager->Bind(
+            commandBuffer,
+            g_context->vk_context.pipelineLayout,
+            frameIndex);
+
+        // Draw scene meshes
         auto entities = ecs->Query<MeshRenderer>();
+
         for (auto &entity : entities)
         {
             auto &trans = ecs->Get<Transform>(entity);
@@ -28200,13 +28279,50 @@ namespace Engine
                 VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                 0, sizeof(PushConstantData), &push);
 
-            // find meshrender and bind & draw
+            GPUMaterial material{};
+            std::shared_ptr<Texture> activeTex = nullptr;
+
+            if (ecs->Has<Material>(entity))
+            {
+                auto &mat = ecs->Get<Material>(entity);
+                material.color = mat.color;
+                material.roughness = mat.roughness;
+                material.metallic = mat.metallic;
+
+                // Load or get cached texture for this material
+                if (!mat.texture && !mat.albedoTexture.empty())
+                {
+                    mat.texture = g_context->vk_context.textureManager->LoadTexture(mat.albedoTexture);
+                }
+
+                activeTex = mat.texture ? mat.texture : g_context->vk_context.textureManager->GetDefaultTexture();
+            }
+            else
+            {
+                material.color = glm::vec4(110.0f / 255.0f, 160.0f / 255.0f, 220.0f / 255.0f, 1.0f);
+                material.roughness = 0.5f;
+                material.metallic = 0.0f;
+                activeTex = g_context->vk_context.textureManager->GetDefaultTexture();
+            }
+
+            if (ecs->Has<Skeleton>(entity))
+            {
+                auto &skel = ecs->Get<Skeleton>(entity);
+                g_context->vk_context.resourceManager->UpdateBuffer(
+                    "BoneBuffer",
+                    skel.finalBoneMatrices.data(),
+                    skel.finalBoneMatrices.size() * sizeof(glm::mat4));
+            }
+
+            // Update AlbedoMap texture and MaterialBuffer UBO for the current drawn object
+            g_context->vk_context.resourceManager->UpdateTexture("AlbedoMap", activeTex->getImageView(), activeTex->getSampler());
+            g_context->vk_context.resourceManager->UpdateBuffer("MaterialBuffer", &material, sizeof(GPUMaterial));
+
             auto &renderer = ecs->Get<MeshRenderer>(entity);
             renderer.BindBuffers(commandBuffer);
             renderer.Draw(commandBuffer);
         }
     }
-
 }
 
 ============================================================
@@ -28216,8 +28332,10 @@ FILE: D:\Program Education\c++\olia-engine\engine\src\components\mesh-renderer.c
 #include <cstring>
 #include <cassert>
 
-void MeshRenderer::Setup(Engine::EngineDevice* devicePtr)
+void MeshRenderer::Setup(Engine::EngineDevice *devicePtr)
 {
+    if (!mesh)
+        return;
     device = devicePtr;
     CreateVertexBuffers(mesh->vertices);
     CreateIndicesBuffers(mesh->indices);
@@ -28225,8 +28343,8 @@ void MeshRenderer::Setup(Engine::EngineDevice* devicePtr)
 
 void MeshRenderer::BindBuffers(VkCommandBuffer commandBuffer)
 {
-    VkBuffer buffers[] = { vertexBuffer->getBuffer() };
-    VkDeviceSize offsets[] = { 0 };
+    VkBuffer buffers[] = {vertexBuffer->getBuffer()};
+    VkDeviceSize offsets[] = {0};
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
     vkCmdBindIndexBuffer(commandBuffer, indexBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT16);
 }
@@ -28236,7 +28354,7 @@ void MeshRenderer::Draw(VkCommandBuffer commandBuffer)
     vkCmdDrawIndexed(commandBuffer, indicesCount, 1, 0, 0, 0);
 }
 
-void MeshRenderer::CreateVertexBuffers(const std::vector<Engine::Vertex>& vertices)
+void MeshRenderer::CreateVertexBuffers(const std::vector<Engine::Vertex> &vertices)
 {
     vertexCount = static_cast<uint32_t>(vertices.size());
     assert(vertexCount >= 3 && "Vertex count must be at least 3");
@@ -28244,46 +28362,43 @@ void MeshRenderer::CreateVertexBuffers(const std::vector<Engine::Vertex>& vertic
     // Create a buffer with one "instance" per vertex (or use 1 instance with total size).
     // Using instanceCount = vertexCount and instanceSize = sizeof(Vertex) keeps alignment simple.
     vertexBuffer = std::make_unique<Engine::EngineBuffer>(
-        *device,                                     // dereference pointer
-        sizeof(Engine::Vertex),                     // instance size
-        vertexCount,                                // instance count
+        *device,                // dereference pointer
+        sizeof(Engine::Vertex), // instance size
+        vertexCount,            // instance count
         VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-        1                                           // minOffsetAlignment (1 is fine for vertex data)
+        1 // minOffsetAlignment (1 is fine for vertex data)
     );
 
     // Map the whole buffer, copy vertex data, then unmap.
     VkResult result = vertexBuffer->map();
     assert(result == VK_SUCCESS);
     vertexBuffer->writeToBuffer(
-        const_cast<void*>(static_cast<const void*>(vertices.data())),
+        const_cast<void *>(static_cast<const void *>(vertices.data())),
         sizeof(Engine::Vertex) * vertexCount,
-        0
-    );
+        0);
     vertexBuffer->unmap();
 }
 
-void MeshRenderer::CreateIndicesBuffers(const std::vector<uint16_t>& indices)
+void MeshRenderer::CreateIndicesBuffers(const std::vector<uint16_t> &indices)
 {
     indicesCount = static_cast<uint32_t>(indices.size());
     assert(indicesCount >= 3 && "Indices count must be at least 3");
 
     indexBuffer = std::make_unique<Engine::EngineBuffer>(
         *device,
-        sizeof(uint16_t),                          // each index is one instance
+        sizeof(uint16_t), // each index is one instance
         indicesCount,
         VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-        1
-    );
+        1);
 
     VkResult result = indexBuffer->map();
     assert(result == VK_SUCCESS);
     indexBuffer->writeToBuffer(
-        const_cast<void*>(static_cast<const void*>(indices.data())),
+        const_cast<void *>(static_cast<const void *>(indices.data())),
         sizeof(uint16_t) * indicesCount,
-        0
-    );
+        0);
     indexBuffer->unmap();
 }
 
@@ -28304,25 +28419,119 @@ std::vector<VkVertexInputBindingDescription> Mesh::GetBindingDescriptions()
 
 std::vector<VkVertexInputAttributeDescription> Mesh::GetAttributeDescriptions()
 {
-    std::vector<VkVertexInputAttributeDescription> descriptions(3);
+    // FIX: Change vector size from 3 to 5
+    std::vector<VkVertexInputAttributeDescription> descriptions(5);
+
+    // Location 0: Position
     descriptions[0].binding = 0;
     descriptions[0].location = 0;
     descriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
     descriptions[0].offset = offsetof(Vertex, position);
 
+    // Location 1: Normal
     descriptions[1].binding = 0;
     descriptions[1].location = 1;
     descriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
     descriptions[1].offset = offsetof(Vertex, normal);
 
+    // Location 2: UV
     descriptions[2].binding = 0;
     descriptions[2].location = 2;
     descriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
     descriptions[2].offset = offsetof(Vertex, uv);
+
+    // Location 3: Bone Indices
+    descriptions[3].binding = 0;
+    descriptions[3].location = 3;
+    descriptions[3].format = VK_FORMAT_R32G32B32A32_SINT;
+    descriptions[3].offset = offsetof(Vertex, boneIndices);
+
+    // Location 4: Bone Weights
+    descriptions[4].binding = 0;
+    descriptions[4].location = 4;
+    descriptions[4].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+    descriptions[4].offset = offsetof(Vertex, boneWeights);
+
     return descriptions;
 }
 
+============================================================
+FILE: D:\Program Education\c++\olia-engine\engine\src\core\animation.cpp
+============================================================
+#include "core/animation/animation.h"
+#include "components/skeleton.h"
+#include "engine/globals.h"
+#include <cmath>
 
+static glm::mat4 UfbxToGlmMat4(const ufbx_matrix &m)
+{
+    glm::mat4 mat(1.0f);
+    mat[0] = glm::vec4((float)m.m00, (float)m.m10, (float)m.m20, 0.0f);
+    mat[1] = glm::vec4((float)m.m01, (float)m.m11, (float)m.m21, 0.0f);
+    mat[2] = glm::vec4((float)m.m02, (float)m.m12, (float)m.m22, 0.0f);
+    mat[3] = glm::vec4((float)m.m03, (float)m.m13, (float)m.m23, 1.0f);
+    return mat;
+}
+
+namespace Engine
+{
+    void UpdateSkeletalAnimation(Entity entity, float deltaTime)
+    {
+        if (!ecs->Has<Skeleton>(entity) || !ecs->Has<Animator>(entity))
+            return;
+
+        auto &skel = ecs->Get<Skeleton>(entity);
+        auto &anim = ecs->Get<Animator>(entity);
+
+        if (!anim.isPlaying || !anim.scene)
+            return;
+
+        // 1. Advance Playback Time
+        anim.currentTime += deltaTime * anim.speed;
+        if (anim.duration > 0.0f && anim.currentTime > anim.duration)
+        {
+            if (anim.isLooping)
+                anim.currentTime = std::fmod(anim.currentTime, anim.duration);
+            else
+                anim.currentTime = anim.duration;
+        }
+
+        // 2. Evaluate Local Transforms & Propagate Global Hierarchy
+        std::vector<glm::mat4> globalTransforms(skel.bones.size(), glm::mat4(1.0f));
+
+        for (size_t i = 0; i < skel.bones.size(); i++)
+        {
+            auto &bone = skel.bones[i];
+
+            glm::mat4 localMat = bone.localTransform;
+
+            if (bone.node)
+            {
+                // Evaluate animated local transform using ufbx
+                ufbx_transform ufbxTrans = ufbx_evaluate_transform(
+                    anim.anim ? anim.anim : anim.scene->anim,
+                    bone.node,
+                    (double)anim.currentTime);
+
+                ufbx_matrix m = ufbx_transform_to_matrix(&ufbxTrans);
+                localMat = UfbxToGlmMat4(m);
+            }
+
+            // Combine with parent bone transform
+            if (bone.parentIndex >= 0)
+            {
+                globalTransforms[i] = globalTransforms[bone.parentIndex] * localMat;
+            }
+            else
+            {
+                globalTransforms[i] = localMat;
+            }
+
+            // 3. Final Matrix = Global Transform * Inverse Bind Matrix
+            skel.finalBoneMatrices[i] = globalTransforms[i] * bone.inverseBindMatrix;
+        }
+    }
+} // namespace Engine
 
 ============================================================
 FILE: D:\Program Education\c++\olia-engine\engine\src\ecs\model.cpp
@@ -28333,254 +28542,270 @@ FILE: D:\Program Education\c++\olia-engine\engine\src\ecs\model.cpp
 #include <iostream>
 #include <vector>
 #include <memory>
+#include <string>
+#include <algorithm>
 
 #include "components/mesh.h"
 #include "components/material.h"
 #include "components/mesh-renderer.h"
+#include "components/skeleton.h"
 
 #include "engine/globals.h"
 #include "ufbx/ufbx.h"
 #include "utils/file.h"
 
+// Helper to convert ufbx_matrix (4x3) to glm::mat4
+static glm::mat4 UfbxToGlmMat4(const ufbx_matrix &m)
+{
+    glm::mat4 mat(1.0f);
+    mat[0] = glm::vec4((float)m.m00, (float)m.m10, (float)m.m20, 0.0f);
+    mat[1] = glm::vec4((float)m.m01, (float)m.m11, (float)m.m21, 0.0f);
+    mat[2] = glm::vec4((float)m.m02, (float)m.m12, (float)m.m22, 0.0f);
+    mat[3] = glm::vec4((float)m.m03, (float)m.m13, (float)m.m23, 1.0f);
+    return mat;
+}
+
+// Helper to convert ufbx_transform to glm::mat4
+static glm::mat4 UfbxTransformToGlmMat4(const ufbx_transform &t)
+{
+    ufbx_matrix m = ufbx_transform_to_matrix(&t);
+    return UfbxToGlmMat4(m);
+}
+
 std::vector<Entity> LoadModel(const char *filename)
 {
     std::vector<Entity> entities;
 
-    std::filesystem::path path =
-        Engine::GetExecutableDir() / "assets" / filename;
+    std::filesystem::path path = Engine::GetExecutableDir() / "assets" / filename;
 
     ufbx_load_opts opts{};
+    opts.target_unit_meters = 1.0f; // Automatically converts all units (cm/mm) to meters for vertices AND bones
+    opts.target_axes = ufbx_axes_right_handed_y_up; // Ensures consistent coordinate axes
+    opts.use_blender_pbr_material = true;
     ufbx_error error{};
 
-    ufbx_scene *scene = ufbx_load_file(
-        path.string().c_str(),
-        &opts,
-        &error);
+    ufbx_scene *scene = ufbx_load_file(path.string().c_str(), &opts, &error);
 
     if (!scene)
     {
-        std::cerr
-            << "Failed loading FBX: "
-            << error.description.data
-            << "\n";
-
+        std::cerr << "Failed loading FBX: " << error.description.data << "\n";
         return entities;
     }
 
-    std::cout
-        << "Loaded FBX: "
-        << filename
-        << "\n";
+    std::cout << "Loaded FBX: " << filename << "\n";
 
     //
-    // Load Materials
+    // 1. Load Materials
     //
-
     std::vector<Material> materials;
-
     materials.reserve(scene->materials.count);
 
     for (size_t i = 0; i < scene->materials.count; i++)
     {
-        ufbx_material *fbxMat =
-            scene->materials.data[i];
-
+        ufbx_material *fbxMat = scene->materials.data[i];
         Material mat{};
 
-        mat.color = glm::vec4(
-            (float)fbxMat->pbr.base_color.value_vec3.x,
-            (float)fbxMat->pbr.base_color.value_vec3.y,
-            (float)fbxMat->pbr.base_color.value_vec3.z,
-            (float)fbxMat->pbr.opacity.value_real);
+        ufbx_vec3 col = fbxMat->pbr.base_color.has_value
+                            ? fbxMat->pbr.base_color.value_vec3
+                            : fbxMat->fbx.diffuse_color.value_vec3;
+
+        float opacity = fbxMat->pbr.opacity.has_value
+                            ? (float)fbxMat->pbr.opacity.value_real
+                            : 1.0f;
+
+        mat.color = glm::vec4((float)col.x, (float)col.y, (float)col.z, opacity);
 
         if (fbxMat->pbr.base_color.texture)
         {
-            mat.texturePath =
-                fbxMat->pbr.base_color.texture
-                    ->filename.data;
+            mat.albedoTexture = fbxMat->pbr.base_color.texture->filename.data;
         }
 
         materials.push_back(mat);
     }
 
     //
-    // Meshes
+    // 2. Load Meshes & Extract Skinning / Bone Data
     //
-
     for (size_t i = 0; i < scene->meshes.count; i++)
     {
+        ufbx_mesh *fbxMesh = scene->meshes.data[i];
+        std::string meshName = fbxMesh->name.data ? fbxMesh->name.data : "";
 
-        ufbx_mesh *fbxMesh =
-            scene->meshes.data[i];
+        auto mesh = std::make_unique<Mesh>();
+        Skeleton skeletonComponent{};
 
-        auto mesh =
-            std::make_unique<Mesh>();
+        // Check if mesh has skinning
+        ufbx_skin_deformer *skin = (fbxMesh->skin_deformers.count > 0)
+                                       ? fbxMesh->skin_deformers.data[0]
+                                       : nullptr;
 
-        std::vector<uint32_t> triangles(
-            fbxMesh->max_face_triangles * 3);
-
-        for (size_t faceIndex = 0;
-             faceIndex < fbxMesh->faces.count;
-             faceIndex++)
+        // Build Skeleton info if skinning exists
+        if (skin)
         {
+            skeletonComponent.bones.resize(skin->clusters.count);
+            skeletonComponent.finalBoneMatrices.resize(skin->clusters.count, glm::mat4(1.0f));
 
-            ufbx_face face =
-                fbxMesh->faces.data[faceIndex];
+            // Map Clusters to Bones
+            for (size_t c = 0; c < skin->clusters.count; c++)
+            {
+                ufbx_skin_cluster *cluster = skin->clusters.data[c];
+                Bone &bone = skeletonComponent.bones[c];
+
+                bone.name = cluster->name.data ? cluster->name.data : "";
+                bone.node = cluster->bone_node;
+                bone.inverseBindMatrix = UfbxToGlmMat4(cluster->geometry_to_bone);
+
+                if (cluster->bone_node)
+                {
+                    bone.localTransform = UfbxTransformToGlmMat4(cluster->bone_node->local_transform);
+                }
+            }
+
+            // Resolve Parent Indices for Hierarchy
+            for (size_t c = 0; c < skin->clusters.count; c++)
+            {
+                Bone &bone = skeletonComponent.bones[c];
+                if (bone.node && bone.node->parent)
+                {
+                    for (size_t p = 0; p < skin->clusters.count; p++)
+                    {
+                        if (skin->clusters.data[p]->bone_node == bone.node->parent)
+                        {
+                            bone.parentIndex = static_cast<int>(p);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        std::vector<uint32_t> triangles(fbxMesh->max_face_triangles * 3);
+
+        for (size_t faceIndex = 0; faceIndex < fbxMesh->faces.count; faceIndex++)
+        {
+            ufbx_face face = fbxMesh->faces.data[faceIndex];
 
             if (face.num_indices < 3)
                 continue;
 
-            uint32_t count =
-                ufbx_triangulate_face(
-                    triangles.data(),
-                    triangles.size(),
-                    fbxMesh,
-                    face);
+            uint32_t count = ufbx_triangulate_face(
+                triangles.data(),
+                triangles.size(),
+                fbxMesh,
+                face);
 
             for (uint32_t t = 0; t < count * 3; t++)
             {
-
-                uint32_t index =
-                    triangles[t];
-
+                uint32_t index = triangles[t];
                 Engine::Vertex vertex{};
 
-                //
-                // Position
-                //
+                // Position (ufbx now handles scaling to meters automatically via opts.target_unit_meters)
+                auto pos = ufbx_get_vertex_vec3(&fbxMesh->vertex_position, index);
+                vertex.position = {(float)pos.x, (float)pos.y, (float)pos.z};
 
-                auto pos =
-                    ufbx_get_vertex_vec3(
-                        &fbxMesh->vertex_position,
-                        index);
-
-                float scale = 0.01f; // cm -> meter
-
-                vertex.position =
-                    {
-                        (float)pos.x * scale,
-                        (float)pos.y * scale,
-                        (float)pos.z * scale};
-
-                //
                 // Normal
-                //
-
                 if (fbxMesh->vertex_normal.exists)
                 {
-                    auto normal =
-                        ufbx_get_vertex_vec3(
-                            &fbxMesh->vertex_normal,
-                            index);
-
-                    vertex.normal =
-                        {
-                            (float)normal.x,
-                            (float)normal.y,
-                            (float)normal.z};
+                    auto normal = ufbx_get_vertex_vec3(&fbxMesh->vertex_normal, index);
+                    vertex.normal = {(float)normal.x, (float)normal.y, (float)normal.z};
                 }
                 else
                 {
-                    vertex.normal =
-                        {
-                            0, 1, 0};
+                    vertex.normal = {0.0f, 1.0f, 0.0f};
                 }
 
-                //
                 // UV
-                //
-
                 if (fbxMesh->vertex_uv.exists)
                 {
-
-                    auto uv =
-                        ufbx_get_vertex_vec2(
-                            &fbxMesh->vertex_uv,
-                            index);
-
-                    vertex.uv =
-                        {
-                            (float)uv.x,
-                            1.0f - (float)uv.y};
+                    auto uv = ufbx_get_vertex_vec2(&fbxMesh->vertex_uv, index);
+                    vertex.uv = {(float)uv.x, 1.0f - (float)uv.y};
                 }
                 else
                 {
-                    vertex.uv =
+                    vertex.uv = {0.0f, 0.0f};
+                }
+
+                // Extract Skinning Weights (Up to 4 bones per vertex)
+                if (skin)
+                {
+                    uint32_t vtxIndex = fbxMesh->vertex_indices.data[index];
+                    if (vtxIndex < skin->vertices.count)
+                    {
+                        ufbx_skin_vertex skinVert = skin->vertices.data[vtxIndex];
+                        uint32_t numWeights = std::min((uint32_t)skinVert.num_weights, 4u);
+                        for (uint32_t w = 0; w < numWeights; w++)
                         {
-                            0, 0};
+                            ufbx_skin_weight weight = skin->weights.data[skinVert.weight_begin + w];
+                            vertex.boneIndices[w] = static_cast<int32_t>(weight.cluster_index);
+                            vertex.boneWeights[w] = static_cast<float>(weight.weight);
+                        }
+                    }
                 }
 
                 mesh->vertices.push_back(vertex);
-
-                mesh->indices.push_back(
-                    static_cast<uint32_t>(
-                        mesh->vertices.size() - 1));
+                mesh->indices.push_back(static_cast<uint32_t>(mesh->vertices.size() - 1));
             }
         }
 
         if (mesh->vertices.empty())
         {
-            std::cout
-                << "Empty mesh skipped: "
-                << fbxMesh->name.data
-                << "\n";
-
+            std::cout << "Empty mesh skipped: " << meshName << "\n";
             continue;
         }
 
-        //
-        // Find material
-        //
-
+        // Material Assignment
         int materialIndex = -1;
-
-        if (fbxMesh->materials.count)
+        if (fbxMesh->materials.count > 0)
         {
-
-            ufbx_material *mat =
-                fbxMesh->materials.data[0];
-
-            for (size_t m = 0;
-                 m < scene->materials.count;
-                 m++)
+            ufbx_material *targetMat = fbxMesh->materials.data[0];
+            for (size_t m = 0; m < scene->materials.count; m++)
             {
-                if (scene->materials.data[m] == mat)
+                if (scene->materials.data[m] == targetMat)
                 {
                     materialIndex = (int)m;
                     break;
                 }
             }
         }
+        else if (!materials.empty())
+        {
+            materialIndex = 0;
+        }
 
         //
         // Create Entity
         //
+        Entity entity = ecs->Create();
 
-        Entity entity =
-            ecs->Create();
+        auto &renderer = ecs->Add<MeshRenderer>(entity);
+        renderer.SetMesh(std::move(mesh));
 
-        auto &renderer =
-            ecs->Add<MeshRenderer>(entity);
-
-        renderer.SetMesh(
-            std::move(mesh));
-
-        if (materialIndex >= 0 &&
-            materialIndex < materials.size())
+        auto &mat = ecs->Add<Material>(entity);
+        if (materialIndex >= 0 && materialIndex < static_cast<int>(materials.size()))
         {
-
-            auto &mat =
-                ecs->Add<Material>(entity);
-
             mat = materials[materialIndex];
+        }
+
+        // Attach Skeleton and Animator components if model has bones
+        if (skin)
+        {
+            auto &skel = ecs->Add<Skeleton>(entity);
+            skel = std::move(skeletonComponent);
+
+            auto &anim = ecs->Add<Animator>(entity);
+            ufbx_retain_scene(scene); // Keep scene alive for ufbx animation evaluation
+            anim.scene = scene;
+
+            if (scene->anim_stacks.count > 0)
+            {
+                anim.anim = scene->anim_stacks.data[0]->anim; // First animation clip
+                anim.duration = (float)scene->anim_stacks.data[0]->time_end;
+            }
         }
 
         entities.push_back(entity);
 
-        std::cout
-            << "Mesh: "
-            << fbxMesh->name.data
-            << "\n";
+        std::cout << "Mesh & Skeleton loaded successfully: " << meshName << "\n";
     }
 
     ufbx_free_scene(scene);
@@ -29882,6 +30107,333 @@ namespace Engine
 } // namespace lve
 
 ============================================================
+FILE: D:\Program Education\c++\olia-engine\engine\src\vk\texture-manager.cpp
+============================================================
+#include "vulkan/texture-manager.hpp"
+#include "utils/file.h"
+#include <filesystem>
+#include <iostream>
+
+namespace Engine
+{
+    TextureManager::TextureManager(EngineDevice &device) : device(device)
+    {
+        // Create 1x1 solid white fallback texture
+        defaultTexture = std::make_shared<Texture>(device);
+    }
+
+    std::shared_ptr<Texture> TextureManager::LoadTexture(const std::string &filePath)
+    {
+        // 1. If path is empty, return default 1x1 white texture
+        if (filePath.empty())
+        {
+            return defaultTexture;
+        }
+
+        // 2. Return from cache if already loaded
+        auto it = textureCache.find(filePath);
+        if (it != textureCache.end())
+        {
+            return it->second;
+        }
+
+        std::string resolvedPath = "";
+        std::filesystem::path targetFilename = std::filesystem::path(filePath).filename();
+
+        // 3. Try original path directly (e.g. absolute or direct relative path)
+        if (std::filesystem::exists(filePath) && std::filesystem::is_regular_file(filePath))
+        {
+            resolvedPath = filePath;
+        }
+        // 4. Try relative to executable directory
+        else if (std::filesystem::exists(GetExecutableDir() / filePath) && std::filesystem::is_regular_file(GetExecutableDir() / filePath))
+        {
+            resolvedPath = (GetExecutableDir() / filePath).string();
+        }
+        // 5. Try relative to executable's assets folder
+        else if (std::filesystem::exists(GetExecutableDir() / "assets" / filePath) && std::filesystem::is_regular_file(GetExecutableDir() / "assets" / filePath))
+        {
+            resolvedPath = (GetExecutableDir() / "assets" / filePath).string();
+        }
+        else
+        {
+            // 6. Search recursively inside ./assets/ for matching filename
+            std::filesystem::path assetsDir = GetExecutableDir() / "assets";
+            if (std::filesystem::exists(assetsDir) && std::filesystem::is_directory(assetsDir))
+            {
+                for (const auto &entry : std::filesystem::recursive_directory_iterator(assetsDir, std::filesystem::directory_options::skip_permission_denied))
+                {
+                    if (entry.is_regular_file() && entry.path().filename() == targetFilename)
+                    {
+                        resolvedPath = entry.path().string();
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 7. If no valid file was found, fallback to default white texture
+        if (resolvedPath.empty() || !std::filesystem::exists(resolvedPath))
+        {
+            std::cerr << "Texture file not found: '" << filePath << "'. Falling back to default texture.\n";
+            textureCache[filePath] = defaultTexture;
+            return defaultTexture;
+        }
+
+        // 8. Attempt to load the resolved texture
+        try
+        {
+            auto texture = std::make_shared<Texture>(device, resolvedPath);
+            textureCache[filePath] = texture;
+            std::cout << "Texture loaded successfully: " << resolvedPath << "\n";
+            return texture;
+        }
+        catch (const std::exception &e)
+        {
+            std::cerr << "Failed to load texture '" << resolvedPath << "': " << e.what() << ". Using fallback default texture.\n";
+            textureCache[filePath] = defaultTexture;
+            return defaultTexture;
+        }
+    }
+
+    void TextureManager::Clear()
+    {
+        textureCache.clear();
+    }
+} // namespace Engine
+
+============================================================
+FILE: D:\Program Education\c++\olia-engine\engine\src\vk\texture.cpp
+============================================================
+#include "vulkan/texture.hpp"
+
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb/stb_image.h>
+
+#include <stdexcept>
+#include <cassert>
+
+namespace Engine
+{
+    Texture::Texture(EngineDevice &device, const std::string &filePath) : device(device)
+    {
+        createTextureImage(filePath);
+        createImageView();
+        createTextureSampler();
+    }
+
+    Texture::Texture(EngineDevice &device) : device(device)
+    {
+        createDefaultTexture();
+        createImageView();
+        createTextureSampler();
+    }
+
+    Texture::~Texture()
+    {
+        VkDevice vkDevice = device.device();
+        if (sampler != VK_NULL_HANDLE) vkDestroySampler(vkDevice, sampler, nullptr);
+        if (imageView != VK_NULL_HANDLE) vkDestroyImageView(vkDevice, imageView, nullptr);
+        if (image != VK_NULL_HANDLE) vkDestroyImage(vkDevice, image, nullptr);
+        if (imageMemory != VK_NULL_HANDLE) vkFreeMemory(vkDevice, imageMemory, nullptr);
+    }
+
+    void Texture::createTextureImage(const std::string &filePath)
+    {
+        int texWidth, texHeight, texChannels;
+        stbi_uc *pixels = stbi_load(filePath.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+        VkDeviceSize imageSize = static_cast<VkDeviceSize>(texWidth) * texHeight * 4;
+
+        if (!pixels)
+        {
+            // Fall back to default white texture if file not found
+            createDefaultTexture();
+            return;
+        }
+
+        width = static_cast<uint32_t>(texWidth);
+        height = static_cast<uint32_t>(texHeight);
+
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        device.createBuffer(
+            imageSize,
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            stagingBuffer,
+            stagingBufferMemory);
+
+        void *data;
+        vkMapMemory(device.device(), stagingBufferMemory, 0, imageSize, 0, &data);
+        memcpy(data, pixels, static_cast<size_t>(imageSize));
+        vkUnmapMemory(device.device(), stagingBufferMemory);
+
+        stbi_image_free(pixels);
+
+        VkImageCreateInfo imageInfo{};
+        imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        imageInfo.imageType = VK_IMAGE_TYPE_2D;
+        imageInfo.extent.width = width;
+        imageInfo.extent.height = height;
+        imageInfo.extent.depth = 1;
+        imageInfo.mipLevels = 1;
+        imageInfo.arrayLayers = 1;
+        imageInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+        imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+        imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+        imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        device.createImageWithInfo(
+            imageInfo,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+            image,
+            imageMemory);
+
+        transitionImageLayout(image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        device.copyBufferToImage(stagingBuffer, image, width, height, 1);
+        transitionImageLayout(image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+        vkDestroyBuffer(device.device(), stagingBuffer, nullptr);
+        vkFreeMemory(device.device(), stagingBufferMemory, nullptr);
+    }
+
+    void Texture::createDefaultTexture()
+    {
+        width = 1;
+        height = 1;
+        uint32_t whitePixel = 0xFFFFFFFF; // RGBA 255, 255, 255, 255
+        VkDeviceSize imageSize = sizeof(uint32_t);
+
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        device.createBuffer(
+            imageSize,
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            stagingBuffer,
+            stagingBufferMemory);
+
+        void *data;
+        vkMapMemory(device.device(), stagingBufferMemory, 0, imageSize, 0, &data);
+        memcpy(data, &whitePixel, sizeof(uint32_t));
+        vkUnmapMemory(device.device(), stagingBufferMemory);
+
+        VkImageCreateInfo imageInfo{};
+        imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        imageInfo.imageType = VK_IMAGE_TYPE_2D;
+        imageInfo.extent = {1, 1, 1};
+        imageInfo.mipLevels = 1;
+        imageInfo.arrayLayers = 1;
+        imageInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+        imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+        imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+        imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        device.createImageWithInfo(imageInfo, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, image, imageMemory);
+
+        transitionImageLayout(image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        device.copyBufferToImage(stagingBuffer, image, 1, 1, 1);
+        transitionImageLayout(image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+        vkDestroyBuffer(device.device(), stagingBuffer, nullptr);
+        vkFreeMemory(device.device(), stagingBufferMemory, nullptr);
+    }
+
+    void Texture::createImageView()
+    {
+        VkImageViewCreateInfo viewInfo{};
+        viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        viewInfo.image = image;
+        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        viewInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+        viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        viewInfo.subresourceRange.baseMipLevel = 0;
+        viewInfo.subresourceRange.levelCount = 1;
+        viewInfo.subresourceRange.baseArrayLayer = 0;
+        viewInfo.subresourceRange.layerCount = 1;
+
+        if (vkCreateImageView(device.device(), &viewInfo, nullptr, &imageView) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to create texture image view!");
+        }
+    }
+
+    void Texture::createTextureSampler()
+    {
+        VkSamplerCreateInfo samplerInfo{};
+        samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        samplerInfo.magFilter = VK_FILTER_LINEAR;
+        samplerInfo.minFilter = VK_FILTER_LINEAR;
+        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        samplerInfo.anisotropyEnable = VK_TRUE;
+        samplerInfo.maxAnisotropy = device.properties.limits.maxSamplerAnisotropy;
+        samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+        samplerInfo.unnormalizedCoordinates = VK_FALSE;
+        samplerInfo.compareEnable = VK_FALSE;
+        samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+
+        if (vkCreateSampler(device.device(), &samplerInfo, nullptr, &sampler) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to create texture sampler!");
+        }
+    }
+
+    void Texture::transitionImageLayout(VkImage img, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)
+    {
+        VkCommandBuffer commandBuffer = device.beginSingleTimeCommands();
+
+        VkImageMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.oldLayout = oldLayout;
+        barrier.newLayout = newLayout;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image = img;
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = 1;
+
+        VkPipelineStageFlags sourceStage;
+        VkPipelineStageFlags destinationStage;
+
+        if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+        {
+            barrier.srcAccessMask = 0;
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+            destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        }
+        else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+        {
+            barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        }
+        else
+        {
+            throw std::invalid_argument("unsupported layout transition!");
+        }
+
+        vkCmdPipelineBarrier(
+            commandBuffer,
+            sourceStage, destinationStage,
+            0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+        device.endSingleTimeCommands(commandBuffer);
+    }
+} // namespace Engine
+
+============================================================
 FILE: D:\Program Education\c++\olia-engine\engine\src\vk\shader\buffer.cpp
 ============================================================
 /*
@@ -30505,8 +31057,8 @@ namespace Engine
         configInfo.rasterizationInfo.rasterizerDiscardEnable = VK_FALSE;
         configInfo.rasterizationInfo.polygonMode = VK_POLYGON_MODE_FILL;
         configInfo.rasterizationInfo.lineWidth = 1.0f;
-        configInfo.rasterizationInfo.cullMode = VK_CULL_MODE_NONE;
-        configInfo.rasterizationInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+        configInfo.rasterizationInfo.cullMode = VK_CULL_MODE_BACK_BIT;
+        configInfo.rasterizationInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
         configInfo.rasterizationInfo.depthBiasEnable = VK_FALSE;
         configInfo.rasterizationInfo.depthBiasConstantFactor = 0.0f; // Optional
         configInfo.rasterizationInfo.depthBiasClamp = 0.0f;          // Optional
@@ -30527,13 +31079,13 @@ namespace Engine
         configInfo.colorBlendAttachment.colorWriteMask =
             VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT |
             VK_COLOR_COMPONENT_A_BIT;
-        configInfo.colorBlendAttachment.blendEnable = VK_FALSE;
-        configInfo.colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;  // Optional
-        configInfo.colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO; // Optional
-        configInfo.colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;             // Optional
-        configInfo.colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;  // Optional
-        configInfo.colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO; // Optional
-        configInfo.colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;             // Optional
+        configInfo.colorBlendAttachment.blendEnable = VK_TRUE;
+        configInfo.colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+        configInfo.colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+        configInfo.colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+        configInfo.colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+        configInfo.colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+        configInfo.colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
 
         configInfo.colorBlendInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
         configInfo.colorBlendInfo.logicOpEnable = VK_FALSE;
@@ -30572,6 +31124,230 @@ namespace Engine
 
 
 ============================================================
+FILE: D:\Program Education\c++\olia-engine\engine\src\vk\shader\resource-manager.cpp
+============================================================
+#include "vulkan/shader/resource-manager.hpp"
+#include <stdexcept>
+
+namespace Engine
+{
+
+    ResourceManager::ResourceManager(EngineDevice &device, uint32_t maxFramesInFlight)
+        : device(device), maxFrames(maxFramesInFlight), layoutBuilder(device)
+    {
+    }
+
+    ResourceManager::~ResourceManager()
+    {
+        Shutdown();
+    }
+
+    void ResourceManager::RegisterBuffer(const std::string &name,
+                                         ResourceType type,
+                                         VkDeviceSize size,
+                                         uint32_t binding,
+                                         VkShaderStageFlags stageFlags)
+    {
+        if (resources.find(name) != resources.end())
+        {
+            throw std::runtime_error("Resource already registered: " + name);
+        }
+
+        VkBufferUsageFlags usage = 0;
+        VkDescriptorType descType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        if (type == ResourceType::Uniform)
+        {
+            usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+            descType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        }
+        else if (type == ResourceType::Storage)
+        {
+            usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+            descType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        }
+
+        auto buffer = std::make_unique<EngineBuffer>(
+            device, size, 1, usage,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 1);
+        buffer->map();
+
+        Resource res;
+        res.type = type;
+        res.buffer = std::move(buffer);
+        res.binding = binding;
+        resources[name] = std::move(res);
+
+        layoutBuilder.addBinding(binding, descType, stageFlags);
+    }
+
+    void ResourceManager::RegisterTexture(const std::string &name,
+                                          VkImageView imageView,
+                                          VkSampler sampler,
+                                          uint32_t binding,
+                                          VkShaderStageFlags stageFlags)
+    {
+        if (resources.find(name) != resources.end())
+        {
+            throw std::runtime_error("Resource already registered: " + name);
+        }
+
+        Resource res;
+        res.type = ResourceType::CombinedImageSampler;
+        res.binding = binding;
+        res.imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        res.imageInfo.imageView = imageView;
+        res.imageInfo.sampler = sampler;
+
+        resources[name] = std::move(res);
+
+        layoutBuilder.addBinding(binding, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, stageFlags);
+    }
+
+    void ResourceManager::BuildDescriptorSetsInternal()
+    {
+        if (built)
+            return;
+
+        descriptorSetLayout = layoutBuilder.build();
+
+        EngineDescriptorPool::Builder poolBuilder(device);
+        for (const auto &[name, res] : resources)
+        {
+            VkDescriptorType descType;
+            if (res.type == ResourceType::Storage)
+                descType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+            else if (res.type == ResourceType::CombinedImageSampler)
+                descType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            else
+                descType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+
+            poolBuilder.addPoolSize(descType, maxFrames);
+        }
+        poolBuilder.setMaxSets(maxFrames);
+        descriptorPool = poolBuilder.build();
+
+        descriptorSets.resize(maxFrames);
+        for (uint32_t i = 0; i < maxFrames; ++i)
+        {
+            EngineDescriptorWriter writer(*descriptorSetLayout, *descriptorPool);
+
+            std::vector<VkDescriptorBufferInfo> bufferInfos;
+            std::vector<VkDescriptorImageInfo> imageInfos;
+            bufferInfos.reserve(resources.size());
+            imageInfos.reserve(resources.size());
+
+            for (const auto &[name, res] : resources)
+            {
+                if (res.type == ResourceType::CombinedImageSampler)
+                {
+                    imageInfos.push_back(res.imageInfo);
+                    writer.writeImage(res.binding, &imageInfos.back());
+                }
+                else
+                {
+                    bufferInfos.push_back(res.buffer->descriptorInfo());
+                    writer.writeBuffer(res.binding, &bufferInfos.back());
+                }
+            }
+
+            if (!writer.build(descriptorSets[i]))
+            {
+                throw std::runtime_error("Failed to allocate descriptor set");
+            }
+        }
+
+        built = true;
+    }
+
+    void ResourceManager::BuildDescriptorSets()
+    {
+        BuildDescriptorSetsInternal();
+    }
+
+    VkDescriptorSetLayout ResourceManager::GetDescriptorSetLayout() const
+    {
+        if (!descriptorSetLayout)
+        {
+            throw std::runtime_error("Descriptor set layout not built yet. Call BuildDescriptorSets() first.");
+        }
+        return descriptorSetLayout->getDescriptorSetLayout();
+    }
+
+    void ResourceManager::UpdateBuffer(const std::string &name,
+                                       const void *data,
+                                       VkDeviceSize size,
+                                       VkDeviceSize offset)
+    {
+        auto it = resources.find(name);
+        if (it == resources.end())
+        {
+            throw std::runtime_error("Resource not found: " + name);
+        }
+        auto &res = it->second;
+        res.buffer->writeToBuffer(const_cast<void *>(data), size, offset);
+        res.buffer->flush(size, offset);
+    }
+
+    void ResourceManager::Bind(VkCommandBuffer cmdBuf,
+                               VkPipelineLayout pipelineLayout,
+                               uint32_t frameIndex)
+    {
+        if (!built)
+            BuildDescriptorSetsInternal();
+        if (frameIndex >= descriptorSets.size())
+        {
+            throw std::runtime_error("frameIndex out of range");
+        }
+        vkCmdBindDescriptorSets(cmdBuf,
+                                VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                pipelineLayout,
+                                0,
+                                1,
+                                &descriptorSets[frameIndex],
+                                0,
+                                nullptr);
+    }
+
+    void ResourceManager::Shutdown()
+    {
+        for (auto &[name, res] : resources)
+        {
+            if (res.buffer)
+            {
+                res.buffer->unmap();
+            }
+        }
+        resources.clear();
+        descriptorSets.clear();
+        descriptorPool.reset();
+        descriptorSetLayout.reset();
+        built = false;
+    }
+void ResourceManager::UpdateTexture(const std::string &name, VkImageView imageView, VkSampler sampler)
+{
+    auto it = resources.find(name);
+    if (it == resources.end())
+    {
+        throw std::runtime_error("Resource not found: " + name);
+    }
+
+    auto &res = it->second;
+    res.imageInfo.imageView = imageView;
+    res.imageInfo.sampler = sampler;
+
+    if (built)
+    {
+        for (uint32_t i = 0; i < maxFrames; ++i)
+        {
+            EngineDescriptorWriter writer(*descriptorSetLayout, *descriptorPool);
+            writer.writeImage(res.binding, &res.imageInfo);
+            writer.overwrite(descriptorSets[i]);
+        }
+    }
+}
+} // namespace Engine
+
+============================================================
 FILE: D:\Program Education\c++\olia-engine\app\include\app\app.h
 ============================================================
 #pragma once
@@ -30592,33 +31368,45 @@ void loop();
 FILE: D:\Program Education\c++\olia-engine\app\src\app.cpp
 ============================================================
 #include <app/app.h>
+#include <glm/gtc/matrix_transform.hpp>
 
-#include <app/app.h>
-
-Transform *cube = nullptr; // declare as global, but assign later
-
+Transform *cu_trans;
+Entity character;
 void setup()
 {
+    // 1. Setup Camera: slightly above object, looking down by ~18 degrees
     Entity camera = ecs->Create();
     auto &c_cam = ecs->Add<Camera>(camera);
+    c_cam.fov = 60.0f;
+    c_cam.nearPlane = 0.1f;
+    c_cam.farPlane = 1000.0f;
+
     auto &t_cam = ecs->Get<Transform>(camera);
-    t_cam.position = {0.0f, 0.0f, 5.0f}; // Move camera further back
+    t_cam.position = {0.0f, 2.2f, 4.8f};
+    t_cam.rotation = {glm::radians(-18.0f), 0.0f, 0.0f}; // Angled downward by 18 degrees
 
-    auto models = LoadModel("models/cube.fbx");
-    for (auto &model : models)
-    {
-        auto &trans = ecs->Get<Transform>(model);
-        cube = &trans;
-    }
+    auto light = ecs->Create();
+    auto &l_light = ecs->Add<Light>(light);
+    auto &t_light = ecs->Get<Transform>(light);
+    t_light.position = {1.0f, 1.0f, 2.0f};
 
-    Entity light = ecs->Create();
-    ecs->Add<Light>(light);
-    ecs->Get<Transform>(light).position = {1, 2, 3};
+    character = LoadModel("models/character.fbx")[0];
+    cu_trans = &ecs->Get<Transform>(character);
+    cu_trans->rotation.x = glm::radians(-90.0f); 
+    
+    auto&mat = ecs->Get<Material>(character);
+    // mat.albedoTexture = "asssets/textures/wall.jpg";
+    printf("r:%f, g:%f, b:%f\n", mat.color.r, mat.color.g, mat.color.b);
 }
 
 void loop()
 {
-    cube->rotation.y += 0.01f;
+    // cu_trans->rotation.y += 0.01f;
+
+    float deltaTime = (float)input->GetTime().deltaTime;
+
+    // Update animation playback
+    Engine::UpdateSkeletalAnimation(character, deltaTime);
 }
 
 ============================================================
@@ -30644,6 +31432,8 @@ FILE: D:\Program Education\c++\olia-engine\assets\shaders\main.vert
 layout(location = 0) in vec3 aPosition;
 layout(location = 1) in vec3 aNormal;
 layout(location = 2) in vec2 aUV;
+layout(location = 3) in ivec4 aBoneIndices;
+layout(location = 4) in vec4 aBoneWeights;
 
 layout(push_constant) uniform Push {
     mat4 model; 
@@ -30651,17 +31441,44 @@ layout(push_constant) uniform Push {
     mat4 view;
 } push;
 
-layout(location = 0) out vec3 fragColor;
-layout(location = 1) out vec3 fragNormal;
-layout(location = 2) out vec3 fragWorldPos;
+// Storage Buffer or Uniform Buffer for Final Bone Matrices
+layout(set = 0, binding = 4) readonly buffer BoneBuffer
+{
+    mat4 finalBoneMatrices[];
+};
+
+layout(location = 0) out vec3 fragNormal;
+layout(location = 1) out vec3 fragWorldPos;
+layout(location = 2) out vec2 fragUV;
 
 void main()
 {
-    vec4 worldPos = push.model * vec4(aPosition, 1.0);
+    // Compute Skinning Matrix
+    mat4 boneTransform = mat4(0.0);
+
+    float totalWeight = aBoneWeights.x + aBoneWeights.y + aBoneWeights.z + aBoneWeights.w;
+
+    if (totalWeight > 0.0)
+    {
+        boneTransform += finalBoneMatrices[aBoneIndices.x] * aBoneWeights.x;
+        boneTransform += finalBoneMatrices[aBoneIndices.y] * aBoneWeights.y;
+        boneTransform += finalBoneMatrices[aBoneIndices.z] * aBoneWeights.z;
+        boneTransform += finalBoneMatrices[aBoneIndices.w] * aBoneWeights.w;
+    }
+    else
+    {
+        boneTransform = mat4(1.0); // Static mesh fallback
+    }
+
+    vec4 localPosition = boneTransform * vec4(aPosition, 1.0);
+    vec4 worldPos = push.model * localPosition;
+
     gl_Position = push.proj * push.view * worldPos;
-    fragColor = vec3(0.3, 0.3, 1.0);
-    fragNormal = normalize(mat3(push.model) * aNormal);
+
+    mat3 normalMatrix = transpose(inverse(mat3(push.model * boneTransform)));
+    fragNormal = normalize(normalMatrix * aNormal);
     fragWorldPos = worldPos.xyz;
+    fragUV = aUV;
 }
 
 ============================================================
@@ -30671,39 +31488,64 @@ FILE: D:\Program Education\c++\olia-engine\assets\shaders\main.frag
 
 layout(location = 0) out vec4 outColor;
 
-layout(location = 0) in vec3 fragColor;
-layout(location = 1) in vec3 fragNormal;
-layout(location = 2) in vec3 fragWorldPos;
+layout(location = 0) in vec3 fragNormal;
+layout(location = 1) in vec3 fragWorldPos;
+layout(location = 2) in vec2 fragUV;
 
-layout(set = 0, binding = 0) buffer LightBuffer
+layout(push_constant) uniform Push {
+    mat4 model; 
+    mat4 proj;
+    mat4 view;
+} push;
+
+struct GPULight
 {
-    vec4 position; // xyz = position, w=?
-    vec4 color;    // rgb = color, w = intensity
-} lights[];
+    vec4 position;      // xyz = position
+    vec4 color;         // rgb = color, w = intensity
+};
+
+layout(set = 0, binding = 0) readonly buffer LightBuffer
+{
+    GPULight lights[];
+};
 
 layout(set = 0, binding = 1) uniform CameraUBO
 {
-    vec4 viewPos;
+    vec4 viewPos;       // xyz = camera position
 } camera;
+
+layout(set = 0, binding = 2) uniform MaterialUBO
+{
+    vec4 color;
+    float roughness;
+    float metallic;
+    float _padding;
+    float padding_;
+} material;
+
+layout(set = 0, binding = 3) uniform sampler2D albedoMap;
 
 void main()
 {
     float ambientStrength = 0.1;
-    float specularStrength = 0.3;
     vec3 ambient = ambientStrength * lights[0].color.rgb;
 
-    vec3 lightDir = normalize(lights[0].position.xyz - fragWorldPos);  
-    
-    float diff = max(dot(fragNormal, lightDir), 0.0);
-    vec3 diffuse = diff * lights[0].color.rgb * lights[0].color.w;
+    vec3 norm = fragNormal;
+    vec3 lightDir = normalize(lights[0].position.xyz - fragWorldPos); 
 
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = diff * lights[0].color.rgb;
+
+    float specularStrength = 0.5;
     vec3 viewDir = normalize(camera.viewPos.xyz - fragWorldPos);
-    vec3 reflectDir = reflect(-lightDir, fragNormal);  
+    vec3 reflectDir = reflect(-lightDir, norm);  
 
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-    vec3 specular = specularStrength * spec * lights[0].color.rgb;  
+    vec3 specular = specularStrength * spec * lights[0].color.rgb;
 
-    vec3 result = (ambient + diffuse + specular) * fragColor;
-    outColor = vec4(result, 1.0);
+    vec4 texColor = texture(albedoMap, fragUV);
+
+    vec3 result = (ambient + diffuse + specular);
+    outColor = vec4(result, 1.0) * material.color * texColor;
 }
 
